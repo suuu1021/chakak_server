@@ -1,0 +1,43 @@
+server:
+  servlet:
+    encoding:
+      charset: utf-8
+      force: true
+  port: 8080
+
+# 로그 레벨 설정
+logging:
+  level:
+    root: INFO                 # 모든 라이브러리는 INFO 이상 출력
+    com.chakak: DEBUG            # 내 프로젝트는 DEBUG 이상 모두 출력
+    org.hibernate.SQL: debug    # Hibernate 실행 쿼리 출력
+    org.hibernate.type.descriptor.sql: trace  # 쿼리 파라미터 값 출력
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.0.76:3306/mini_project_v2?useSSl=false&serverTimezone=Asia/Seoul
+    username: v2User
+    password: ghkdlxld123
+
+  # H2 데이터베이스 웹 콘솔 활성화 (개발용)
+  h2:
+    console:
+      enabled: true
+
+  #  sql:
+  #    init:
+  #      mode: always
+  #      data-locations:
+  #        - classpath:db/data.sql
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true                # SQL 예쁘게 출력
+        default_batch_fetch_size: 10
+    defer-datasource-initialization: true
