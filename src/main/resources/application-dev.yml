@@ -16,9 +16,9 @@ logging:
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.0.76:3306/mini_project_v2?useSSl=false&serverTimezone=Asia/Seoul
-    username: v2User
-    password: ghkdlxld123
+    url: jdbc:mysql://192.168.0.82:3306/chakak?useSSl=false&serverTimezone=Asia/Seoul
+    username: chakakAdmin
+    password: chakak1234
 
   # H2 데이터베이스 웹 콘솔 활성화 (개발용)
   h2:
@@ -34,7 +34,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: create #update
     show-sql: true
     properties:
       hibernate:
