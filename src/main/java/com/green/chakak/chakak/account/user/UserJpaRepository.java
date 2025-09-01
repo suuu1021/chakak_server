@@ -21,6 +21,6 @@ public interface UserJpaRepository extends JpaRepository<User, Long> {
     
     boolean existsByNickname(String nickname);
     
-    @Query("SELECT m FROM user m WHERE m.userType = :userType AND m.status = 'ACTIVE'")
+    @Query("SELECT m FROM User m WHERE m.userType = :userType AND m.status = 'ACTIVE'")
     Optional<User> findActivePhotographers(@Param("userType") UserType userType);
 }
