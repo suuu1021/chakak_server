@@ -6,7 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 
@@ -14,34 +17,42 @@ import java.time.LocalDateTime;
 @Table(name = "user_profile")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class UserProfile {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long UserProfileId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
 
-    @Column(length = 100)
-    private String region;
+    @Column(length = 50, nullable = false, unique = true)
+    private String nickName;
 
-    @Lob
-    private String intro;
+    @Column(length = 50)
+    private String introduce;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+//    @Column(length = 500)
+//    private String profileImageURL;
 
-    @PrePersist
-    void prePersist() {
-        this.createdAt = this.updatedAt = LocalDateTime.now();
+    @CreationTimestamp
+    private Timestamp createdAt;
+
+    @CreationTimestamp
+    private Timestamp updatedAt;
+
+    @Builder
+    public UserProfile(Long userProfileId, User user, String nickName, String introduce, Timestamp createdAt, Timestamp updatedAt) {
+        UserProfileId = userProfileId;
+        this.user = user;
+        this.nickName = nickName;
+        this.introduce = introduce;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
-    @PreUpdate
-    void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
+
+    //public String getTime() {
+      //  return MyDateUtil.timestampFormat(instDate);}
 }
