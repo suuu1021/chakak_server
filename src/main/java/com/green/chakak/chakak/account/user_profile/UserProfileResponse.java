@@ -27,4 +27,25 @@ public class UserProfileResponse {
         }
     }
 
+//    @Data
+//    public static class UpdateDTO{
+//        private Long UserProfileId;
+//        private String nickName;
+//        private String introduce;
+//
+//        public UpdateDTO(UserProfile userProfile) {
+//            this.UserProfileId = userProfile.getUserProfileId();
+//            this.nickName = userProfile.getNickName();
+//            this.introduce = userProfile.getIntroduce();
+//        }
+//
+//        public UserProfile toEntity(){
+//            return UserProfile.builder()
+//                    .userProfileId(this.UserProfileId)
+//                    .nickName(this.nickName)
+//                    .introduce(this.introduce)
+//                    .build();
+//        }
+//    }
+
 }
