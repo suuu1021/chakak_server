@@ -1,6 +1,6 @@
 package com.green.chakak.chakak.account.user;
 
-import com.green.chakak.chakak.global.utils.ApiResponse;
+import com.green.chakak.chakak.global.utils.ApiUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,6 +29,6 @@ public class UserRestController {
         String jwtToken = userService.login(req);
         return ResponseEntity.ok()
                 .header("Authorization", "Bearer " + jwtToken)
-                .body(new ApiResponse<>(null));
+                .body(new ApiUtil<>(null));
     }
 }

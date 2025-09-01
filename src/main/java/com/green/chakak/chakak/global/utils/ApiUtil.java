@@ -30,7 +30,7 @@ public class ApiUtil<T> {
     /**
      * 실패 응답 생성자
      */
-    public ApiUtil(Integer status,String msg) {
+    public ApiUtil(Integer status, String msg) {
         this.status = status;
         this.msg = msg;
         this.body = null;
