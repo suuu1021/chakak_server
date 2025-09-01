@@ -10,12 +10,18 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "user_account")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class User {
+    //빌더 생성자 (필수값만) 아마 회원가입때 사용
+    @Builder
+    public User(String password, String email, UserType userType, UserStatus status) {
+        this.password = password;
+        this.email = email;
+        this.userType = userType;
+        this.status = status;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
