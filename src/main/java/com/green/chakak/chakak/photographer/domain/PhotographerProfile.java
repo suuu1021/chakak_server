@@ -1,0 +1,60 @@
+package com.green.chakak.chakak.photographer.domain;
+
+import com.green.chakak.chakak.account.user.User;
+import jakarta.persistence.*;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import java.sql.Timestamp;
+
+@NoArgsConstructor
+@Data
+@Table(name = "photographer_profile")
+@Entity
+public class PhotographerProfile {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long photographerId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    private String businessName; // 상호명
+
+    @Column(columnDefinition = "TEXT")
+    private String introduction; // 소개글
+
+    private String location; // 활동 지역
+
+    private int experienceYears; // 경력 연수
+
+    @Column(nullable = false)
+    private String status; // 상태(활성/비활성)
+
+    @CreationTimestamp
+    private Timestamp createdAt;
+
+    @UpdateTimestamp
+    private Timestamp updateAt;
+
+
+    @Builder
+    public PhotographerProfile(Long photographerId, User user, String businessName, String introduction,
+                               String location, int experienceYears, String status) {
+        this.photographerId = photographerId;
+        this.user = user;
+        this.businessName = businessName;
+        this.introduction = introduction;
+        this.location = location;
+        this.experienceYears = experienceYears;
+        this.status = status;
+    }
+
+//    public String getTime() {
+//        return MydateUtil.timestampFormat(compScrapDate);
+//    }
+}
