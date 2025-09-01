@@ -31,7 +31,7 @@ public class PhotographerProfile {
 
     private String location; // 활동 지역
 
-    private int experienceYears; // 경력 연수
+    private Integer experienceYears; // 경력 연수
 
     @Column(nullable = false)
     private String status; // 상태(활성/비활성)
@@ -45,7 +45,7 @@ public class PhotographerProfile {
 
     @Builder
     public PhotographerProfile(User user, String businessName, String introduction,
-                               String location, int experienceYears, String status) {
+                               String location, Integer experienceYears, String status) {
         this.user = user;
         this.businessName = businessName;
         this.introduction = introduction;
@@ -57,6 +57,10 @@ public class PhotographerProfile {
 //    public String getTime() {
 //        return MydateUtil.timestampFormat(compScrapDate);
 //    }
+
+    public void  changeStatus(String newStatus) {
+        this.status = newStatus;
+    }
 
     public void update(String businessName, String introduction,
                        String location, Integer experienceYears, String status) {
