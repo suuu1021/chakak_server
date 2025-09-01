@@ -11,7 +11,7 @@ public class PhotographerRequest {
     // 포토그래퍼 프로필 저장
     @Data
     @NoArgsConstructor
-    public static class PhotographerSaveRequest {
+    public static class SaveProfile {
 
         @NotNull(message = "사용자 ID는 필수입니다.")
         private Long userId;
@@ -48,7 +48,7 @@ public class PhotographerRequest {
     // 포토그래퍼 프로필 수정
     @Data
     @NoArgsConstructor
-    public static class PhotographerUpdateRequest {
+    public static class UpdateProfile {
 
         @Size(max = 100, message = "상호명은 100자를 초과할 수 없습니다.")
         private String businessName;
