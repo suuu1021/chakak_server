@@ -1,15 +1,12 @@
 package com.green.chakak.chakak.account.user;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
 public class UserRequest {
 
 
     @Getter
-    public static class UserSignupRequest {
+    public static class SignupRequest {
 
         private String email;
         private String password;
@@ -20,6 +17,18 @@ public class UserRequest {
                     .email(this.email)
                     .password(this.password)
                     .build();
+        }
+    }
+    @Getter
+    public static class LoginRequest {
+        private String email;
+        private String password;
+        public User toEntity() {
+            return User.builder()
+                    .email(this.email)
+                    .password(this.password)
+                    .build();
+
         }
     }
 

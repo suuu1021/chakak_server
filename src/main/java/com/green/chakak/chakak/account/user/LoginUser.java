@@ -24,7 +24,7 @@ public class LoginUser {
 
     public static LoginUser fromEntity(User user) {
         return LoginUser.builder()
-                .id(user.getId())
+                .id(user.getUserId())
                 .email(user.getEmail())
                 .userTypeName(user.getUserType().getTypeCode())
                 .status(user.getStatus())

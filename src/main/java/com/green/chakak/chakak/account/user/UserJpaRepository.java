@@ -10,6 +10,9 @@ import java.util.Optional;
 public interface UserJpaRepository extends JpaRepository<User, Long> {
     
     Optional<User> findByEmail(String email);
+    @Query("SELECT u FROM User u WHERE u.email = :email AND u.password = :password")
+    Optional<User> findByEmailAndUserPassword(String email, String password);
+
     
     //Optional<User> findByNickname(String nickname);
     
@@ -19,7 +22,7 @@ public interface UserJpaRepository extends JpaRepository<User, Long> {
     
     boolean existsByEmail(String email);
     
-    boolean existsByNickname(String nickname);
+//    boolean existsByNickname(String nickname);
     
 //    @Query("SELECT m FROM user m WHERE m.userType = :userType AND m.status = 'ACTIVE'")
 //    Optional<User> findActivePhotographers(@Param("userType") UserType userType);

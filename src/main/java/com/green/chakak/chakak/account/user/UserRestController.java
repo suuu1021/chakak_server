@@ -1,5 +1,6 @@
 package com.green.chakak.chakak.account.user;
 
+import com.green.chakak.chakak.global.util.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,9 +17,18 @@ public class UserRestController {
 
     private final UserService userService;
 
+    //회원 가입
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @RequestBody UserRequest.UserSignupRequest request) {
-        UserResponse.UserSignupResponse response = userService.signup(request);
+    public ResponseEntity<?> signup(@Valid @RequestBody UserRequest.SignupRequest req) {
+        UserResponse.SignupResponse response = userService.signup(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+    // 로그인
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody UserRequest.LoginRequest req) {
+        String jwtToken = userService.login(req);
+        return ResponseEntity.ok()
+                .header("Authorization", "Bearer " + jwtToken)
+                .body(new ApiResponse<>(null));
     }
 }
