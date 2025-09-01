@@ -30,9 +30,9 @@ public class PhotographerService {
 												  String introduction, String location,
 												  Integer experienceYears) {
 		// 이미 가입된 포토그래퍼인지 확인
-		if (photographerRepository.existsByUser_UserId(user.getUserId())) {
-			throw new RuntimeException("이미 가입된 포토그래퍼입니다.");
-		}
+//		if (photographerRepository.existsByUser_UserId(user.getUserId())) {
+//			throw new RuntimeException("이미 가입된 포토그래퍼입니다.");
+//		}
 
 		PhotographerProfile photographerProfile = PhotographerProfile.builder()
 				.user(user)
