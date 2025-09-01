@@ -1,8 +1,12 @@
 package com.green.chakak.chakak.account.user;
 
-import com.green.chakak.chakak.account.userType.UserType;
+
+import com.green.chakak.chakak.account.user_type.UserType;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
