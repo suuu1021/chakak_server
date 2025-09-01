@@ -1,6 +1,6 @@
 package com.green.chakak.chakak.account.user;
 
-import com.green.chakak.chakak.global.util.response.ApiResponse;
+import com.green.chakak.chakak.global.utils.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

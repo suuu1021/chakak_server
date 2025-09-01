@@ -1,4 +1,4 @@
-package com.green.chakak.chakak.global.util;
+package com.green.chakak.chakak.global.utils;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
