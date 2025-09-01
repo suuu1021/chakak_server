@@ -1,8 +1,7 @@
 package com.green.chakak.chakak.account.user_profile;
 
 import com.green.chakak.chakak.account.user.LoginUser;
-import com.green.chakak.chakak.account.user.User;
-import com.green.chakak.chakak.global.util.Define;
+import com.green.chakak.chakak.global.utils.Define;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
