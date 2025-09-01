@@ -1,44 +1,73 @@
 package com.green.chakak.chakak.account.user;
+
 import jakarta.persistence.*;
-import lombok.Data;
-import org.hibernate.usertype.UserType;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import java.time.LocalDateTime;
 
-@Data
+@Entity
+@Table(name = "user")
+@Getter
+@Setter
+@NoArgsConstructor
 public class User {
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private Long id;
-
-    @Column(length = 200, nullable = false, unique = true)
+    private Long userId;
+    
+    @Column(unique = true, nullable = false, length = 100)
     private String email;
-
-    @Column(length = 200, nullable = false)
+    
+    @Column(length = 255)
     private String password;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_type_id", nullable = false)
-    private UserType userType;
-
+    
+    @Column(unique = true, length = 50)
+    private String nickname;
+    
+    @Column(length = 500)
+    private String profileImageUrl;
+    
     @Enumerated(EnumType.STRING)
-    @Column(length = 20, nullable = false)
-    private UserStatus status;
-
-    @Column(name = "created_at", nullable = false)
+    @Column(nullable = false)
+    private UserType userType = UserType.CUSTOMER;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SocialType socialType = SocialType.KAKAO;
+    
+    @Column(length = 100)
+    private String socialId;
+    
+    @Column(length = 20)
+    private String phoneNumber;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private userStatus status = userStatus.ACTIVE;
+    
+    @Column(length = 500)
+    private String refreshToken;
+    
+    @CreationTimestamp
     private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
+    
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
-
-    @PrePersist
-    void prePersist() {
-        this.createdAt = this.updatedAt = LocalDateTime.now();
+    
+    public enum UserType {
+        CUSTOMER, PHOTOGRAPHER
     }
-
-    @PreUpdate
-    void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+    
+    public enum SocialType {
+        KAKAO
+    }
+    
+    public enum userStatus {
+        ACTIVE, INACTIVE, SUSPENDED, DELETED
     }
 }
