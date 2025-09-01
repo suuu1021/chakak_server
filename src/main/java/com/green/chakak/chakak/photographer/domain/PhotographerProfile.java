@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
 import java.sql.Timestamp;
 
 @NoArgsConstructor
@@ -43,9 +44,8 @@ public class PhotographerProfile {
 
 
     @Builder
-    public PhotographerProfile(Long photographerId, User user, String businessName, String introduction,
+    public PhotographerProfile(User user, String businessName, String introduction,
                                String location, int experienceYears, String status) {
-        this.photographerId = photographerId;
         this.user = user;
         this.businessName = businessName;
         this.introduction = introduction;
@@ -57,4 +57,23 @@ public class PhotographerProfile {
 //    public String getTime() {
 //        return MydateUtil.timestampFormat(compScrapDate);
 //    }
+
+    public void update(String businessName, String introduction,
+                       String location, Integer experienceYears, String status) {
+        if (businessName != null) {
+            this.businessName = businessName;
+        }
+        if (introduction != null) {
+            this.introduction = introduction;
+        }
+        if (location != null) {
+            this.location = location;
+        }
+        if (experienceYears != null) {
+            this.experienceYears = experienceYears;
+        }
+        if (status != null) {
+            this.status = status;
+        }
+    }
 }
