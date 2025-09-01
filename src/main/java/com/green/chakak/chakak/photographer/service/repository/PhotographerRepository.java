@@ -8,10 +8,10 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface PhotographerJpaRepository extends JpaRepository<PhotographerProfile, Long> {
+public interface PhotographerRepository extends JpaRepository<PhotographerProfile, Long> {
 
 	// 사용자 ID로 포토그래퍼 조회 (1:1 관계)
-	Optional<PhotographerProfile> findByUserId(Long userId);
+	Optional<PhotographerProfile> findByUser_UserId(Long userId);
 
 	// 활성 상태 포토그래퍼만 조회
 	List<PhotographerProfile> findByStatus(String status);
@@ -26,7 +26,7 @@ public interface PhotographerJpaRepository extends JpaRepository<PhotographerPro
 	List<PhotographerProfile> findByBusinessNameContaining(String businessName);
 
 	// 존재 여부 확인
-	boolean existsByUserId(Long userId);
+	boolean existsByUser_UserId(Long userId);
 	boolean existsByBusinessName(String businessName);
 
 	// 활성 포토그래퍼 수 조회
