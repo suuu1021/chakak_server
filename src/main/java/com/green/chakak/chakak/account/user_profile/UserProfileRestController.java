@@ -1,6 +1,7 @@
 package com.green.chakak.chakak.account.user_profile;
 
 import com.green.chakak.chakak.account.user.LoginUser;
+import com.green.chakak.chakak.global.utils.ApiUtil;
 import com.green.chakak.chakak.global.utils.Define;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class UserProfileRestController {
                                          Errors errors,
                                          @RequestAttribute(value = Define.LOGIN_USER) LoginUser loginUser){
         UserProfileResponse.DetailDTO userProfileDetail = userProfileService.createdProfile(createDTO,loginUser);
-        return ResponseEntity.ok(userProfileDetail);
+        return ResponseEntity.ok(new ApiUtil<>("처리가 완료 되었습니다."));
     }
 
     // 프로필 수정
@@ -31,6 +32,6 @@ public class UserProfileRestController {
                                            Errors errors,
                                            @RequestAttribute(Define.LOGIN_USER)LoginUser loginuser){
         UserProfileResponse.UpdateDTO updateProfileDTO = userProfileService.updateProfile(updateDTO, loginuser);
-        return ResponseEntity.ok(updateProfileDTO);
+        return ResponseEntity.ok(new ApiUtil<>("처리가 완료 되었습니다."));
     }
 }

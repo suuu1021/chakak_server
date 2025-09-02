@@ -17,7 +17,8 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 public class UserProfile {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long UserProfileId;
 
     @OneToOne(fetch = FetchType.LAZY)
