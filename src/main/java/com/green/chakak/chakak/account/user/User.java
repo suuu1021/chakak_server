@@ -60,6 +60,14 @@ public class User {
         PENDING,
         SUSPENDED
     }
+    public void changeEmail(String newEmail) {
+        this.email = newEmail;
 
+    }
+
+    public void changePassword(String newPassword) {
+        this.password = newPassword;
+
+    }
 }
 
