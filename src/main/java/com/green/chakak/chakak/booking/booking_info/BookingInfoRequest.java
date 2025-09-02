@@ -1,11 +1,10 @@
 package com.green.chakak.chakak.booking.booking_info;
 
 import com.green.chakak.chakak.account.user_profile.UserProfile;
+import com.green.chakak.chakak.booking.domain.BookingInfo;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
-import com.green.chakak.chakak.photo.service.PhotoService;
 import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
-import com.green.chakak.chakak.photographer.service.PhotographerService;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;

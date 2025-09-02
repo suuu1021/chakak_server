@@ -1,5 +1,6 @@
 package com.green.chakak.chakak.booking.booking_info;
 
+import com.green.chakak.chakak.booking.domain.BookingInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -1,9 +1,9 @@
 package com.green.chakak.chakak.photo.service.request;
 
+import com.green.chakak.chakak.booking.domain.BookingInfo;
 import com.green.chakak.chakak.photo.domain.PhotoServiceReview;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
 import com.green.chakak.chakak.account.user.User;
-import com.green.chakak.chakak.booking.domain.BookingInfo;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;

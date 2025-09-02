@@ -1,5 +1,6 @@
 package com.green.chakak.chakak.booking.booking_info;
 
+import com.green.chakak.chakak.booking.domain.BookingInfo;
 import lombok.Data;
 
 import java.time.LocalDate;
