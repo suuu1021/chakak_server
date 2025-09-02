@@ -1,7 +1,9 @@
 package com.green.chakak.chakak.account.user;
 
-import com.green.chakak.chakak.account.userType.UserType;
-import com.green.chakak.chakak.account.userType.UserTypeRepository;
+
+
+import com.green.chakak.chakak.account.user_type.UserType;
+import com.green.chakak.chakak.account.user_type.UserTypeRepository;
 import com.green.chakak.chakak.global.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

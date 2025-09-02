@@ -28,14 +28,25 @@ public class UserProfileService {
             throw new Exception400("이미 프로필을 작성하셨습니다.");
         });
         userProfileJpaRepository.findByNickName(createDTO.getNickName()).ifPresent(up -> {
-            throw new Exception400("이미 존재하는 닉네임입니다.");
+            throw new Exception400("이미 사용중인 닉네임입니다.");
         });
         UserProfile savedProfile = userProfileJpaRepository.save(createDTO.toEntity(user));
 
         return new UserProfileResponse.DetailDTO(savedProfile);
     }
 
-//    @Transactional
-//    public UserProfileResponse.UpdateDTO updateProfile(User)
+    @Transactional
+    public UserProfileResponse.UpdateDTO updateProfile(UserProfileRequest.UpdateDTO updateDTO, LoginUser loginUser){
+        UserProfile userProfile = userProfileJpaRepository.findByUserId(loginUser.getId())
+                        .orElseThrow(() -> new Exception404("수정할 프로필이 존재하지 않습니다."));
+
+        userProfileJpaRepository.findByNickName(updateDTO.getNickName()).ifPresent(userProfile1 -> {
+            if(!userProfile1.getUserProfileId().equals(userProfile.getUserProfileId()))
+                throw new Exception400("이미 사용중인 닉네임입니다.");
+        });
+
+        userProfile.update(updateDTO.getNickName(),updateDTO.getIntroduce());
+        return new UserProfileResponse.UpdateDTO(userProfile);
+    }
 
 }

@@ -65,6 +65,5 @@ public class PhotographerRequest {
 
         @Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "상태는 ACTIVE 또는 INACTIVE만 가능합니다.")
         private String status;
-
     }
 }

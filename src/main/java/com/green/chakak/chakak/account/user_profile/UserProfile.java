@@ -2,15 +2,13 @@ package com.green.chakak.chakak.account.user_profile;
 
 import com.green.chakak.chakak.account.user.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.sql.Time;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 
 
 @Entity
@@ -39,12 +37,12 @@ public class UserProfile {
     @CreationTimestamp
     private Timestamp createdAt;
 
-    @CreationTimestamp
+    @UpdateTimestamp
     private Timestamp updatedAt;
 
     @Builder
     public UserProfile(Long userProfileId, User user, String nickName, String introduce, Timestamp createdAt, Timestamp updatedAt) {
-        UserProfileId = userProfileId;
+        this.UserProfileId = userProfileId;
         this.user = user;
         this.nickName = nickName;
         this.introduce = introduce;
@@ -53,6 +51,9 @@ public class UserProfile {
     }
 
 
-    //public String getTime() {
-      //  return MyDateUtil.timestampFormat(instDate);}
+    public void update(String nickName, String introduce){
+        this.nickName = nickName;
+        this.introduce = introduce;
+
+    }
 }

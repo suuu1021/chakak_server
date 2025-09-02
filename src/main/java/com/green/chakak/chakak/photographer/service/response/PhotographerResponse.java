@@ -12,7 +12,7 @@ public class PhotographerResponse {
         private String businessName;
         private String introduction;
         private String location;
-        private int experienceYears;
+        private Integer experienceYears;
         private String status;
 
         public SaveDTO(PhotographerProfile profile) {
@@ -31,7 +31,7 @@ public class PhotographerResponse {
         private String businessName;
         private String introduction;
         private String location;
-        private int experienceYears;
+        private Integer experienceYears;
         private String status;
 
         public UpdateDTO(PhotographerProfile profile) {
@@ -50,7 +50,7 @@ public class PhotographerResponse {
         private String businessName;
         private String introduction;
         private String location;
-        private int experienceYears;
+        private Integer experienceYears;
         private String status;
 
         public DetailDTO(PhotographerProfile profile) {
