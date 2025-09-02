@@ -14,11 +14,6 @@ public class UserTypeService {
         this.userTypeRepository = userTypeRepository;
     }
 
-    // 전체 조회
-    public List<UserType> getAllUserTypes() {
-        return userTypeRepository.findAll();
-    }
-
     // 초기값 삽입
     @Transactional
     public void initializeUserTypes() {
@@ -39,5 +34,51 @@ public class UserTypeService {
             photographer.setUpdatedAt(now);
             userTypeRepository.save(photographer);
         }
+    }
+
+    // 전체 조회
+    public List<UserType> getAllUserTypes() {
+        return userTypeRepository.findAll();
+    }
+
+    // 상세 조회
+    public UserType getUserTypeById(Long id) {
+        return userTypeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("해당 회원 유형이 없습니다."));
+    }
+
+
+    // 등록
+    @Transactional
+    public UserType createUserType(UserTypeRequest request) {
+
+        UserType userType = new UserType();
+        LocalDateTime now = LocalDateTime.now();
+
+        userType.setTypeName(request.getTypeName());
+        userType.setTypeCode(request.getTypeCode());
+        userType.setCreatedAt(now);
+        userType.setUpdatedAt(now);
+
+        return userTypeRepository.save(userType);
+    }
+
+    // 수정
+    @Transactional
+    public UserType updateUserType(Long id, UserTypeRequest request){
+        UserType userType = userTypeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("해당 회원 유형이 존재하지 않습니다."));
+
+                userType.setTypeName(request.getTypeName());
+                userType.setTypeCode(request.getTypeCode());
+                userType.setUpdatedAt(LocalDateTime.now());
+
+                return userTypeRepository.save(userType);
+
+    }
+
+    // 삭제
+    public void deleteUserType(Long id){
+        userTypeRepository.deleteById(id);
     }
 }
