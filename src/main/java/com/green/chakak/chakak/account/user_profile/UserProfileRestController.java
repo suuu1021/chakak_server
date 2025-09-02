@@ -17,11 +17,20 @@ public class UserProfileRestController {
     //private final UserService userService;
 
     // 프로필 생성
-    @GetMapping("/profile")
+    @PostMapping("/profile")
     public ResponseEntity<?> createProfile(@Valid @RequestBody UserProfileRequest.CreateDTO createDTO,
                                          Errors errors,
-                                         @RequestAttribute(value = Define.LOGIN_USER, required = false) LoginUser loginUser){
+                                         @RequestAttribute(value = Define.LOGIN_USER) LoginUser loginUser){
         UserProfileResponse.DetailDTO userProfileDetail = userProfileService.createdProfile(createDTO,loginUser);
         return ResponseEntity.ok(userProfileDetail);
+    }
+
+    // 프로필 수정
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@Valid @RequestBody UserProfileRequest.UpdateDTO updateDTO,
+                                           Errors errors,
+                                           @RequestAttribute(Define.LOGIN_USER)LoginUser loginuser){
+        UserProfileResponse.UpdateDTO updateProfileDTO = userProfileService.updateProfile(updateDTO, loginuser);
+        return ResponseEntity.ok(updateProfileDTO);
     }
 }
