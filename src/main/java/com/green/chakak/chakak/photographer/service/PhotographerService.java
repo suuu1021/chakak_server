@@ -26,18 +26,15 @@ public class PhotographerService {
     private final PhotographerRepository photographerRepository;
     private final PhotographerCategoryRepository photographerCategoryRepository;
     private final PhotographerMapRepository photographerMapRepository;
-    private final UserJpaRepository userJpaRepository;
 
     /**
      * 포토그래퍼 가입
      */
-    public PhotographerResponse.SaveDTO joinAsPhotographer(PhotographerRequest.SaveProfile saveDTO) {
-        if (photographerRepository.existsByUser_UserId(saveDTO.getUserId())) {
+    public PhotographerResponse.SaveDTO joinAsPhotographer(User user, PhotographerRequest.SaveProfile saveDTO) {
+        if (photographerRepository.existsByUser_UserId(user.getUserId())) {
             throw new RuntimeException("이미 가입된 포토그래퍼입니다");
         }
-        User user = userJpaRepository.findById(saveDTO.getUserId())
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다. ID: " + saveDTO.getUserId()));
-
+        
         PhotographerProfile photographerProfile = saveDTO.toEntity(user);
         PhotographerProfile saved = photographerRepository.save(photographerProfile);
 

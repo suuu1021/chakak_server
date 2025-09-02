@@ -13,9 +13,6 @@ public class PhotographerRequest {
     @NoArgsConstructor
     public static class SaveProfile {
 
-        @NotNull(message = "사용자 ID는 필수입니다.")
-        private Long userId;
-
         @Size(max = 100, message = "상호명은 100자를 초과할 수 없습니다.")
         private String businessName;
 
@@ -35,7 +32,6 @@ public class PhotographerRequest {
 
         public PhotographerProfile toEntity(User user) {
             return PhotographerProfile.builder()
-                    .user(user)
                     .businessName(this.businessName)
                     .introduction(this.introduction)
                     .location(this.location)
