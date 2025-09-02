@@ -23,18 +23,19 @@ public class UserProfileRequest {
         }
     }
 
+    @Data
     public static class UpdateDTO {
         @NotEmpty(message = "닉네임을 입력하세요")
         private String nickName;
         @NotEmpty(message = "자기소개를 입력하세요")
         private String introduce;
 
-        public UserProfile toEntity(LoginUser loginUser , User user){
-            return UserProfile.builder()
-                    .user(user)
-                    .nickName(nickName)
-                    .introduce(introduce)
-                    .build();
-        }
+//        public UserProfile toEntity(LoginUser loginUser , User user){
+//            return UserProfile.builder()
+//                    .user(user)
+//                    .nickName(nickName)
+//                    .introduce(introduce)
+//                    .build();
+//        }
     }
 }
