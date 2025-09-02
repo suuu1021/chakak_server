@@ -2,6 +2,7 @@ package com.green.chakak.chakak.account.user;
 
 
 
+import com.green.chakak.chakak.account.user.UserResponse;
 import com.green.chakak.chakak.account.user_type.UserType;
 import com.green.chakak.chakak.account.user_type.UserTypeRepository;
 import com.green.chakak.chakak.global.utils.JwtUtil;
@@ -36,13 +37,13 @@ public class UserService {
                 .status(User.UserStatus.ACTIVE)
                 .build();
 
-        User saved = userJpaRepository.save(user);
+        User savedUser = userJpaRepository.save(user);
 
         return UserResponse.SignupResponse.builder()
-                .userId(saved.getUserId())
-                .email(saved.getEmail())
-                .userTypeCode(saved.getUserType().getTypeCode())
-                .status(saved.getStatus())
+                .userId(savedUser.getUserId())
+                .email(savedUser.getEmail())
+                .userTypeCode(savedUser.getUserType().getTypeCode())
+                .status(savedUser.getStatus())
                 .build();
     }
 
@@ -58,5 +59,32 @@ public class UserService {
 
         LoginUser loginUser = LoginUser.fromEntity(user); // (id, email, typeCode, status)
         return JwtUtil.create(loginUser);
+    }
+    // 회원 정보 수정
+
+    public UserResponse.UpdateResponse updateUser(Long userId, UserRequest.UpdateRequest req) {
+        User user = userJpaRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        if (req.getEmail() != null && !req.getEmail().isEmpty()) {
+            if (!user.getEmail().equals(req.getEmail()) && userJpaRepository.existsByEmail(req.getEmail())) {
+                throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+            }
+            user.changeEmail(req.getEmail());
+        }
+
+        if (req.getPassword() != null && !req.getPassword().isEmpty()) {
+            user.setPassword(req.getPassword());
+        }
+
+        User updatedUser = userJpaRepository.save(user);
+
+        return UserResponse.UpdateResponse.builder()
+                .userId(updatedUser.getUserId())
+                .email(updatedUser.getEmail())
+                .userTypeCode(updatedUser.getUserType().getTypeCode())
+                .status(updatedUser.getStatus())
+                .updatedAt(updatedUser.getUpdatedAt() != null ? updatedUser.getUpdatedAt().toLocalDateTime() : java.time.LocalDateTime.now())
+                .build();
     }
 }

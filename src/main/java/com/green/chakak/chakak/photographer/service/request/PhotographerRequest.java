@@ -32,6 +32,7 @@ public class PhotographerRequest {
 
         public PhotographerProfile toEntity(User user) {
             return PhotographerProfile.builder()
+                    .user(user)
                     .businessName(this.businessName)
                     .introduction(this.introduction)
                     .location(this.location)
