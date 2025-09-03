@@ -1,0 +1,43 @@
+package com.green.chakak.chakak.portfolios.service.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+public class PortfolioCategoryRequest {
+
+	// 카테고리 생성 요청
+	@Data
+	@NoArgsConstructor
+	public static class CreateDTO {
+
+		@NotBlank(message = "카테고리명은 필수입니다")
+		@Size(max = 100, message = "카테고리명은 100자 이내여야 합니다")
+		private String categoryName;
+
+		// 부모 카테고리 ID (선택 사항)
+		private Long parentId;
+
+		// 정렬 순서
+		private Integer sortOrder = 0;
+	}
+
+	// 카테고리 수정 요청
+	@Data
+	@NoArgsConstructor
+	public static class UpdateDTO {
+
+		@Size(max = 100, message = "카테고리명은 100자 이내여야 합니다")
+		private String categoryName;
+
+		// 부모 카테고리 ID
+		private Long parentId;
+
+		// 정렬 순서
+		private Integer sortOrder;
+
+		// 활성화 여부
+		private Boolean isActive;
+	}
+}

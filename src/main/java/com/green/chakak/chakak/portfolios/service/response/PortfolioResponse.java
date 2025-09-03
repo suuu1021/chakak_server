@@ -5,7 +5,6 @@ import com.green.chakak.chakak.portfolios.domain.PortfolioImage;
 import com.green.chakak.chakak.portfolios.domain.PortfolioCategory;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,13 +19,9 @@ public class PortfolioResponse {
 		private Long portfolioId;
 		private Long photographerId;
 		private String photographerName;
-		private String portfolioTitle;
-		private String portfolioDescription;
-		private String shootingLocation;
-		private LocalDateTime shootingDate;
-		private Integer viewCount;
-		private Integer likeCount;
-		private Boolean isPublic;
+		private String title;
+		private String description;
+		private String thumbnailUrl;
 		private LocalDateTime createdAt;
 		private LocalDateTime updatedAt;
 
@@ -40,13 +35,9 @@ public class PortfolioResponse {
 			this.portfolioId = portfolio.getPortfolioId();
 			this.photographerId = portfolio.getPhotographerProfile().getPhotographerId();
 			this.photographerName = portfolio.getPhotographerProfile().getBusinessName();
-			this.portfolioTitle = portfolio.getPortfolioTitle();
-			this.portfolioDescription = portfolio.getPortfolioDescription();
-			this.shootingLocation = portfolio.getShootingLocation();
-			this.shootingDate = portfolio.getShootingDate();
-			this.viewCount = portfolio.getViewCount();
-			this.likeCount = portfolio.getLikeCount();
-			this.isPublic = portfolio.getIsPublic();
+			this.title = portfolio.getTitle();
+			this.description = portfolio.getDescription();
+			this.thumbnailUrl = portfolio.getThumbnailUrl();
 			this.createdAt = portfolio.getCreatedAt();
 			this.updatedAt = portfolio.getUpdatedAt();
 
@@ -72,28 +63,17 @@ public class PortfolioResponse {
 	public static class ListDTO {
 
 		private Long portfolioId;
-		private Long photographerId;
-		private String photographerName;
-		private String portfolioTitle;
-		private String portfolioDescription;
-		private Integer viewCount;
-		private Integer likeCount;
-		private LocalDateTime createdAt;
+		private String title;
+		private String description;
 		private String thumbnailUrl;
+		private LocalDateTime createdAt;
 
 		public ListDTO(Portfolio portfolio) {
 			this.portfolioId = portfolio.getPortfolioId();
-			this.photographerId = portfolio.getPhotographerProfile().getPhotographerId();
-			this.photographerName = portfolio.getPhotographerProfile().getBusinessName();
-			this.portfolioTitle = portfolio.getPortfolioTitle();
-			this.portfolioDescription = portfolio.getPortfolioDescription();
-			this.viewCount = portfolio.getViewCount();
-			this.likeCount = portfolio.getLikeCount();
+			this.title = portfolio.getTitle();
+			this.description = portfolio.getDescription();
+			this.thumbnailUrl = portfolio.getThumbnailUrl();
 			this.createdAt = portfolio.getCreatedAt();
-
-			// 썸네일 URL 설정 (첫 번째 이미지)
-			this.thumbnailUrl = portfolio.getPortfolioImages().isEmpty() ?
-					null : portfolio.getPortfolioImages().get(0).getImageUrl();
 		}
 
 		public static ListDTO from(Portfolio portfolio) {
@@ -106,25 +86,15 @@ public class PortfolioResponse {
 	@NoArgsConstructor
 	public static class ImageDTO {
 
-		private Long imageId;
+		private Long portfolioImageId;
 		private String imageUrl;
-		private String imageName;
-		private String imageDescription;
-		private Integer imageOrder;
-		private Long fileSize;
-		private Integer imageWidth;
-		private Integer imageHeight;
+		private Boolean isMain;
 		private LocalDateTime createdAt;
 
 		public ImageDTO(PortfolioImage image) {
-			this.imageId = image.getImageId();
+			this.portfolioImageId = image.getPortfolioImageId();
 			this.imageUrl = image.getImageUrl();
-			this.imageName = image.getImageName();
-			this.imageDescription = image.getImageDescription();
-			this.imageOrder = image.getImageOrder();
-			this.fileSize = image.getFileSize();
-			this.imageWidth = image.getImageWidth();
-			this.imageHeight = image.getImageHeight();
+			this.isMain = image.getIsMain();
 			this.createdAt = image.getCreatedAt();
 		}
 
@@ -140,14 +110,10 @@ public class PortfolioResponse {
 
 		private Long categoryId;
 		private String categoryName;
-		private String categoryDescription;
-		private Boolean isActive;
 
 		public CategoryDTO(PortfolioCategory category) {
-			this.categoryId = category.getCategoryId();
+			this.categoryId = category.getPortfolioCategoryId();
 			this.categoryName = category.getCategoryName();
-			this.categoryDescription = category.getCategoryDescription();
-			this.isActive = category.getIsActive();
 		}
 
 		public static CategoryDTO from(PortfolioCategory category) {

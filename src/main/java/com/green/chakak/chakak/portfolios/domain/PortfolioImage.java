@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "PORTFOLIO_IMAGE")
 @Getter
@@ -16,39 +17,37 @@ public class PortfolioImage {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "image_id")
-	private Long imageId;
+	@Column(name = "PORTFOLIO_IMAGE_ID")
+	private Long portfolioImageId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "portfolio_id", nullable = false)
+	@JoinColumn(name = "PORTFOLIO_ID", nullable = false)
 	private Portfolio portfolio;
 
-	@Column(name = "image_url", nullable = false, length = 500)
+	@Column(name = "IMAGE_URL", nullable = false, length = 512)
 	private String imageUrl;
 
-	@Column(name = "image_name", length = 100)
-	private String imageName;
+	@Column(name = "IS_MAIN", nullable = true)
+	private Boolean isMain = false;
 
-	@Column(name = "image_description", length = 500)
-	private String imageDescription;
-
-	@Column(name = "image_order", nullable = false)
-	private Integer imageOrder;
-
-	@Column(name = "file_size")
-	private Long fileSize;
-
-	@Column(name = "image_width")
-	private Integer imageWidth;
-
-	@Column(name = "image_height")
-	private Integer imageHeight;
-
-	@Column(name = "created_at", nullable = false)
+	@Column(name = "CREATED_AT", nullable = false)
 	private LocalDateTime createdAt;
 
 	@PrePersist
 	protected void onCreate() {
 		createdAt = LocalDateTime.now();
+		if (isMain == null) {
+			isMain = false;
+		}
+	}
+
+	// 편의 메서드 - 메인 이미지로 설정
+	public void setAsMain() {
+		this.isMain = true;
+	}
+
+	// 편의 메서드 - 메인 이미지 해제
+	public void unsetAsMain() {
+		this.isMain = false;
 	}
 }

@@ -19,22 +19,31 @@ public class PortfolioCategory {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "category_id")
-	private Long categoryId;
+	@Column(name = "PORTFOLIO_CATEGORY_ID")
+	private Long portfolioCategoryId;
 
-	@Column(name = "category_name", nullable = false, length = 50)
+	@Column(name = "CATEGORY_NAME", nullable = false, length = 50)
 	private String categoryName;
 
-	@Column(name = "category_description", length = 200)
-	private String categoryDescription;
+	// 계층구조를 위한 자기 참조
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "PARENT_ID")
+	private PortfolioCategory parent;
 
-	@Column(name = "is_active", nullable = false)
+	// 하위 카테고리들
+	@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+	private List<PortfolioCategory> children = new ArrayList<>();
+
+	@Column(name = "SORT_ORDER", nullable = false)
+	private Integer sortOrder = 0;
+
+	@Column(name = "IS_ACTIVE", nullable = false)
 	private Boolean isActive = true;
 
-	@Column(name = "created_at", nullable = false)
+	@Column(name = "CREATED_AT", nullable = false)
 	private LocalDateTime createdAt;
 
-	@Column(name = "updated_at")
+	@Column(name = "UPDATED_AT")
 	private LocalDateTime updatedAt;
 
 	// 매핑 테이블과의 관계
@@ -50,5 +59,27 @@ public class PortfolioCategory {
 	@PreUpdate
 	protected void onUpdate() {
 		updatedAt = LocalDateTime.now();
+	}
+
+	// 편의 메서드 - 하위 카테고리 추가
+	public void addChild(PortfolioCategory child) {
+		children.add(child);
+		child.setParent(this);
+	}
+
+	// 편의 메서드 - 하위 카테고리 제거
+	public void removeChild(PortfolioCategory child) {
+		children.remove(child);
+		child.setParent(null);
+	}
+
+	// 편의 메서드 - 루트 카테고리인지 확인
+	public boolean isRoot() {
+		return parent == null;
+	}
+
+	// 편의 메서드 - 리프 카테고리인지 확인
+	public boolean isLeaf() {
+		return children.isEmpty();
 	}
 }

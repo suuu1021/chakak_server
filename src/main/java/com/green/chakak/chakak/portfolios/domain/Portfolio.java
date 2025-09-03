@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Entity
 @Table(name = "PORTFOLIO")
 @Getter
@@ -21,39 +20,27 @@ public class Portfolio {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "portfolio_id")
+	@Column(name = "PORTFOLIO_ID")
 	private Long portfolioId;
 
 	// Photographer 엔티티와 연결
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "photographer_id", nullable = false)
+	@JoinColumn(name = "PHOTOGRAPHER_PROFILE_ID", nullable = false)
 	private PhotographerProfile photographerProfile;
 
-	@Column(name = "portfolio_title", nullable = false, length = 100)
-	private String portfolioTitle;
+	@Column(name = "TITLE", nullable = false, length = 255)
+	private String title;
 
-	@Column(name = "portfolio_description", length = 1000)
-	private String portfolioDescription;
+	@Column(name = "DESCRIPTION", columnDefinition = "TEXT")
+	private String description;
 
-	@Column(name = "shooting_location", length = 100)
-	private String shootingLocation;
+	@Column(name = "THUMBNAIL_URL", nullable = false, length = 512)
+	private String thumbnailUrl;
 
-	@Column(name = "shooting_date")
-	private LocalDateTime shootingDate;
-
-	@Column(name = "view_count", nullable = false)
-	private Integer viewCount = 0;
-
-	@Column(name = "like_count", nullable = false)
-	private Integer likeCount = 0;
-
-	@Column(name = "is_public", nullable = false)
-	private Boolean isPublic = true;
-
-	@Column(name = "created_at", nullable = false)
+	@Column(name = "CREATED_AT", nullable = false)
 	private LocalDateTime createdAt;
 
-	@Column(name = "updated_at")
+	@Column(name = "UPDATED_AT")
 	private LocalDateTime updatedAt;
 
 	// 포트폴리오 이미지들과의 관계

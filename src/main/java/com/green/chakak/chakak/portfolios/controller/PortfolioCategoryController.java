@@ -2,8 +2,8 @@ package com.green.chakak.chakak.portfolios.controller;
 
 import com.green.chakak.chakak.global.utils.ApiUtil;
 import com.green.chakak.chakak.portfolios.service.PortfolioCategoryService;
-import com.green.chakak.chakak.portfolios.service.request.PortfolioRequest;
-import com.green.chakak.chakak.portfolios.service.response.PortfolioResponse;
+import com.green.chakak.chakak.portfolios.service.request.PortfolioCategoryRequest;
+import com.green.chakak.chakak.portfolios.service.response.PortfolioCategoryResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -35,8 +35,8 @@ public class PortfolioCategoryController {
 
 	// 카테고리 생성
 	@PostMapping
-	public ResponseEntity<?> createCategory(@Valid @RequestBody PortfolioRequest.CategoryDTO categoryRequest) {
-		PortfolioResponse.CategoryDTO response = portfolioCategoryService.createCategory(categoryRequest);
+	public ResponseEntity<?> createCategory(@Valid @RequestBody PortfolioCategoryRequest.CreateDTO categoryRequest) {
+		PortfolioCategoryResponse.DetailDTO response = portfolioCategoryService.createCategory(categoryRequest);
 		URI location = URI.create(String.format("/api/portfolio-categories/%d", response.getCategoryId()));
 		return ResponseEntity.created(location).body(new ApiUtil<>(response));
 	}
@@ -44,29 +44,29 @@ public class PortfolioCategoryController {
 	// 카테고리 상세 조회
 	@GetMapping("/{categoryId}")
 	public ResponseEntity<?> getCategory(@PathVariable Long categoryId) {
-		PortfolioResponse.CategoryDTO response = portfolioCategoryService.getCategory(categoryId);
+		PortfolioCategoryResponse.DetailDTO response = portfolioCategoryService.getCategory(categoryId);
 		return ResponseEntity.ok(new ApiUtil<>(response));
 	}
 
 	// 활성 카테고리 목록 조회
 	@GetMapping
 	public ResponseEntity<?> getActiveCategories() {
-		List<PortfolioResponse.CategoryDTO> response = portfolioCategoryService.getActiveCategories();
+		List<PortfolioCategoryResponse.DetailDTO> response = portfolioCategoryService.getActiveCategories();
 		return ResponseEntity.ok(new ApiUtil<>(response));
 	}
 
 	// 전체 카테고리 목록 조회 (관리자용)
 	@GetMapping("/all")
 	public ResponseEntity<?> getAllCategories() {
-		List<PortfolioResponse.CategoryDTO> response = portfolioCategoryService.getAllCategories();
+		List<PortfolioCategoryResponse.DetailDTO> response = portfolioCategoryService.getAllCategories();
 		return ResponseEntity.ok(new ApiUtil<>(response));
 	}
 
 	// 카테고리 수정
 	@PutMapping("/{categoryId}")
 	public ResponseEntity<?> updateCategory(@PathVariable Long categoryId,
-											@Valid @RequestBody PortfolioRequest.CategoryDTO categoryRequest) {
-		PortfolioResponse.CategoryDTO response = portfolioCategoryService.updateCategory(categoryId, categoryRequest);
+											@Valid @RequestBody PortfolioCategoryRequest.UpdateDTO categoryRequest) {
+		PortfolioCategoryResponse.DetailDTO response = portfolioCategoryService.updateCategory(categoryId, categoryRequest);
 		return ResponseEntity.ok(new ApiUtil<>(response));
 	}
 

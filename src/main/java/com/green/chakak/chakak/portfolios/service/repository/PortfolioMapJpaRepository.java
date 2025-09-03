@@ -14,27 +14,29 @@ import java.util.Optional;
 @Repository
 public interface PortfolioMapJpaRepository extends JpaRepository<PortfolioMap, Long> {
 
-	// 특정 포트폴리오의 카테고리들 조회
+	// 특정 포트폴리오의 모든 카테고리 매핑을 조회합니다. (GET /portfolios/{portfolioId}/categories)
 	List<PortfolioMap> findByPortfolio(Portfolio portfolio);
 
-	// 특정 카테고리의 포트폴리오들 조회 (공개된 것만)
+	// 특정 카테고리에 속한 공개된 포트폴리오 목록을 조회합니다. (GET /categories/{categoryId}/portfolios)
 	@Query("SELECT pm FROM PortfolioMap pm WHERE pm.portfolioCategory = :category AND pm.portfolio.isPublic = true")
-	List<PortfolioMap> findByPortfolioCategoryAndPublic(@Param("category") PortfolioCategory category);
+	List<PortfolioMap> findByPortfolioCategoryAndIsPublicTrue(@Param("category") PortfolioCategory category);
 
-	// 포트폴리오-카테고리 매핑 존재 여부 확인
+	// 특정 포트폴리오와 카테고리 매핑이 존재하는지 확인합니다.
 	boolean existsByPortfolioAndPortfolioCategory(Portfolio portfolio, PortfolioCategory category);
 
-	// 특정 포트폴리오-카테고리 매핑 조회
+	// 특정 포트폴리오와 카테고리 매핑을 조회합니다.
 	Optional<PortfolioMap> findByPortfolioAndPortfolioCategory(Portfolio portfolio, PortfolioCategory category);
 
-	// 특정 포트폴리오의 모든 매핑 삭제
+	// 특정 포트폴리오에 연결된 모든 카테고리 매핑을 삭제합니다. (DELETE /portfolios/{portfolioId}/categories)
 	void deleteByPortfolio(Portfolio portfolio);
 
-	// 특정 카테고리별 포트폴리오 개수
+	// 특정 카테고리에 속한 공개된 포트폴리오의 개수를 조회합니다.
 	@Query("SELECT COUNT(pm) FROM PortfolioMap pm WHERE pm.portfolioCategory = :category AND pm.portfolio.isPublic = true")
-	long countByPortfolioCategory(@Param("category") PortfolioCategory category);
+	long countByPortfolioCategoryAndIsPublicTrue(@Param("category") PortfolioCategory category);
 
-	// 카테고리별 포트폴리오 조회 (페이징)
+	// 특정 카테고리에 속한 공개된 포트폴리오들을 생성일 역순으로 조회합니다. (GET /categories/{categoryId}/portfolios)
 	@Query("SELECT pm.portfolio FROM PortfolioMap pm WHERE pm.portfolioCategory = :category AND pm.portfolio.isPublic = true ORDER BY pm.portfolio.createdAt DESC")
-	List<Portfolio> findPortfoliosByCategory(@Param("category") PortfolioCategory category);
+	List<Portfolio> findPortfoliosByCategoryAndIsPublicTrue(@Param("category") PortfolioCategory category);
+
+	void deleteByPortfolio_PortfolioId(Long portfolioId);
 }

@@ -20,7 +20,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -96,31 +95,23 @@ public class PortfolioService {
 				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 포트폴리오입니다: " + portfolioId));
 
 		// 필드 업데이트
-		if (request.getPortfolioTitle() != null) {
-			portfolio.setPortfolioTitle(request.getPortfolioTitle());
+		if (request.getTitle() != null) {
+			portfolio.setTitle(request.getTitle());
 		}
-		if (request.getPortfolioDescription() != null) {
-			portfolio.setPortfolioDescription(request.getPortfolioDescription());
+		if (request.getDescription() != null) {
+			portfolio.setDescription(request.getDescription());
 		}
-		if (request.getShootingLocation() != null) {
-			portfolio.setShootingLocation(request.getShootingLocation());
+		if (request.getThumbnailUrl() != null) {
+			portfolio.setThumbnailUrl(request.getThumbnailUrl());
 		}
-		if (request.getShootingDate() != null) {
-			portfolio.setShootingDate(request.getShootingDate());
-		}
-		if (request.getIsPublic() != null) {
-			portfolio.setIsPublic(request.getIsPublic());
-		}
-
-		Portfolio updatedPortfolio = portfolioRepository.save(portfolio);
 
 		// 카테고리 매핑 업데이트
 		if (request.getCategoryIds() != null) {
-			updateCategoryMappings(updatedPortfolio, request.getCategoryIds());
+			updateCategoryMappings(portfolio, request.getCategoryIds());
 		}
 
 		log.info("포트폴리오 수정 완료: portfolioId = {}", portfolioId);
-		return PortfolioResponse.DetailDTO.from(updatedPortfolio);
+		return PortfolioResponse.DetailDTO.from(portfolio);
 	}
 
 	/**
@@ -133,8 +124,8 @@ public class PortfolioService {
 		Portfolio portfolio = portfolioRepository.findById(portfolioId)
 				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 포트폴리오입니다: " + portfolioId));
 
-		// 조회수 증가
-		portfolioRepository.incrementViewCount(portfolioId);
+		// 조회수 증가 로직은 엔티티에 없으므로 주석 처리
+		// portfolioRepository.incrementViewCount(portfolioId);
 
 		return PortfolioResponse.DetailDTO.from(portfolio);
 	}
@@ -146,10 +137,13 @@ public class PortfolioService {
 	public void deletePortfolio(Long portfolioId) {
 		log.info("포트폴리오 삭제 시작: portfolioId = {}", portfolioId);
 
-		Portfolio portfolio = portfolioRepository.findById(portfolioId)
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 포트폴리오입니다: " + portfolioId));
+		// 연관된 매핑과 이미지부터 삭제
+		// PortfolioMapJpaRepository에 추가된 deleteByPortfolio 메서드 활용
+		portfolioMapRepository.deleteByPortfolio_PortfolioId(portfolioId);
+		// PortfolioImageJpaRepository에 추가된 deleteByPortfolio_PortfolioId 메서드 활용
+		portfolioImageRepository.deleteByPortfolio_PortfolioId(portfolioId);
 
-		portfolioRepository.delete(portfolio);
+		portfolioRepository.deleteById(portfolioId);
 		log.info("포트폴리오 삭제 완료: portfolioId = {}", portfolioId);
 	}
 
@@ -164,18 +158,8 @@ public class PortfolioService {
 		Pageable pageable = PageRequest.of(searchRequest.getPage(), searchRequest.getSize());
 		Page<Portfolio> portfolioPage;
 
-		switch (searchRequest.getSortBy()) {
-			case "popular":
-				portfolioPage = portfolioRepository.findByIsPublicTrueOrderByLikeCountDescCreatedAtDesc(pageable);
-				break;
-			case "viewed":
-				portfolioPage = portfolioRepository.findByIsPublicTrueOrderByViewCountDescCreatedAtDesc(pageable);
-				break;
-			case "latest":
-			default:
-				portfolioPage = portfolioRepository.findByIsPublicTrueOrderByCreatedAtDesc(pageable);
-				break;
-		}
+		// 엔티티에 viewCount, likeCount, isPublic 필드가 없으므로, 최신순으로만 조회하도록 수정
+		portfolioPage = portfolioRepository.findAllByOrderByCreatedAtDesc(pageable);
 
 		return portfolioPage.map(PortfolioResponse.ListDTO::from);
 	}
@@ -192,7 +176,6 @@ public class PortfolioService {
 			return portfolioRepository.findByTitleContaining(searchRequest.getKeyword(), pageable)
 					.map(PortfolioResponse.ListDTO::from);
 		}
-
 		return getPortfolioList(searchRequest);
 	}
 
@@ -205,7 +188,7 @@ public class PortfolioService {
 		PhotographerProfile photographer = photographerRepository.findById(photographerId)
 				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사진작가입니다: " + photographerId));
 
-		List<Portfolio> portfolios = portfolioRepository.findByPhotographerProfileAndIsPublicTrue(photographer);
+		List<Portfolio> portfolios = portfolioRepository.findByPhotographerProfile(photographer);
 
 		return portfolios.stream()
 				.map(PortfolioResponse.ListDTO::from)
@@ -224,21 +207,22 @@ public class PortfolioService {
 		Portfolio portfolio = portfolioRepository.findById(request.getPortfolioId())
 				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 포트폴리오입니다: " + request.getPortfolioId()));
 
-		// 다음 순서 번호 자동 설정
-		Integer nextOrder = portfolioImageRepository.findMaxImageOrderByPortfolio(portfolio) + 1;
+		// isMain이 null일 경우 false로 설정
+		Boolean isMain = (request.getIsMain() != null) ? request.getIsMain() : false;
+
+		// 이미 메인 이미지가 존재하면 해제
+		if (isMain) {
+			portfolioImageRepository.findByPortfolioAndIsMainTrue(portfolio)
+					.ifPresent(mainImage -> mainImage.setIsMain(false));
+		}
 
 		PortfolioImage image = new PortfolioImage();
 		image.setPortfolio(portfolio);
 		image.setImageUrl(request.getImageUrl());
-		image.setImageName(request.getImageName());
-		image.setImageDescription(request.getImageDescription());
-		image.setImageOrder(nextOrder);
-		image.setFileSize(request.getFileSize());
-		image.setImageWidth(request.getImageWidth());
-		image.setImageHeight(request.getImageHeight());
+		image.setIsMain(isMain);
 
 		PortfolioImage savedImage = portfolioImageRepository.save(image);
-		log.info("이미지 추가 완료: imageId = {}", savedImage.getImageId());
+		log.info("이미지 추가 완료: imageId = {}", savedImage.getPortfolioImageId());
 
 		return PortfolioResponse.ImageDTO.from(savedImage);
 	}
@@ -250,10 +234,7 @@ public class PortfolioService {
 	public void deleteImage(Long imageId) {
 		log.info("이미지 삭제: imageId = {}", imageId);
 
-		PortfolioImage image = portfolioImageRepository.findById(imageId)
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이미지입니다: " + imageId));
-
-		portfolioImageRepository.delete(image);
+		portfolioImageRepository.deleteById(imageId);
 		log.info("이미지 삭제 완료: imageId = {}", imageId);
 	}
 
@@ -272,6 +253,7 @@ public class PortfolioService {
 		PortfolioCategory category = categoryRepository.findById(categoryId)
 				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다: " + categoryId));
 
+		// existsByPortfolioAndPortfolioCategory 메서드 활용
 		if (!portfolioMapRepository.existsByPortfolioAndPortfolioCategory(portfolio, category)) {
 			PortfolioMap mapping = new PortfolioMap();
 			mapping.setPortfolio(portfolio);
@@ -280,22 +262,13 @@ public class PortfolioService {
 		}
 	}
 
-	/**
-	 * 좋아요 증가
-	 */
-	@Transactional
-	public void increaseLike(Long portfolioId) {
-		log.info("좋아요 증가: portfolioId = {}", portfolioId);
-		portfolioRepository.incrementLikeCount(portfolioId);
-	}
-
 	// ============ Private 헬퍼 메서드 ============
-
 	private void createCategoryMappings(Portfolio portfolio, List<Long> categoryIds) {
 		for (Long categoryId : categoryIds) {
 			PortfolioCategory category = categoryRepository.findById(categoryId)
 					.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다: " + categoryId));
 
+			// existsByPortfolioAndPortfolioCategory 메서드 활용
 			if (!portfolioMapRepository.existsByPortfolioAndPortfolioCategory(portfolio, category)) {
 				PortfolioMap mapping = new PortfolioMap();
 				mapping.setPortfolio(portfolio);
@@ -306,6 +279,7 @@ public class PortfolioService {
 	}
 
 	private void updateCategoryMappings(Portfolio portfolio, List<Long> categoryIds) {
+		// deleteByPortfolio 메서드 활용
 		portfolioMapRepository.deleteByPortfolio(portfolio);
 		if (categoryIds != null && !categoryIds.isEmpty()) {
 			createCategoryMappings(portfolio, categoryIds);

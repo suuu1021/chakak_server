@@ -6,8 +6,9 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "PORTFOLIO_MAP")
+@Table(name = "PORTFOLIO_CATEGORY_MAP")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,18 +17,18 @@ public class PortfolioMap {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "map_id")
-	private Long mapId;
+	@Column(name = "PORTFOLIO_MAP_ID")
+	private Long portfolioMapId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "portfolio_id", nullable = false)
+	@JoinColumn(name = "PORTFOLIO_ID", nullable = false)
 	private Portfolio portfolio;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "category_id", nullable = false)
+	@JoinColumn(name = "PORTFOLIO_CATEGORY_ID", nullable = false)
 	private PortfolioCategory portfolioCategory;
 
-	@Column(name = "created_at", nullable = false)
+	@Column(name = "CREATED_AT", nullable = false)
 	private LocalDateTime createdAt;
 
 	@PrePersist
@@ -43,7 +44,7 @@ public class PortfolioMap {
 		PortfolioMap that = (PortfolioMap) o;
 		return portfolio != null && portfolioCategory != null &&
 				portfolio.getPortfolioId().equals(that.portfolio.getPortfolioId()) &&
-				portfolioCategory.getCategoryId().equals(that.portfolioCategory.getCategoryId());
+				portfolioCategory.getPortfolioCategoryId().equals(that.portfolioCategory.getPortfolioCategoryId());
 	}
 
 	@Override

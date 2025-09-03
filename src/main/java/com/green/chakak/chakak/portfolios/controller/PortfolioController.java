@@ -136,10 +136,4 @@ public class PortfolioController {
 		return ResponseEntity.ok(new ApiUtil<>("카테고리가 추가되었습니다."));
 	}
 
-	// 좋아요 증가
-	@PostMapping("/{portfolioId}/like")
-	public ResponseEntity<?> likePortfolio(@PathVariable Long portfolioId) {
-		portfolioService.increaseLike(portfolioId);
-		return ResponseEntity.ok(new ApiUtil<>("좋아요가 추가되었습니다."));
-	}
 }
