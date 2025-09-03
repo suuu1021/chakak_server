@@ -152,7 +152,20 @@ public class BookingInfoService {
     bookingInfo.setStatus(status);
     }
 
+    // TODO - 리뷰 남길 시 사용할 서비스
     // (유저) 리뷰남길시 상태값 변경(리뷰 작성완료)
+    @Transactional
+    public void photoReviewStatus(Long bookingInfoId,String status ,LoginUser loginUser){
+        BookingInfo bookingInfo = bookingInfoJpaRepository.findById(bookingInfoId)
+                .orElseThrow(() -> new Exception404("존재하지 않는 예약 내역입니다"));
+        if (!bookingInfo.getUserProfile().getUser().getUserId().equals(loginUser.getId())){
+            throw new Exception403("혜당 서비스에 리뷰를 남길 수 없습니다.");
+        }
+        if(!"촬영완료".equals(bookingInfo.getStatus())){
+            throw new Exception400("촬용을 완료한 서비스에만 리뷰 작성처리가 가능합니다.");
+        }
+        bookingInfo.setStatus(status);
+    }
 
 
 }
