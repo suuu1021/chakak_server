@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -65,11 +66,20 @@ public class BookingInfoService {
     }
 
 
-//    // 예약 상세 조회
-//    @Transactional
-//    public BookingInfoResponse.BookingDetail findByDetailList(){
-//
-//    }
+    // 예약 상세 조회
+    @Transactional
+    public BookingInfoResponse.BookingDetailDTO findByDetailList(LoginUser loginUser, Long bookingInfoId){
+        BookingInfo bookingInfo = bookingInfoJpaRepository.findById(bookingInfoId)
+                .orElseThrow(() -> new Exception404("존재하지 않는 예약입니다."));
+
+        Long userId = bookingInfo.getUserProfile().getUser().getUserId();
+        Long photographerUserId = bookingInfo.getPhotographerProfile().getUser().getUserId();
+
+        if(!loginUser.getId().equals(userId) && !loginUser.getId().equals(photographerUserId)){
+            throw new Exception403("해당 예약 정보를조회할 권한이 없습니다.");
+        }
+        return new BookingInfoResponse.BookingDetailDTO(bookingInfo);
+    }
 
 
     // 예약하기

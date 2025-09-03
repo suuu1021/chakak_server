@@ -32,8 +32,12 @@ public class BookingInfoRestController {
         return ResponseEntity.ok(bookingInfoService.bookingPhotographerListDTO(loginUser,userId));
     }
 
-
     // [세부사항] 예약 사항 세부목록
+    @GetMapping("/booking/{bookingInfoId}/detail")
+    public ResponseEntity<?> bookingDetail(@PathVariable(name = "bookingInfoId")Long bookingInfoId,
+                                           @RequestAttribute(value = Define.LOGIN_USER)LoginUser loginUser){
+        return ResponseEntity.ok(bookingInfoService.findByDetailList(loginUser,bookingInfoId));
+    }
 
     // 예약하기
     @PostMapping("/booking/save")
