@@ -3,10 +3,16 @@ package com.green.chakak.chakak.booking.booking_info;
 import com.green.chakak.chakak.account.user.LoginUser;
 import com.green.chakak.chakak.account.user.User;
 import com.green.chakak.chakak.account.user.UserJpaRepository;
+import com.green.chakak.chakak.account.user_profile.UserProfile;
 import com.green.chakak.chakak.account.user_profile.UserProfileJpaRepository;
+import com.green.chakak.chakak.booking.domain.BookingInfo;
 import com.green.chakak.chakak.global.errors.exception.Exception403;
 import com.green.chakak.chakak.global.errors.exception.Exception404;
+import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
+import com.green.chakak.chakak.photo.service.repository.PhotoServiceJpaRepository;
+import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
+import com.green.chakak.chakak.photographer.service.repository.PhotographerCategoryRepository;
 import com.green.chakak.chakak.photographer.service.repository.PhotographerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +29,8 @@ public class BookingInfoService {
     private final UserJpaRepository userJpaRepository;
     private final UserProfileJpaRepository userProfileJpaRepository;
     private final PhotographerRepository photographerRepository;
+    private final PhotoServiceJpaRepository photoServiceJpaRepository;
+    private final PhotographerCategoryRepository photographerCategoryRepository;
 
 
     // 예약 조회(유저 입장)
@@ -56,6 +64,28 @@ public class BookingInfoService {
 
 
     // 예약하기
+    @Transactional
+    public BookingInfoResponse.SaveDTO save(BookingInfoRequest.CreateDTO createDTO, LoginUser loginUser){
+        UserProfile userProfile = userProfileJpaRepository.findByUserId(loginUser.getId())
+                .orElseThrow(() -> new Exception404("존재하지 않는 일반 사용자입니다."));
+
+        PhotographerProfile photographerProfile = photographerRepository.findById(createDTO.getPhotographerProfileId())
+                .orElseThrow(() -> new Exception404("존재하지 않는 작가입니다."));
+
+        PhotographerCategory photographerCategory = photographerCategoryRepository.findById(createDTO.getPhotographerCategoryId())
+                .orElseThrow(() -> new Exception404("존재하지 않는 카테고리입니다."));
+
+        PhotoServiceInfo photoServiceInfo = photoServiceJpaRepository.findById(createDTO.getPhotoServiceId())
+                .orElseThrow(() -> new Exception404("존재하지 않는 포토서비스입니다"));
+//        BookingInfo bookingInfo = BookingInfo.builder()
+//                .userProfile(userProfile)
+//                .photographerProfile(photographerProfile)
+//                .photoServiceInfo(photoServiceInfo)
+//                .build();
+        BookingInfo bookingInfo = createDTO.toEntity(userProfile, photographerProfile, photographerCategory, photoServiceInfo);
+         BookingInfo savedBookingInfo = bookingInfoJpaRepository.save(bookingInfo);
+        return new BookingInfoResponse.SaveDTO(savedBookingInfo);
+    }
 
 
     // 예약 정보 변경

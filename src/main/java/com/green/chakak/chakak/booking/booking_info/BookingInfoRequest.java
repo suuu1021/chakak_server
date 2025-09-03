@@ -19,9 +19,9 @@ public class BookingInfoRequest {
     @Data
     public static class CreateDTO{
 
-//        private Long photographerProfileId;   // 포토그래퍼 선택
-//        private Long photographerCategoryId;  // 카테고리 선택
-//        private Long photographerServiceId;   // 서비스 선택
+        private Long photographerProfileId;   // 포토그래퍼 선택
+        private Long photographerCategoryId;  // 카테고리 선택
+        private Long photoServiceId;   // 서비스 선택
 
         @NotNull(message = "촬영 희망일을 선택하세요")
         private LocalDate bookingDate;             // 촬영 희망일

@@ -8,6 +8,41 @@ import java.time.LocalTime;
 
 public class BookingInfoResponse {
 
+
+    @Data
+    public static class SaveDTO{
+        private Long bookingInfoId;
+        private Long userProfileId;
+        private Long photographerProfileId;
+        private Long photographerCategoryId;
+        private Long photoServiceInfoId;
+        private LocalDate bookingDate;
+        private LocalTime bookingTime;
+        private String location;
+        private int budget;
+        private String specialRequest;
+        private String status;
+        private int participantCount;
+        private int shootingDuration;
+
+        public SaveDTO(BookingInfo bookingInfo) {
+            this.bookingInfoId = bookingInfo.getBookingInfoId();
+            this.userProfileId = bookingInfo.getUserProfile().getUserProfileId();
+            this.photographerProfileId = bookingInfo.getPhotographerProfile().getPhotographerId();
+            this.photographerCategoryId = bookingInfo.getPhotographerCategory().getCategoryId();
+            this.photoServiceInfoId = bookingInfo.getPhotoServiceInfo().getServiceId();
+            this.bookingDate = bookingInfo.getBookingDate();
+            this.bookingTime = bookingInfo.getBookingTime();
+            this.location = bookingInfo.getLocation();
+            this.budget = bookingInfo.getBudget();
+            this.specialRequest = bookingInfo.getSpecialRequest();
+            this.status = bookingInfo.getStatus();
+            this.participantCount = bookingInfo.getParticipantCount();
+            this.shootingDuration = bookingInfo.getShootingDuration();
+        }
+    }
+
+
     // 예약 리스트(유저 입장)
     @Data
     public static class BookingUserListDTO{
