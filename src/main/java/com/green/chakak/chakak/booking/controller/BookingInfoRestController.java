@@ -1,13 +1,13 @@
-package com.green.chakak.chakak.booking.booking_info;
+package com.green.chakak.chakak.booking.controller;
 
 import com.green.chakak.chakak.account.user.LoginUser;
+import com.green.chakak.chakak.booking.service.request.BookingInfoRequest;
+import com.green.chakak.chakak.booking.service.BookingInfoService;
 import com.green.chakak.chakak.global.utils.ApiUtil;
 import com.green.chakak.chakak.global.utils.Define;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.expression.Operation;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,16 +42,29 @@ public class BookingInfoRestController {
     // 예약하기
     @PostMapping("/booking/save")
     public ResponseEntity<?> saveBooking(@Valid @RequestBody BookingInfoRequest.CreateDTO createDTO, Errors errors,
-                                           @RequestAttribute(value = Define.LOGIN_USER) LoginUser loginUser){
+                                         @RequestAttribute(value = Define.LOGIN_USER) LoginUser loginUser){
         bookingInfoService.save(createDTO,loginUser);
         return ResponseEntity.ok(new ApiUtil<>("서비스 생성이 완료 되었습니다"));
     }
 
-    // 예약 확정 하기
+    // 예약 확정 하기(포토그래퍼)
+    @PutMapping("booking/{bookingInfoId}/photographer-confirm")
+    public ResponseEntity<?> photographerConfirm(@PathVariable(name = "bookingInfoId") Long bookingInfoId,
+                                        @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser){
+        bookingInfoService.userCancelStatus(bookingInfoId, "예약승낙", loginUser);
+        return ResponseEntity.ok(new ApiUtil<>("예약 승낙 처리가 완료 되었습니다"));
+    }
+    // 예약 거절 하기(포토그래퍼)
+    @PutMapping("booking/{bookingInfoId}/photographer-cancel")
+    public ResponseEntity<?> photographerCancel(@PathVariable(name = "bookingInfoId") Long bookingInfoId,
+                                        @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser){
+        bookingInfoService.userCancelStatus(bookingInfoId, "예약거절", loginUser);
+        return ResponseEntity.ok(new ApiUtil<>("예약 거절 처리가 완료 되었습니다"));
+    }
 
     // 촬영 완료 하기
 
-    // 예약 취소하기
+    // 예약 취소하기(유저)
     @PutMapping("booking/{bookingInfoId}/user-cancel")
     public ResponseEntity<?> userCancel(@PathVariable(name = "bookingInfoId") Long bookingInfoId,
                                         @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser){
@@ -59,6 +72,6 @@ public class BookingInfoRestController {
         return ResponseEntity.ok(new ApiUtil<>("예약 취소 처리가 완료 되었습니다"));
     }
 
-    // 예약 거절 하기
+
 
 }

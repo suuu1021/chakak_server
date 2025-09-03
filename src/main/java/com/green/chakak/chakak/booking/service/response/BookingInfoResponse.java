@@ -1,4 +1,4 @@
-package com.green.chakak.chakak.booking.booking_info;
+package com.green.chakak.chakak.booking.service.response;
 
 import com.green.chakak.chakak.booking.domain.BookingInfo;
 import lombok.Data;

@@ -1,5 +1,9 @@
-package com.green.chakak.chakak.booking.booking_cancel_info;
+package com.green.chakak.chakak.booking.service;
 
+import com.green.chakak.chakak.booking.domain.BookingCancelInfo;
+import com.green.chakak.chakak.booking.service.repository.BookingCancelInfoJpaRepository;
+import com.green.chakak.chakak.booking.service.request.BookingCancelInfoRequest;
+import com.green.chakak.chakak.booking.service.response.BookingCancelInfoResponse;
 import com.green.chakak.chakak.global.utils.PageUtil.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

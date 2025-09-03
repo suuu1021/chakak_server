@@ -1,5 +1,6 @@
-package com.green.chakak.chakak.booking.booking_cancel_info;
+package com.green.chakak.chakak.booking.service.repository;
 
+import com.green.chakak.chakak.booking.domain.BookingCancelInfo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

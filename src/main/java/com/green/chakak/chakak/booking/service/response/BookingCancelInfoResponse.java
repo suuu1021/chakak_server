@@ -1,5 +1,6 @@
-package com.green.chakak.chakak.booking.booking_cancel_info;
+package com.green.chakak.chakak.booking.service.response;
 
+import com.green.chakak.chakak.booking.domain.BookingCancelInfo;
 import lombok.Builder;
 import lombok.Data;
 

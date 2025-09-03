@@ -1,4 +1,4 @@
-package com.green.chakak.chakak.booking.booking_cancel_info;
+package com.green.chakak.chakak.booking.service.request;
 
 import lombok.Getter;
 
