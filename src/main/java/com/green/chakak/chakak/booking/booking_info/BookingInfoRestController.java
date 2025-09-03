@@ -47,9 +47,18 @@ public class BookingInfoRestController {
         return ResponseEntity.ok(new ApiUtil<>("서비스 생성이 완료 되었습니다"));
     }
 
+    // 예약 확정 하기
 
-    // 예약 변경 하기
+    // 촬영 완료 하기
 
     // 예약 취소하기
+    @PutMapping("booking/{bookingInfoId}/user-cancel")
+    public ResponseEntity<?> userCancel(@PathVariable(name = "bookingInfoId") Long bookingInfoId,
+                                        @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser){
+        bookingInfoService.userCancelStatus(bookingInfoId, "예약취소", loginUser);
+        return ResponseEntity.ok(new ApiUtil<>("예약 취소 처리가 완료 되었습니다"));
+    }
+
+    // 예약 거절 하기
 
 }

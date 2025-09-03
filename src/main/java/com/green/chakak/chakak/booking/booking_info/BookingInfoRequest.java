@@ -34,6 +34,7 @@ public class BookingInfoRequest {
 
         @PositiveOrZero(message = "금액은 0 이상이어야 합니다.")
         private int budget;                   // 예산
+
         private String specialRequest;        // 특별 요청사항
 
         @Min(value = 1, message = "최소 인원수는 1명 이상이어야 합니다")
@@ -50,14 +51,14 @@ public class BookingInfoRequest {
                  .photographerProfile(photographerProfile)         // 포토그래퍼
                  .photographerCategory(photographerCategory)       // 카테고리
                  .photoServiceInfo(photoServiceInfo)         // 서비스
-                 .bookingDate(bookingDate)                        // DTO 값
-                 .bookingTime(bookingTime)                        // DTO 값
-                 .location(location)                              // DTO 값
-                 .budget(budget)                                  // DTO 값
-                 .specialRequest(specialRequest)                  // DTO 값
-                 .status("예약")                               // 예약 초기 상태 (기본값)
-                 .participantCount(participantCount)              // DTO 값
-                 .shootingDuration(shootingDuration)              // DTO 값
+                 .bookingDate(this.bookingDate)                        // DTO 값
+                 .bookingTime(this.bookingTime)                        // DTO 값
+                 .location(this.location)                              // DTO 값
+                 .budget(this.budget)                                  // DTO 값
+                 .specialRequest(this.specialRequest)                  // DTO 값
+                 .status("예약대기")                               // 예약 초기 상태 (기본값)
+                 .participantCount(this.participantCount)              // DTO 값
+                 .shootingDuration(this.shootingDuration)              // DTO 값
                  .build();
         }
 
