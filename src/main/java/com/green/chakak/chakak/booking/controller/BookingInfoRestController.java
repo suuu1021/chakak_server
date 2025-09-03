@@ -63,6 +63,13 @@ public class BookingInfoRestController {
     }
 
     // 촬영 완료 하기
+    @PutMapping("booking/{bookingInfoId}/photographer-service-end")
+    public ResponseEntity<?> photographerServiceEnd(@PathVariable(name = "bookingInfoId") Long bookingInfoId,
+                                                @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser){
+        bookingInfoService.userCancelStatus(bookingInfoId, "촬영완료", loginUser);
+        return ResponseEntity.ok(new ApiUtil<>("촬영 완료 처리가 완료 되었습니다"));
+    }
+
 
     // 예약 취소하기(유저)
     @PutMapping("booking/{bookingInfoId}/user-cancel")

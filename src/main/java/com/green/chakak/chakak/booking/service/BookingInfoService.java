@@ -139,6 +139,18 @@ public class BookingInfoService {
     }
 
     // (포토그래퍼입장) 촬영 완료
+    @Transactional
+    public void photographerServiceEndStatus(Long bookingInfoId,String status ,LoginUser loginUser){
+        BookingInfo bookingInfo = bookingInfoJpaRepository.findById(bookingInfoId)
+                .orElseThrow(() -> new Exception404("존재하지 않는 예약 내역입니다."));
+    if(!bookingInfo.getPhotographerProfile().getUser().getUserId().equals(loginUser.getId())){
+        throw new Exception403("혜당 예약 정보를 수정할 권한이 없습니다.");
+    }
+    if(!"예약승낙".equals(bookingInfo.getStatus())){
+        throw new Exception400("예약 승낙된 상태일시만 촬용 완료처리 가능합니다.");
+    }
+    bookingInfo.setStatus(status);
+    }
 
     // (유저) 리뷰남길시 상태값 변경(리뷰 작성완료)
 
