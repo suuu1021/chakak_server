@@ -1,4 +1,4 @@
-package com.green.chakak.chakak.booking.booking_info;
+package com.green.chakak.chakak.booking.service.repository;
 
 import com.green.chakak.chakak.booking.domain.BookingInfo;
 import org.springframework.data.jpa.repository.JpaRepository;

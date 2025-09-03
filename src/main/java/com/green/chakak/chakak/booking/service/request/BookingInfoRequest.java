@@ -1,4 +1,4 @@
-package com.green.chakak.chakak.booking.booking_info;
+package com.green.chakak.chakak.booking.service.request;
 
 import com.green.chakak.chakak.account.user_profile.UserProfile;
 import com.green.chakak.chakak.booking.domain.BookingInfo;

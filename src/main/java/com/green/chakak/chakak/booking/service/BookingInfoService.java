@@ -1,4 +1,4 @@
-package com.green.chakak.chakak.booking.booking_info;
+package com.green.chakak.chakak.booking.service;
 
 import com.green.chakak.chakak.account.user.LoginUser;
 import com.green.chakak.chakak.account.user.User;
@@ -6,6 +6,9 @@ import com.green.chakak.chakak.account.user.UserJpaRepository;
 import com.green.chakak.chakak.account.user_profile.UserProfile;
 import com.green.chakak.chakak.account.user_profile.UserProfileJpaRepository;
 import com.green.chakak.chakak.booking.domain.BookingInfo;
+import com.green.chakak.chakak.booking.service.repository.BookingInfoJpaRepository;
+import com.green.chakak.chakak.booking.service.request.BookingInfoRequest;
+import com.green.chakak.chakak.booking.service.response.BookingInfoResponse;
 import com.green.chakak.chakak.global.errors.exception.Exception400;
 import com.green.chakak.chakak.global.errors.exception.Exception403;
 import com.green.chakak.chakak.global.errors.exception.Exception404;
@@ -20,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -122,17 +124,23 @@ public class BookingInfoService {
         bookingInfo.setStatus(status);
     }
 
-//     (포토그래퍼입장)예약 정보 변경
-//    @Transactional
-//    public void photographerUpdateStatus(Long bookingInfoId,String status ,LoginUser loginUser){
-//        BookingInfo bookingInfo = bookingInfoJpaRepository.findById(bookingInfoId)
-//                .orElseThrow(() -> new Exception404("존재하지 않는 예약 내역입니다."));
-//        if(!bookingInfo.)
-//
-//    }
+//     (포토그래퍼입장)예약 승낙,거절
+    @Transactional
+    public void photographerUpdateStatus(Long bookingInfoId,String status ,LoginUser loginUser){
+        BookingInfo bookingInfo = bookingInfoJpaRepository.findById(bookingInfoId)
+                .orElseThrow(() -> new Exception404("존재하지 않는 예약 내역입니다."));
+        if(!bookingInfo.getPhotographerProfile().getUser().getUserId().equals(loginUser.getId())){
+            throw new Exception403("해당 예약 정보를 수정할 권한이 없습니다.");
+        }
+        if(!"예약대기".equals(bookingInfo.getStatus())){
+            throw new Exception400("예약대기 상태일시만 예약 승낙 가능합니다.");
+        }
+        bookingInfo.setStatus(status);
+    }
 
+    // (포토그래퍼입장) 촬영 완료
 
-    // 예약 취소
+    // (유저) 리뷰남길시 상태값 변경(리뷰 작성완료)
 
 
 }
