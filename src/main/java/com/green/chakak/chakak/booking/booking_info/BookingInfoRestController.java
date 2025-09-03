@@ -26,6 +26,11 @@ public class BookingInfoRestController {
     }
 
     // [포토그래퍼] 나의 예약 목록
+    @GetMapping("/booking/photographer/{userId}/list")
+    public ResponseEntity<?> photographerBookingList(@PathVariable(name = "userId")Long userId,
+                                             @RequestAttribute(value = Define.LOGIN_USER) LoginUser loginUser){
+        return ResponseEntity.ok(bookingInfoService.bookingPhotographerListDTO(loginUser,userId));
+    }
 
 
     // [세부사항] 예약 사항 세부목록

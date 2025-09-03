@@ -49,11 +49,20 @@ public class BookingInfoService {
     }
 
 
-//    // 예약 조회(포토그래퍼 입장)
-//    @Transactional
-//    public BookingInfoResponse.BookingPhotographerList findByPhotographerList(){
-//
-//    }
+    // 예약 조회(포토그래퍼 입장)
+    @Transactional
+    public List<BookingInfoResponse.BookingUserListDTO> bookingPhotographerListDTO(LoginUser loginUser, Long userId){
+        User user = userJpaRepository.findById(loginUser.getId())
+                .orElseThrow(() -> new Exception404("존재하지 않는 유저입니다."));
+
+        if(!user.getUserId().equals(userId)){
+            throw new Exception403("본인의 예약만 조회가능합니다.");
+        }
+        return bookingInfoJpaRepository.findByPhotographerId(userId)
+                .stream()
+                .map(BookingInfoResponse.BookingUserListDTO::new)
+                .toList();
+    }
 
 
 //    // 예약 상세 조회

@@ -9,10 +9,17 @@ import java.util.List;
 
 public interface BookingInfoJpaRepository extends JpaRepository<BookingInfo, Long> {
 
-    @Query("SELECT b FROM BookingInfo b JOIN FETCH b.userProfile up " +
+    @Query("SELECT b FROM BookingInfo b " +
+            "JOIN FETCH b.userProfile up " +
             "JOIN FETCH up.user u " +
             "JOIN FETCH b.photographerProfile pp " +
             "WHERE u.userId = :userId")
     List<BookingInfo> findByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT b FROM BookingInfo b " +
+            "JOIN FETCH b.photographerProfile pp " +
+            "JOIN FETCH b.userProfile up " +
+            "WHERE pp.photographerProfileId = :photographerProfileId")
+    List<BookingInfo> findByPhotographerId(@Param("photographerProfileId") Long photographerProfileId);
 
 }
