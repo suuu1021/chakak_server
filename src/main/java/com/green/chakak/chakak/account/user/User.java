@@ -26,7 +26,7 @@ public class User {
         this.userType = userType;
         this.status = status;
     }
-
+//
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
