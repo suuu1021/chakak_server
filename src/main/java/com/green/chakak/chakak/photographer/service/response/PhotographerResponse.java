@@ -103,7 +103,7 @@ public class PhotographerResponse {
 
         public mapDTO(PhotographerMap map) {
             this.mappingId = map.getMappingId();
-            this.photographerId = map.getPhotographerProfile().getPhotographerId();
+            this.photographerId = map.getPhotographerProfile().getPhotographerProfileId();
             PhotographerCategory category = map.getPhotographerCategory();
             this.categoryId = category.getCategoryId();
             this.categoryName = category.getCategoryName();
