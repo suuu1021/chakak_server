@@ -28,7 +28,7 @@ public class BookingInfoResponse {
         public SaveDTO(BookingInfo bookingInfo) {
             this.bookingInfoId = bookingInfo.getBookingInfoId();
             this.userProfileId = bookingInfo.getUserProfile().getUserProfileId();
-            this.photographerProfileId = bookingInfo.getPhotographerProfile().getPhotographerId();
+            this.photographerProfileId = bookingInfo.getPhotographerProfile().getPhotographerProfileId();
             this.photographerCategoryId = bookingInfo.getPhotographerCategory().getCategoryId();
             this.photoServiceInfoId = bookingInfo.getPhotoServiceInfo().getServiceId();
             this.bookingDate = bookingInfo.getBookingDate();
@@ -53,7 +53,7 @@ public class BookingInfoResponse {
         private int budget;
 
         public BookingUserListDTO(BookingInfo bookingInfo){
-         this.photographerProfileId = bookingInfo.getPhotographerProfile().getPhotographerId();
+         this.photographerProfileId = bookingInfo.getPhotographerProfile().getPhotographerProfileId();
          this.bookingDate = bookingInfo.getBookingDate();
          this.bookingTime = bookingInfo.getBookingTime();
          this.location = bookingInfo.getLocation();
@@ -92,7 +92,7 @@ public class BookingInfoResponse {
         private String specialRequest;
 
         public BookingDetailDTO(BookingInfo bookingInfo) {
-            this.photographerProfileId = bookingInfo.getPhotographerProfile().getPhotographerId();
+            this.photographerProfileId = bookingInfo.getPhotographerProfile().getPhotographerProfileId();
             this.userProfileId = bookingInfo.getUserProfile().getUserProfileId();
             this.bookingDate = bookingInfo.getBookingDate();
             this.bookingTime = bookingInfo.getBookingTime();
