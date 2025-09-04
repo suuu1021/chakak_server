@@ -16,7 +16,7 @@ public class PhotographerResponse {
         private String status;
 
         public SaveDTO(PhotographerProfile profile) {
-            this.photographerId = profile.getPhotographerId();
+            this.photographerId = profile.getPhotographerProfileId();
             this.userId = profile.getUser().getUserId();
             this.businessName = profile.getBusinessName();
             this.introduction = profile.getIntroduction();
@@ -54,7 +54,7 @@ public class PhotographerResponse {
         private String status;
 
         public DetailDTO(PhotographerProfile profile) {
-            this.photographerId = profile.getPhotographerId();
+            this.photographerId = profile.getPhotographerProfileId();
             this.userId = profile.getUser().getUserId();
             this.businessName = profile.getBusinessName();
             this.introduction = profile.getIntroduction();
@@ -73,7 +73,7 @@ public class PhotographerResponse {
         private String status;
 
         public ListDTO(PhotographerProfile profile) {
-            this.photographerId = profile.getPhotographerId();
+            this.photographerId = profile.getPhotographerProfileId();
             this.businessName = profile.getBusinessName();
             this.location = profile.getLocation();
             this.experienceYears = profile.getExperienceYears();
