@@ -10,7 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
 
-
+//
 @Entity
 @Table(name = "user_profile")
 @Data
