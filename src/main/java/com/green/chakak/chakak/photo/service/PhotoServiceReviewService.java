@@ -6,8 +6,8 @@
 //import com.green.chakak.chakak.photo.service.repository.PhotoServiceJpaRepository;
 //import com.green.chakak.chakak.photo.service.request.PhotoServiceReviewRequest;
 //import com.green.chakak.chakak.photo.service.response.PhotoServiceReviewResponse;
-//import com.green.chakak.chakak.account.user.User;
-//import com.green.chakak.chakak.account.user.UserJpaRepository;
+//import com.green.chakak.chakak.account.domain.User;
+//import com.green.chakak.chakak.account.service.repository.UserJpaRepository;
 //import lombok.RequiredArgsConstructor;
 //import org.springframework.stereotype.Service;
 //import org.springframework.transaction.annotation.Transactional;

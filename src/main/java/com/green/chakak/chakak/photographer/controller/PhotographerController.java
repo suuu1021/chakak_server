@@ -1,10 +1,7 @@
 package com.green.chakak.chakak.photographer.controller;
 
-import com.green.chakak.chakak.account.user.User;
-import com.green.chakak.chakak.global.errors.exception.Exception400;
-import com.green.chakak.chakak.global.errors.exception.Exception403;
+import com.green.chakak.chakak.account.domain.User;
 import com.green.chakak.chakak.global.utils.Define;
-import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photographer.service.PhotographerService;
 import com.green.chakak.chakak.photographer.service.request.PhotographerRequest;
 import com.green.chakak.chakak.photographer.service.response.PhotographerResponse;

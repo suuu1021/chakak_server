@@ -1,12 +1,8 @@
 package com.green.chakak.chakak.photo.controller;
 
-import com.green.chakak.chakak.account.user.LoginUser;
-import com.green.chakak.chakak.account.user.User;
-import com.green.chakak.chakak.global.errors.exception.Exception400;
-import com.green.chakak.chakak.global.errors.exception.Exception500;
+import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.global.utils.ApiUtil;
 import com.green.chakak.chakak.global.utils.Define;
-import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
 import com.green.chakak.chakak.photo.service.PhotoService;
 import com.green.chakak.chakak.photo.service.request.PhotoServiceInfoRequest;
 import com.green.chakak.chakak.photo.service.response.PhotoServiceResponse;

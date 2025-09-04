@@ -1,6 +1,6 @@
 package com.green.chakak.chakak.photographer.domain;
 
-import com.green.chakak.chakak.account.user.User;
+import com.green.chakak.chakak.account.domain.User;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;

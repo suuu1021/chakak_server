@@ -1,5 +1,8 @@
-package com.green.chakak.chakak.account.user_type;
+package com.green.chakak.chakak.account.service;
 
+import com.green.chakak.chakak.account.domain.UserType;
+import com.green.chakak.chakak.account.service.repository.UserTypeRepository;
+import com.green.chakak.chakak.account.service.request.UserTypeRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;

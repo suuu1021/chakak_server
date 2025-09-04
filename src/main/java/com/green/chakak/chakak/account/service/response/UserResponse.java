@@ -1,10 +1,9 @@
-package com.green.chakak.chakak.account.user;
+package com.green.chakak.chakak.account.service.response;
 
+import com.green.chakak.chakak.account.domain.User;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 public class UserResponse {

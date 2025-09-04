@@ -1,6 +1,6 @@
 package com.green.chakak.chakak.booking.domain;
 
-import com.green.chakak.chakak.account.user_profile.UserProfile;
+import com.green.chakak.chakak.account.domain.UserProfile;
 import com.green.chakak.chakak.booking.booking_info.BookingInfo;
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,23 +1,28 @@
-package com.green.chakak.chakak.account.user_profile;
+package com.green.chakak.chakak.account.service;
 
-import com.green.chakak.chakak.account.user.LoginUser;
-import com.green.chakak.chakak.account.user.User;
-import com.green.chakak.chakak.account.user.UserJpaRepository;
+import com.green.chakak.chakak.account.domain.LoginUser;
+import com.green.chakak.chakak.account.domain.User;
+import com.green.chakak.chakak.account.domain.UserProfile;
+import com.green.chakak.chakak.account.service.repository.UserJpaRepository;
+import com.green.chakak.chakak.account.service.repository.UserProfileJpaRepository;
+import com.green.chakak.chakak.account.service.request.UserProfileRequest;
+import com.green.chakak.chakak.account.service.response.UserProfileResponse;
 import com.green.chakak.chakak.global.errors.exception.Exception400;
 import com.green.chakak.chakak.global.errors.exception.Exception404;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)
+@Slf4j
 public class UserProfileService {
 
     private final UserProfileJpaRepository userProfileJpaRepository;
     private final UserJpaRepository userJpaRepository;
+
 
     @Transactional
     public UserProfileResponse.DetailDTO createdProfile(UserProfileRequest.CreateDTO createDTO, LoginUser loginUser){
@@ -45,7 +50,7 @@ public class UserProfileService {
                 throw new Exception400("이미 사용중인 닉네임입니다.");
         });
 
-        userProfile.update(updateDTO.getNickName(),updateDTO.getIntroduce());
+        userProfile.update(updateDTO);
         return new UserProfileResponse.UpdateDTO(userProfile);
     }
 

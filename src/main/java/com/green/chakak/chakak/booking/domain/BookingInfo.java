@@ -1,6 +1,6 @@
 package com.green.chakak.chakak.booking.domain;
 
-import com.green.chakak.chakak.account.user_profile.UserProfile;
+import com.green.chakak.chakak.account.domain.UserProfile;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
 import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
