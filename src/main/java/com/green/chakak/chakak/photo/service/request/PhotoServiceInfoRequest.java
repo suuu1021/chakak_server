@@ -2,7 +2,10 @@ package com.green.chakak.chakak.photo.service.request;
 
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
+import jakarta.validation.Valid;
 import lombok.Data;
+
+import java.util.List;
 
 public class PhotoServiceInfoRequest {
 
@@ -11,6 +14,10 @@ public class PhotoServiceInfoRequest {
         private String title;
         private String description;
         private String imageData;
+
+        // 추가할 필드
+        @Valid
+        private List<PriceInfoRequest.CreateDTO> priceInfoList;  // 가격정보 리스트
 
         public PhotoServiceInfo toEntity(PhotographerProfile userInfo) {
             return PhotoServiceInfo.builder()

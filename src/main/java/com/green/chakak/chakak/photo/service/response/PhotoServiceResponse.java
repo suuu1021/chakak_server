@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 public class PhotoServiceResponse {
 
@@ -39,6 +40,7 @@ public class PhotoServiceResponse {
         private String imageData;
         private Timestamp createdAt;
         private Timestamp updatedAt;
+        private List<PriceInfoResponse.PriceInfoListDTO> priceInfoList;  // 가격정보 추가
         private boolean canEdit;
 
         @Builder

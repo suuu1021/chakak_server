@@ -25,6 +25,9 @@ public class PriceInfo {
     @ManyToOne(fetch = FetchType.LAZY)
     private PhotoServiceInfo photoServiceInfo;
 
+    @Column(nullable = false, length = 30)
+    private String title;
+
     @Column(nullable = false)
     private int participantCount;
 
@@ -48,9 +51,10 @@ public class PriceInfo {
     private Timestamp updatedAt;
 
     @Builder
-    public PriceInfo(Long priceInfoId, PhotoServiceInfo photoServiceInfo, int participantCount, int shootingDuration, int outfitChanges, String specialEquipment, boolean isMakeupService, Timestamp createdAt, Timestamp updatedAt) {
+    public PriceInfo(Long priceInfoId, PhotoServiceInfo photoServiceInfo, String title, int participantCount, int shootingDuration, int outfitChanges, String specialEquipment, boolean isMakeupService, Timestamp createdAt, Timestamp updatedAt) {
         this.priceInfoId = priceInfoId;
         this.photoServiceInfo = photoServiceInfo;
+        this.title = title;
         this.participantCount = participantCount;
         this.shootingDuration = shootingDuration;
         this.outfitChanges = outfitChanges;

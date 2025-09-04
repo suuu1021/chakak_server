@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface PhotoServiceJpaRepository extends JpaRepository<PhotoServiceInfo, Long> {
+
     @Query("SELECT ps FROM PhotoServiceInfo ps ORDER BY ps.serviceId DESC")
     Page<PhotoServiceInfo> findAllServiceInfo(Pageable pageable);
 
