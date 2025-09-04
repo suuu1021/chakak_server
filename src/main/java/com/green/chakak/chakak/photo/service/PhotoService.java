@@ -1,7 +1,7 @@
 package com.green.chakak.chakak.photo.service;
 
 import com.green.chakak.chakak.account.domain.LoginUser;
-import com.green.chakak.chakak.global.errors.exception.*;
+import com.green.chakak.chakak._global.errors.exception.*;
 import com.green.chakak.chakak.photo.domain.PhotoServiceCategory;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
 import com.green.chakak.chakak.photo.domain.PhotoServiceMapping;
@@ -20,7 +20,6 @@ import com.green.chakak.chakak.photo.service.response.PhotoServiceResponse;
 import com.green.chakak.chakak.photo.service.response.PriceInfoResponse;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photographer.service.repository.PhotographerRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

@@ -30,9 +30,9 @@ public class PhotographerRequest {
         @Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "상태는 ACTIVE 또는 INACTIVE만 가능합니다.")
         private String status;
 
-        public PhotographerProfile toEntity(User user) {
+        public PhotographerProfile toEntity(User searchUser) {
             return PhotographerProfile.builder()
-                    .user(user)
+                    .user(searchUser)
                     .businessName(this.businessName)
                     .introduction(this.introduction)
                     .location(this.location)

@@ -1,7 +1,7 @@
-package com.green.chakak.chakak.global.errors;
+package com.green.chakak.chakak._global.errors;
 
-import com.green.chakak.chakak.global.errors.exception.*;
-import com.green.chakak.chakak.global.utils.ApiUtil;
+import com.green.chakak.chakak._global.errors.exception.*;
+import com.green.chakak.chakak._global.utils.ApiUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

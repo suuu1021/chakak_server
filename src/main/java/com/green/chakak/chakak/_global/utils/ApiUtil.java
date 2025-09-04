@@ -1,4 +1,4 @@
-package com.green.chakak.chakak.global.utils;
+package com.green.chakak.chakak._global.utils;
 
 import lombok.Data;
 

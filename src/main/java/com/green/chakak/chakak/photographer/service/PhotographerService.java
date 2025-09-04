@@ -1,12 +1,11 @@
 package com.green.chakak.chakak.photographer.service;
 
+import com.green.chakak.chakak._global.errors.exception.Exception400;
+import com.green.chakak.chakak._global.errors.exception.Exception403;
+import com.green.chakak.chakak._global.errors.exception.Exception404;
+import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.account.domain.User;
-import com.green.chakak.chakak.account.domain.UserType;
 import com.green.chakak.chakak.account.service.repository.UserJpaRepository;
-import com.green.chakak.chakak.account.service.repository.UserTypeRepository;
-import com.green.chakak.chakak.global.errors.exception.Exception400;
-import com.green.chakak.chakak.global.errors.exception.Exception403;
-import com.green.chakak.chakak.global.errors.exception.Exception404;
 import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
 import com.green.chakak.chakak.photographer.domain.PhotographerMap;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
@@ -29,41 +28,39 @@ import java.util.stream.Collectors;
 public class PhotographerService {
 
     private final UserJpaRepository userJpaRepository;
-    private final UserTypeRepository userTypeRepository;
     private final PhotographerRepository photographerRepository;
     private final PhotographerCategoryRepository photographerCategoryRepository;
     private final PhotographerMapRepository photographerMapRepository;
 
     /**
-     * 포토그래퍼 가입
+     * 포토그래퍼 프로필 상세 정보 추가
      */
-    public PhotographerResponse.SaveDTO joinAsPhotographer(User user, PhotographerRequest.SaveProfile saveDTO) {
-        if (user.getUserType() != null && "photographer".equalsIgnoreCase(user.getUserType().getTypeCode())) {
-            throw new Exception400("이미 포토그래퍼 회원입니다.");
+    public PhotographerResponse.SaveDTO joinAsPhotographer(LoginUser loginUser, PhotographerRequest.SaveProfile saveDTO) {
+        // 1. 요청 사용자가 'photographer' 타입인지 확인 (권한 검사)
+        if (!"photographer".equalsIgnoreCase(loginUser.getUserTypeName())) {
+            throw new Exception403("포토그래퍼 회원만 프로필을 등록할 수 있습니다.");
         }
 
-        if (photographerRepository.existsByUser_UserId(user.getUserId())) {
+        // 2. 이미 프로필이 등록되어 있는지 확인 (중복 생성 방지)
+        if (photographerRepository.existsByUser_UserId(loginUser.getId())) {
             throw new Exception400("이미 등록된 프로필이 존재합니다.");
         }
 
-        // 1. 포토그래퍼 프로필 생성 및 저장
-        PhotographerProfile photographerProfile = saveDTO.toEntity(user);
-        PhotographerProfile saved = photographerRepository.save(photographerProfile);
+        // 3. 영속성 컨텍스트에 사용자 엔티티를 로드
+        User searchUser = userJpaRepository.findById(loginUser.getId()).orElseThrow(() -> new Exception404("해당 유저가 존재 하지 않습니다."));
 
-        // 2. 사용자의 역할을 'photographer'로 업데이트
-        UserType photographerUserType = userTypeRepository.findByTypeCode("photographer")
-                .orElseThrow(() -> new Exception404("photographer 역할을 찾을 수 없습니다."));
-        user.setUserType(photographerUserType);
-        userJpaRepository.save(user);
+        // 4. 포토그래퍼 프로필 생성 및 저장
+        PhotographerProfile photographerProfile = saveDTO.toEntity(searchUser);
+        PhotographerProfile saved = photographerRepository.save(photographerProfile);
 
         return new PhotographerResponse.SaveDTO(saved);
     }
 
     /**
-     * 포토그래퍼 정보 수정
+     * 포토그래퍼 프로필 상세 정보 수정
      */
-    public PhotographerResponse.UpdateDTO updatePhotographer(Long photographerId, PhotographerRequest.UpdateProfile updateDTO, User user) {
-        PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, user);
+    public PhotographerResponse.UpdateDTO updatePhotographer(Long photographerId, PhotographerRequest.UpdateProfile updateDTO, LoginUser loginUser) {
+        PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
 
         // 정보 업데이트
         photographer.update(updateDTO.getBusinessName(), updateDTO.getIntroduction(),
@@ -141,8 +138,8 @@ public class PhotographerService {
     /**
      * 포토그래퍼 활성화
      */
-    public PhotographerResponse.UpdateDTO activatePhotographer(Long photographerId, User user) {
-        PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, user);
+    public PhotographerResponse.UpdateDTO activatePhotographer(Long photographerId, LoginUser loginUser) {
+        PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
         photographer.changeStatus("ACTIVE");
 
         return new PhotographerResponse.UpdateDTO(photographer);
@@ -151,8 +148,8 @@ public class PhotographerService {
     /**
      * 포토그래퍼 비활성화
      */
-    public PhotographerResponse.UpdateDTO deactivatePhotographer(Long photographerId, User user) {
-        PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, user);
+    public PhotographerResponse.UpdateDTO deactivatePhotographer(Long photographerId, LoginUser loginUser) {
+        PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
         photographer.changeStatus("INACTIVE");
 
         return new PhotographerResponse.UpdateDTO(photographer);
@@ -161,8 +158,8 @@ public class PhotographerService {
     /**
      * 포토그래퍼에 카테고리 추가
      */
-    public PhotographerResponse.mapDTO addCategoryToPhotographer(Long photographerId, Long categoryId, User user) {
-        PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, user);
+    public PhotographerResponse.mapDTO addCategoryToPhotographer(Long photographerId, Long categoryId, LoginUser loginUser) {
+        PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
         PhotographerCategory category = photographerCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new Exception404("카테고리를 찾을 수 없습니다."));
 
@@ -193,8 +190,8 @@ public class PhotographerService {
     /**
      * 포토그래퍼에서 카테고리 제거
      */
-    public void removeCategoryFromPhotographer(Long photographerId, Long categoryId, User user) {
-        PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, user);
+    public void removeCategoryFromPhotographer(Long photographerId, Long categoryId, LoginUser loginUser) {
+        PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
         PhotographerCategory category = photographerCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new Exception404("카테고리를 찾을 수 없습니다."));
 
@@ -208,8 +205,8 @@ public class PhotographerService {
     /**
      * 포토그래퍼 완전 삭제 (물리적 삭제)
      */
-    public void removePhotographer(Long photographerId, User user) {
-        PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, user);
+    public void removePhotographer(Long photographerId, LoginUser loginUser) {
+        PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
 
         // 관련 매핑 데이터 먼저 삭제
         List<PhotographerMap> mappings = photographerMapRepository.findByPhotographerProfile(photographer);
@@ -222,15 +219,15 @@ public class PhotographerService {
     /**
      * 사용자가 '포토그래퍼' 유형인지, 그리고 해당 프로필의 소유주인지 확인
      */
-    private PhotographerProfile checkIsPhotographerAndOwner(Long photographerId, User user) {
+    private PhotographerProfile checkIsPhotographerAndOwner(Long photographerId, LoginUser loginUser) {
         // 1. 요청을 보낸 사용자가 'photographer' 유형인지 확인
-        if (user.getUserType() == null || !"photographer".equalsIgnoreCase(user.getUserType().getTypeCode())) {
+        if (loginUser.getUserTypeName() == null || !"photographer".equalsIgnoreCase(loginUser.getUserTypeName())) {
             throw new Exception403("포토그래퍼 회원만 사용할 수 있는 기능입니다.");
         }
 
         // 2. 프로필 존재 여부 확인 및 소유권 확인
         PhotographerProfile photographer = getPhotographerById(photographerId);
-        if (!photographer.getUser().getUserId().equals(user.getUserId())) {
+        if (!photographer.getUser().getUserId().equals(loginUser.getId())) {
             throw new Exception403("해당 프로필에 대한 권한이 없습니다.");
         }
         return photographer;

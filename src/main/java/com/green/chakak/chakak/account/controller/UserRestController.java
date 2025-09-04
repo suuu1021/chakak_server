@@ -3,7 +3,7 @@ package com.green.chakak.chakak.account.controller;
 import com.green.chakak.chakak.account.service.request.UserRequest;
 import com.green.chakak.chakak.account.service.response.UserResponse;
 import com.green.chakak.chakak.account.service.UserService;
-import com.green.chakak.chakak.global.utils.ApiUtil;
+import com.green.chakak.chakak._global.utils.ApiUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

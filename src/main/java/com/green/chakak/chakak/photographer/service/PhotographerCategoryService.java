@@ -1,7 +1,7 @@
 package com.green.chakak.chakak.photographer.service;
 
-import com.green.chakak.chakak.global.errors.exception.Exception400;
-import com.green.chakak.chakak.global.errors.exception.Exception404;
+import com.green.chakak.chakak._global.errors.exception.Exception400;
+import com.green.chakak.chakak._global.errors.exception.Exception404;
 import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
 import com.green.chakak.chakak.photographer.domain.PhotographerMap;
 import com.green.chakak.chakak.photographer.service.repository.PhotographerCategoryRepository;

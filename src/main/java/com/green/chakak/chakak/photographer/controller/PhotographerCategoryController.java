@@ -1,6 +1,6 @@
 package com.green.chakak.chakak.photographer.controller;
 
-import com.green.chakak.chakak.global.utils.ApiUtil;
+import com.green.chakak.chakak._global.utils.ApiUtil;
 import com.green.chakak.chakak.photographer.service.PhotographerCategoryService;
 import com.green.chakak.chakak.photographer.service.request.PhotographerCategoryRequest;
 import com.green.chakak.chakak.photographer.service.response.PhotographerResponse;

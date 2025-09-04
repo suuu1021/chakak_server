@@ -1,6 +1,6 @@
 package com.green.chakak.chakak.portfolios.controller;
 
-import com.green.chakak.chakak.global.utils.ApiUtil;
+import com.green.chakak.chakak._global.utils.ApiUtil;
 import com.green.chakak.chakak.portfolios.service.PortfolioCategoryService;
 import com.green.chakak.chakak.portfolios.service.request.PortfolioCategoryRequest;
 import com.green.chakak.chakak.portfolios.service.response.PortfolioCategoryResponse;
