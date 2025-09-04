@@ -11,14 +11,14 @@ import java.util.List;
 public interface PriceInfoJpaRepository extends JpaRepository<PriceInfo, Long> {
 
     // 특정 PhotoService에 속한 가격 정보들 조회
-    List<PriceInfo> findByPhotoServiceInfo_PhotoServiceInfoId(Long photoServiceInfoId);
+    List<PriceInfo> findByPhotoServiceInfo_serviceId(Long photoServiceInfoId);
 
     // 특정 PhotoService에 속한 가격 정보들 조회 (PhotoServiceInfo 객체로)
     List<PriceInfo> findByPhotoServiceInfo(PhotoServiceInfo photoServiceInfo);
 
     // 특정 PhotoService의 가격 정보 개수
-    long countByPhotoServiceInfo_PhotoServiceInfoId(Long photoServiceInfoId);
+    long countByPhotoServiceInfo_serviceId(Long photoServiceInfoId);
 
     // 특정 PhotoService에 속한 가격 정보 삭제
-    void deleteByPhotoServiceInfo_PhotoServiceInfoId(Long photoServiceInfoId);
+    void deleteByPhotoServiceInfo_serviceId(Long photoServiceInfoId);
 }

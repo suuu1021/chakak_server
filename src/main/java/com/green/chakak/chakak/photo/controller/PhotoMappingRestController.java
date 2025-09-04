@@ -1,6 +1,6 @@
 package com.green.chakak.chakak.photo.controller;
 
-import com.green.chakak.chakak.account.user.LoginUser;
+import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.global.utils.ApiUtil;
 import com.green.chakak.chakak.global.utils.Define;
 import com.green.chakak.chakak.photo.service.PhotoService;

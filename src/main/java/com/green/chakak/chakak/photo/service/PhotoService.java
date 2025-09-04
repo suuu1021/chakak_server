@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -350,7 +351,7 @@ public class PhotoService {
             throw new Exception404("PhotoService를 찾을 수 없습니다: " + photoServiceInfoId);
         }
 
-        List<PriceInfo> priceInfoList = priceInfoJpaRepository.findByPhotoServiceInfo_PhotoServiceInfoId(photoServiceInfoId);
+        List<PriceInfo> priceInfoList = priceInfoJpaRepository.findByPhotoServiceInfo_serviceId(photoServiceInfoId);
         return new PriceInfoResponse.PriceInfosDTO(photoServiceInfoId, priceInfoList);
     }
 
@@ -397,7 +398,7 @@ public class PhotoService {
     // PhotoService 삭제 시 연관된 가격 정보들 삭제 (PhotoService에서 호출)
     @Transactional
     public void deletePriceInfosByPhotoServiceId(Long photoServiceInfoId) {
-        priceInfoJpaRepository.deleteByPhotoServiceInfo_PhotoServiceInfoId(photoServiceInfoId);
+        priceInfoJpaRepository.deleteByPhotoServiceInfo_serviceId(photoServiceInfoId);
     }
 
     // PhotoService 등록 시 가격 정보들 일괄 등록 (PhotoService에서 호출)
