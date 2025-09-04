@@ -1,6 +1,6 @@
 package com.green.chakak.chakak.photographer.domain;
 
-import com.green.chakak.chakak.account.user.User;
+import com.green.chakak.chakak.account.domain.User;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +18,7 @@ public class PhotographerProfile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long photographerId;
+    private Long photographerProfileId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

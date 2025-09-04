@@ -1,18 +1,14 @@
 package com.green.chakak.chakak.photographer.controller;
 
-import com.green.chakak.chakak.account.user.User;
-import com.green.chakak.chakak.global.errors.exception.Exception400;
-import com.green.chakak.chakak.global.errors.exception.Exception403;
+import com.green.chakak.chakak.account.domain.User;
+import com.green.chakak.chakak.global.utils.ApiUtil;
 import com.green.chakak.chakak.global.utils.Define;
-import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photographer.service.PhotographerService;
 import com.green.chakak.chakak.photographer.service.request.PhotographerRequest;
 import com.green.chakak.chakak.photographer.service.response.PhotographerResponse;
-import com.green.chakak.chakak.global.utils.ApiUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -27,7 +23,6 @@ public class PhotographerController {
     private final PhotographerService photographerService;
 
     // 포토그래퍼 가입
-    @Transactional
     @PostMapping
     public ResponseEntity<?> joinAsPhotographer(
             @RequestAttribute(Define.LOGIN_USER) User user,
@@ -53,7 +48,6 @@ public class PhotographerController {
     }
 
     // 포토그래퍼 프로필 정보 수정
-    @Transactional
     @PutMapping("/{photographerId}")
     public ResponseEntity<?> updatePhotographer(@PathVariable Long photographerId,
                                                 @Valid @RequestBody PhotographerRequest.UpdateProfile updateProfile,
@@ -63,7 +57,6 @@ public class PhotographerController {
     }
 
     // 프로필 활성화
-    @Transactional
     @PatchMapping("/{photographerId}/activate")
     public ResponseEntity<?> activatePhotographer(@PathVariable Long photographerId,
                                                   @RequestAttribute(Define.LOGIN_USER) User user) {
@@ -72,7 +65,6 @@ public class PhotographerController {
     }
 
     // 프로필 비활성화
-    @Transactional
     @PatchMapping("/{photographerId}/deactivate")
     public ResponseEntity<?> deactivatePhotographer(@PathVariable Long photographerId,
                                                     @RequestAttribute(Define.LOGIN_USER) User user) {
@@ -103,7 +95,6 @@ public class PhotographerController {
     }
 
     // 포토그래퍼 프로필 삭제
-    @Transactional
     @DeleteMapping("/{photographerId}")
     public ResponseEntity<?> removePhotographer(@PathVariable Long photographerId,
                                                 @RequestAttribute(Define.LOGIN_USER) User user) {

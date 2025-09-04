@@ -1,6 +1,9 @@
-package com.green.chakak.chakak.account.user_profile;
+package com.green.chakak.chakak.account.controller;
 
-import com.green.chakak.chakak.account.user.LoginUser;
+import com.green.chakak.chakak.account.domain.LoginUser;
+import com.green.chakak.chakak.account.service.request.UserProfileRequest;
+import com.green.chakak.chakak.account.service.response.UserProfileResponse;
+import com.green.chakak.chakak.account.service.UserProfileService;
 import com.green.chakak.chakak.global.utils.ApiUtil;
 import com.green.chakak.chakak.global.utils.Define;
 import jakarta.validation.Valid;

@@ -1,10 +1,9 @@
 package com.green.chakak.chakak.photographer.controller;
 
 import com.green.chakak.chakak.global.utils.ApiUtil;
-import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
-import com.green.chakak.chakak.photographer.domain.PhotographerMap;
 import com.green.chakak.chakak.photographer.service.PhotographerCategoryService;
 import com.green.chakak.chakak.photographer.service.request.PhotographerCategoryRequest;
+import com.green.chakak.chakak.photographer.service.response.PhotographerResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,7 @@ public class PhotographerCategoryController {
      */
     @PostMapping
     public ResponseEntity<?> createCategory(@Valid @RequestBody PhotographerCategoryRequest.SaveCategory saveCategory) {
-        PhotographerCategory response = photographerCategoryService.createCategory(saveCategory);
+        PhotographerResponse.CategoryDTO response = photographerCategoryService.createCategory(saveCategory);
         URI location = URI.create(String.format("/api/photographer-categories/%d", response.getCategoryId()));
         return ResponseEntity.created(location).body(new ApiUtil<>(response));
     }
@@ -34,7 +33,7 @@ public class PhotographerCategoryController {
      */
     @GetMapping
     public ResponseEntity<?> getAllCategories() {
-        List<PhotographerCategory> response = photographerCategoryService.getAllCategories();
+        List<PhotographerResponse.CategoryDTO> response = photographerCategoryService.getAllCategories();
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
@@ -43,7 +42,7 @@ public class PhotographerCategoryController {
      */
     @GetMapping("/{categoryId}")
     public ResponseEntity<?> getCategoryDetail(@PathVariable Long categoryId) {
-        PhotographerCategory response = photographerCategoryService.getCategoryById(categoryId);
+        PhotographerResponse.CategoryDTO response = photographerCategoryService.getCategoryById(categoryId);
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
@@ -53,7 +52,7 @@ public class PhotographerCategoryController {
     @PutMapping("/{categoryId}")
     public ResponseEntity<?> updateCategory(@PathVariable Long categoryId,
                                             @Valid @RequestBody PhotographerCategoryRequest.UpdateCategory updateCategory) {
-        PhotographerCategory response = photographerCategoryService.updateCategory(categoryId, updateCategory);
+        PhotographerResponse.CategoryDTO response = photographerCategoryService.updateCategory(categoryId, updateCategory);
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
@@ -71,7 +70,7 @@ public class PhotographerCategoryController {
      */
     @GetMapping("/{categoryId}/photographers")
     public ResponseEntity<?> getPhotographersByCategory(@PathVariable Long categoryId) {
-        List<PhotographerMap> response = photographerCategoryService.getPhotographersByCategory(categoryId);
+        List<PhotographerResponse.ListDTO> response = photographerCategoryService.getPhotographersByCategory(categoryId);
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 

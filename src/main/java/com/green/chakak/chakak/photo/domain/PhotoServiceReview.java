@@ -1,6 +1,6 @@
 package com.green.chakak.chakak.photo.domain;
 
-import com.green.chakak.chakak.account.user.User;
+import com.green.chakak.chakak.account.domain.User;
 
 import com.green.chakak.chakak.booking.domain.BookingInfo;
 import jakarta.persistence.*;

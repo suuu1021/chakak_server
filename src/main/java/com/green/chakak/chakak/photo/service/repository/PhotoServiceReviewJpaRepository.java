@@ -4,7 +4,7 @@ package com.green.chakak.chakak.photo.service.repository;
 import com.green.chakak.chakak.booking.domain.BookingInfo;
 import com.green.chakak.chakak.photo.domain.PhotoServiceReview;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
-import com.green.chakak.chakak.account.user.User;
+import com.green.chakak.chakak.account.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

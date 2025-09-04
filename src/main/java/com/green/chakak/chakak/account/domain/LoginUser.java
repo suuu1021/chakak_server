@@ -1,10 +1,10 @@
-package com.green.chakak.chakak.account.user;
+package com.green.chakak.chakak.account.domain;
 
-import com.green.chakak.chakak.account.user.User.UserStatus;
+import com.green.chakak.chakak.account.domain.User.UserStatus;
 import lombok.Builder;
 import lombok.Getter;
 
-
+//
 @Getter
 
 public class LoginUser {

@@ -1,6 +1,6 @@
 package com.green.chakak.chakak.photographer.service.request;
 
-import com.green.chakak.chakak.account.user.User;
+import com.green.chakak.chakak.account.domain.User;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import jakarta.validation.constraints.*;
 import lombok.Data;

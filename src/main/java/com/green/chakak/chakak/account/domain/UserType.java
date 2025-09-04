@@ -1,9 +1,9 @@
-package com.green.chakak.chakak.account.user_type;
+package com.green.chakak.chakak.account.domain;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
-
+//
 @Data
 @Entity
 @Table(name = "USER_TYPE")

@@ -1,5 +1,6 @@
-package com.green.chakak.chakak.account.user_profile;
+package com.green.chakak.chakak.account.service.repository;
 
+import com.green.chakak.chakak.account.domain.UserProfile;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

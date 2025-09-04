@@ -1,6 +1,6 @@
 package com.green.chakak.chakak.booking.controller;
 
-import com.green.chakak.chakak.account.user.LoginUser;
+import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.booking.service.request.BookingInfoRequest;
 import com.green.chakak.chakak.booking.service.BookingInfoService;
 import com.green.chakak.chakak.global.utils.ApiUtil;

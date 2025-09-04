@@ -33,7 +33,7 @@ public class PortfolioResponse {
 
 		public DetailDTO(Portfolio portfolio) {
 			this.portfolioId = portfolio.getPortfolioId();
-			this.photographerId = portfolio.getPhotographerProfile().getPhotographerId();
+			this.photographerId = portfolio.getPhotographerProfile().getPhotographerProfileId();
 			this.photographerName = portfolio.getPhotographerProfile().getBusinessName();
 			this.title = portfolio.getTitle();
 			this.description = portfolio.getDescription();

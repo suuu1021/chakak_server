@@ -1,6 +1,6 @@
 package com.green.chakak.chakak.photographer.service;
 
-import com.green.chakak.chakak.account.user.User;
+import com.green.chakak.chakak.account.domain.User;
 import com.green.chakak.chakak.global.errors.exception.Exception400;
 import com.green.chakak.chakak.global.errors.exception.Exception403;
 import com.green.chakak.chakak.global.errors.exception.Exception404;
@@ -149,7 +149,7 @@ public class PhotographerService {
     /**
      * 포토그래퍼에 카테고리 추가
      */
-    public PhotographerMap addCategoryToPhotographer(Long photographerId, Long categoryId, User user) {
+    public PhotographerResponse.mapDTO addCategoryToPhotographer(Long photographerId, Long categoryId, User user) {
         PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, user);
         PhotographerCategory category = photographerCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new Exception404("카테고리를 찾을 수 없습니다."));
@@ -164,16 +164,18 @@ public class PhotographerService {
                 .photographerCategory(category)
                 .build();
 
-        return photographerMapRepository.save(photographerMap);
+        PhotographerMap savedMap = photographerMapRepository.save(photographerMap);
+        return new PhotographerResponse.mapDTO(savedMap);
     }
 
     /**
      * 포토그래퍼 카테고리 목록 조회
      */
     @Transactional(readOnly = true)
-    public List<PhotographerMap> getPhotographerCategories(Long photographerId) {
+    public List<PhotographerResponse.mapDTO> getPhotographerCategories(Long photographerId) {
         PhotographerProfile photographer = getPhotographerById(photographerId);
-        return photographerMapRepository.findByPhotographerProfile(photographer);
+        List<PhotographerMap> maps = photographerMapRepository.findByPhotographerProfileWithCategory(photographer);
+        return maps.stream().map(PhotographerResponse.mapDTO::new).collect(Collectors.toList());
     }
 
     /**

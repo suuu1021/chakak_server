@@ -1,7 +1,6 @@
 package com.green.chakak.chakak.photo.service;
 
-import com.green.chakak.chakak.account.user.LoginUser;
-import com.green.chakak.chakak.account.user.User;
+import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.global.errors.exception.*;
 import com.green.chakak.chakak.photo.domain.PhotoServiceCategory;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
@@ -33,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -110,7 +108,7 @@ public class PhotoService {
 
         PhotographerProfile userProfileInfo = photographerRepository.findByUser_UserId(loginUser.getId()).orElseThrow(() -> new Exception404("해당 유저가 존재하지 않습니다."));
 
-        if (!userProfileInfo.getPhotographerId().equals(loginUser.getId())) {
+        if (!userProfileInfo.getPhotographerProfileId().equals(loginUser.getId())) {
             throw new Exception400("해당 서비스를 등록한 회원만 수정 가능 합니다.");
         }
 
@@ -119,7 +117,7 @@ public class PhotoService {
                 .orElseThrow(() -> new Exception404("해당 서비스가 존재하지 않습니다."));
 
         // 3. 소유자 권한 검증
-        if (!photoService.getPhotographerProfile().getPhotographerId().equals(userProfileInfo.getPhotographerId())) {
+        if (!photoService.getPhotographerProfile().getPhotographerProfileId().equals(userProfileInfo.getPhotographerProfileId())) {
             throw new Exception400("해당 서비스를 등록한 회원만 수정 가능합니다.");
         }
 
@@ -141,7 +139,7 @@ public class PhotoService {
                 .orElseThrow(() -> new Exception404("해당 서비스가 존재하지 않습니다."));
 
         // 3. 소유자 권한 검증
-        if (!photoService.getPhotographerProfile().getPhotographerId().equals(userProfileInfo.getPhotographerId())) {
+        if (!photoService.getPhotographerProfile().getPhotographerProfileId().equals(userProfileInfo.getPhotographerProfileId())) {
             throw new Exception400("해당 서비스를 등록한 회원만 삭제 가능합니다.");
         }
 

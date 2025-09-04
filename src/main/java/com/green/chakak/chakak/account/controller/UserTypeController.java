@@ -1,5 +1,8 @@
-package com.green.chakak.chakak.account.user_type;
+package com.green.chakak.chakak.account.controller;
 
+import com.green.chakak.chakak.account.domain.UserType;
+import com.green.chakak.chakak.account.service.request.UserTypeRequest;
+import com.green.chakak.chakak.account.service.UserTypeService;
 import org.springframework.web.bind.annotation.*;
 import jakarta.annotation.PostConstruct;
 import java.util.List;

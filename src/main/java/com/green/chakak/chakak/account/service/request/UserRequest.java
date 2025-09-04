@@ -1,5 +1,6 @@
-package com.green.chakak.chakak.account.user;
+package com.green.chakak.chakak.account.service.request;
 
+import com.green.chakak.chakak.account.domain.User;
 import lombok.Data;
 
 public class UserRequest {

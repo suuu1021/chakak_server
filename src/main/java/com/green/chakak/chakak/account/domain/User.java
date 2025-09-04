@@ -1,7 +1,6 @@
-package com.green.chakak.chakak.account.user;
+package com.green.chakak.chakak.account.domain;
 
 
-import com.green.chakak.chakak.account.user_type.UserType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +25,8 @@ public class User {
         this.userType = userType;
         this.status = status;
     }
-
+//
+     //
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
