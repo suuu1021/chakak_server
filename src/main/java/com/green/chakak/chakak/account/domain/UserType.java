@@ -1,4 +1,4 @@
-package com.green.chakak.chakak.account.user_type;
+package com.green.chakak.chakak.account.domain;
 
 import jakarta.persistence.*;
 import lombok.Data;

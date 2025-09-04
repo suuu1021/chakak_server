@@ -1,10 +1,10 @@
 package com.green.chakak.chakak.booking.service;
 
-import com.green.chakak.chakak.account.user.LoginUser;
-import com.green.chakak.chakak.account.user.User;
-import com.green.chakak.chakak.account.user.UserJpaRepository;
-import com.green.chakak.chakak.account.user_profile.UserProfile;
-import com.green.chakak.chakak.account.user_profile.UserProfileJpaRepository;
+import com.green.chakak.chakak.account.domain.LoginUser;
+import com.green.chakak.chakak.account.domain.User;
+import com.green.chakak.chakak.account.service.repository.UserJpaRepository;
+import com.green.chakak.chakak.account.domain.UserProfile;
+import com.green.chakak.chakak.account.service.repository.UserProfileJpaRepository;
 import com.green.chakak.chakak.booking.domain.BookingInfo;
 import com.green.chakak.chakak.booking.service.repository.BookingInfoJpaRepository;
 import com.green.chakak.chakak.booking.service.request.BookingInfoRequest;

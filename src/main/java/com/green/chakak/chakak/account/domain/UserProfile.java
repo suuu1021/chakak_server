@@ -1,6 +1,6 @@
-package com.green.chakak.chakak.account.user_profile;
+package com.green.chakak.chakak.account.domain;
 
-import com.green.chakak.chakak.account.user.User;
+import com.green.chakak.chakak.account.service.request.UserProfileRequest;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
@@ -32,8 +32,9 @@ public class UserProfile {
     @Column(length = 50)
     private String introduce;
 
-//    @Column(length = 500)
-//    private String profileImageURL;
+    @Column(name = "image_data", nullable = false)
+    @Lob
+    private String imageData;
 
     @CreationTimestamp
     private Timestamp createdAt;
@@ -42,19 +43,30 @@ public class UserProfile {
     private Timestamp updatedAt;
 
     @Builder
-    public UserProfile(Long userProfileId, User user, String nickName, String introduce, Timestamp createdAt, Timestamp updatedAt) {
+    public UserProfile(Long userProfileId, User user, String nickName, String introduce, String imageData, Timestamp createdAt, Timestamp updatedAt) {
         this.UserProfileId = userProfileId;
         this.user = user;
         this.nickName = nickName;
         this.introduce = introduce;
+        this.imageData = imageData;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
 
-    public void update(String nickName, String introduce){
-        this.nickName = nickName;
-        this.introduce = introduce;
+    public void update(UserProfileRequest.UpdateDTO dto){
 
+        if (dto.getNickName() != null) {
+            this.nickName = dto.getNickName();
+        }
+        if (dto.getIntroduce() != null) {
+            this.introduce = dto.getIntroduce();
+        }
+        if (dto.getImageData() != null) {
+            this.imageData = dto.getImageData();
+        }
     }
+
+
+
 }

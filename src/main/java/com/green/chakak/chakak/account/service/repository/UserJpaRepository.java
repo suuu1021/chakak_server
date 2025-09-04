@@ -1,5 +1,6 @@
-package com.green.chakak.chakak.account.user;
+package com.green.chakak.chakak.account.service.repository;
 
+import com.green.chakak.chakak.account.domain.User;
 import org.hibernate.usertype.UserType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

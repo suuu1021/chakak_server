@@ -1,7 +1,6 @@
 package com.green.chakak.chakak.photo.service;
 
-import com.green.chakak.chakak.account.user.LoginUser;
-import com.green.chakak.chakak.account.user.User;
+import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.global.errors.exception.*;
 import com.green.chakak.chakak.photo.domain.PhotoServiceCategory;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
@@ -23,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Transactional(readOnly = true)
 @RequiredArgsConstructor

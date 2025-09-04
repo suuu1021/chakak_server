@@ -1,7 +1,6 @@
-package com.green.chakak.chakak.account.user_profile;
+package com.green.chakak.chakak.account.service.response;
 
-import com.green.chakak.chakak.account.user.User;
-import lombok.Builder;
+import com.green.chakak.chakak.account.domain.UserProfile;
 import lombok.Data;
 
 public class UserProfileResponse {
@@ -11,11 +10,13 @@ public class UserProfileResponse {
         private Long UserProfileId;
         private String nickName;
         private String introduce;
+        private String imageData;
 
         public DetailDTO(UserProfile userProfile) {
             this.UserProfileId = userProfile.getUserProfileId();
             this.nickName = userProfile.getNickName();
             this.introduce = userProfile.getIntroduce();
+            this.imageData = userProfile.getImageData();
         }
 
         public UserProfile toEntity(){
@@ -23,6 +24,7 @@ public class UserProfileResponse {
                     .userProfileId(this.UserProfileId)
                     .nickName(this.nickName)
                     .introduce(this.introduce)
+                    .imageData(this.imageData)
                     .build();
         }
     }
@@ -32,11 +34,13 @@ public class UserProfileResponse {
         private Long UserProfileId;
         private String nickName;
         private String introduce;
+        private String imageData;
 
         public UpdateDTO(UserProfile userProfile) {
             this.UserProfileId = userProfile.getUserProfileId();
             this.nickName = userProfile.getNickName();
             this.introduce = userProfile.getIntroduce();
+            this.imageData = userProfile.getImageData();
         }
 
         public UserProfile toEntity(){
@@ -44,8 +48,8 @@ public class UserProfileResponse {
                     .userProfileId(this.UserProfileId)
                     .nickName(this.nickName)
                     .introduce(this.introduce)
+                    .imageData(this.imageData)
                     .build();
         }
     }
-
 }
