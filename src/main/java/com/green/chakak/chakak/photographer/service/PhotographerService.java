@@ -1,6 +1,9 @@
 package com.green.chakak.chakak.photographer.service;
 
 import com.green.chakak.chakak.account.domain.User;
+import com.green.chakak.chakak.account.domain.UserType;
+import com.green.chakak.chakak.account.service.repository.UserJpaRepository;
+import com.green.chakak.chakak.account.service.repository.UserTypeRepository;
 import com.green.chakak.chakak.global.errors.exception.Exception400;
 import com.green.chakak.chakak.global.errors.exception.Exception403;
 import com.green.chakak.chakak.global.errors.exception.Exception404;
@@ -25,6 +28,8 @@ import java.util.stream.Collectors;
 @Transactional
 public class PhotographerService {
 
+    private final UserJpaRepository userJpaRepository;
+    private final UserTypeRepository userTypeRepository;
     private final PhotographerRepository photographerRepository;
     private final PhotographerCategoryRepository photographerCategoryRepository;
     private final PhotographerMapRepository photographerMapRepository;
@@ -41,8 +46,15 @@ public class PhotographerService {
             throw new Exception400("이미 등록된 프로필이 존재합니다.");
         }
 
+        // 1. 포토그래퍼 프로필 생성 및 저장
         PhotographerProfile photographerProfile = saveDTO.toEntity(user);
         PhotographerProfile saved = photographerRepository.save(photographerProfile);
+
+        // 2. 사용자의 역할을 'photographer'로 업데이트
+        UserType photographerUserType = userTypeRepository.findByTypeCode("photographer")
+                .orElseThrow(() -> new Exception404("photographer 역할을 찾을 수 없습니다."));
+        user.setUserType(photographerUserType);
+        userJpaRepository.save(user);
 
         return new PhotographerResponse.SaveDTO(saved);
     }
