@@ -3,7 +3,7 @@ package com.green.chakak.chakak.account.user_type;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
-
+//
 @Data
 @Entity
 @Table(name = "USER_TYPE")

@@ -4,7 +4,7 @@ import com.green.chakak.chakak.account.user.User.UserStatus;
 import lombok.Builder;
 import lombok.Getter;
 
-
+//
 @Getter
 
 public class LoginUser {
