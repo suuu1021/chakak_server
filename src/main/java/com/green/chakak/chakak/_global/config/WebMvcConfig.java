@@ -17,7 +17,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(loginInterceptor)
                 .addPathPatterns("/api/**") // 1. /api/ 로 시작하는 모든 경로에 인터셉터 적용
                 .excludePathPatterns(       // 2. 그 중에서 아래 경로들은 제외
-
                         "/api/users/login",
                         "/api/users/signup",
                         "/api/photographers",
@@ -27,7 +26,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/photographers/user/{userId}",
                         "/api/photographer-categories/**",
                         "/api/portfolios/**",
-                        "/api/v1/users/profile"
+                        "/api/v1/users/profile",
+
+                        "/api/photo/services",
+                        "/api/photo/services/{id}",
+                        "/api/photo/categories",
+                        "/api/photo/categories/{id}",
+                        "/api/photo/mappings",
+                        "/api/photo/mappings/{id}"
                 );
     }
 }

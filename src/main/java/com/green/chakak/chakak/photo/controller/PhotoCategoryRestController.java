@@ -1,8 +1,8 @@
 package com.green.chakak.chakak.photo.controller;
 
-import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak._global.utils.ApiUtil;
 import com.green.chakak.chakak._global.utils.Define;
+import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.photo.service.PhotoService;
 import com.green.chakak.chakak.photo.service.request.PhotoCategoryRequest;
 import com.green.chakak.chakak.photo.service.response.PhotoCategoryResponse;
@@ -51,7 +51,7 @@ public class PhotoCategoryRestController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(
             @PathVariable Long id,
-            @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
+             @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
 
         photoCategoryService.deleteCategory(id, loginUser);
         return ResponseEntity.ok(new ApiUtil<>("카테고리 삭제가 완료 되었습니다"));

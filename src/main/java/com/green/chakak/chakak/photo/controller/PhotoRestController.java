@@ -1,8 +1,8 @@
 package com.green.chakak.chakak.photo.controller;
 
-import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak._global.utils.ApiUtil;
 import com.green.chakak.chakak._global.utils.Define;
+import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.photo.service.PhotoService;
 import com.green.chakak.chakak.photo.service.request.PhotoServiceInfoRequest;
 import com.green.chakak.chakak.photo.service.response.PhotoServiceResponse;
@@ -35,7 +35,7 @@ public class PhotoRestController {
     }
 
     // 포토그래퍼 서비스 상세 조회
-    @GetMapping("/{id}")
+    @GetMapping("{id}")
     public ResponseEntity<?> detail(@PathVariable Long id,
                                     @RequestAttribute(value = Define.LOGIN_USER, required = false) LoginUser loginUser) {
 
@@ -47,8 +47,8 @@ public class PhotoRestController {
     // 포토그래퍼 서비스 생성
     @PostMapping("")
     public ResponseEntity<?> create(@Valid @RequestBody PhotoServiceInfoRequest.SaveDTO saveDTO, Errors errors,
-                                    @RequestAttribute(value = Define.LOGIN_USER) LoginUser loginUser
-    ) {
+                                    @RequestAttribute(value = Define.LOGIN_USER) LoginUser loginUser)
+    {
 
         photoService.saveService(saveDTO, loginUser);
 

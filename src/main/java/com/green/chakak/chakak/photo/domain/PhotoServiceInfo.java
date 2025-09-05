@@ -1,5 +1,7 @@
 package com.green.chakak.chakak.photo.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.green.chakak.chakak.photo.service.request.PhotoServiceInfoRequest;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import jakarta.persistence.*;
@@ -11,6 +13,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.w3c.dom.Text;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @NoArgsConstructor
 @Data
@@ -41,6 +44,12 @@ public class PhotoServiceInfo {
 
     @UpdateTimestamp
     private Timestamp updatedAt;
+
+    @OneToMany(mappedBy = "photoServiceInfo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PhotoServiceMapping> mappings;
+
+    @OneToMany(mappedBy = "photoServiceInfo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PriceInfo> priceInfos;
 
     @Builder
     public PhotoServiceInfo(Long serviceId, PhotographerProfile photographerProfile, String title, String description, String imageData, Timestamp createdAt, Timestamp updatedAt) {

@@ -18,11 +18,11 @@ public class PhotoServiceMapping {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long mappingId;
 
-    @JoinColumn(nullable = false)
+    @JoinColumn(nullable = false, name = "service_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private PhotoServiceInfo photoServiceInfo;
 
-    @JoinColumn(nullable = false)
+    @JoinColumn(nullable = false, name = "category_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private PhotoServiceCategory photoServiceCategory;
 
