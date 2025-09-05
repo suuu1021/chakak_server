@@ -10,6 +10,10 @@ public class UserProfileRequest {
 
     @Data
     public static class CreateDTO {
+
+        @NotEmpty(message = "유저 아이디값은 필수 입니다.")
+        private Long userInfoId;
+
         @NotEmpty(message = "닉네임을 입력하세요")
         @Size(min = 2, max = 20, message = "닉네임은 2자 이상 20자 이하로 입력해주세요")
         private String nickName;
@@ -23,6 +27,7 @@ public class UserProfileRequest {
         public UserProfile toEntity(User user) {
             return UserProfile.builder()
                     .user(user)
+                    .userProfileId(userInfoId)
                     .nickName(nickName)
                     .introduce(introduce)
                     .imageData(imageData)

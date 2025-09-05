@@ -56,8 +56,9 @@ public class BookingInfo {
     @Column(length = 500)
     private String specialRequest; // 특별 요청사항
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private String status; // 예약 상태
+    private BookingStatus status; // 예약 상태
 
     @Column(nullable = false)
     private int participantCount; // 참여 인원수
@@ -73,7 +74,7 @@ public class BookingInfo {
 
 
     @Builder
-    public BookingInfo(Long bookingInfoId, UserProfile userProfile, PhotographerProfile photographerProfile, PhotographerCategory photographerCategory, PhotoServiceInfo photoServiceInfo, LocalDate bookingDate, LocalTime bookingTime, String location, int budget, String specialRequest, String status, int participantCount, int shootingDuration, Timestamp createdAt, Timestamp updatedAt) {
+    public BookingInfo(Long bookingInfoId, UserProfile userProfile, PhotographerProfile photographerProfile, PhotographerCategory photographerCategory, PhotoServiceInfo photoServiceInfo, LocalDate bookingDate, LocalTime bookingTime, String location, int budget, String specialRequest, BookingStatus status, int participantCount, int shootingDuration, Timestamp createdAt, Timestamp updatedAt) {
         this.bookingInfoId = bookingInfoId;
         this.userProfile = userProfile;
         this.photographerProfile = photographerProfile;
