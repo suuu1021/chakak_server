@@ -44,7 +44,7 @@ public class UserService {
                 .email(req.getEmail())
                 .password(req.getPassword())
                 .userType(userType)
-                .status(User.UserStatus.INACTIVE)
+                .status(User.UserStatus.ACTIVE)//TODO: INACTIVE로 수정하기
                 .emailVerified(false)
                 .build();
 
