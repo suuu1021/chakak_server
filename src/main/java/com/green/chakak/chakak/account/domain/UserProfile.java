@@ -4,6 +4,7 @@ import com.green.chakak.chakak.account.service.request.UserProfileRequest;
 import com.green.chakak.chakak.booking.domain.BookingCancelInfo;
 import com.green.chakak.chakak.booking.domain.BookingInfo;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.List;
 @Table(name = "user_profile")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class UserProfile {
 
     @Id
@@ -35,7 +37,7 @@ public class UserProfile {
     @Column(length = 50)
     private String introduce;
 
-    @Column(name = "image_data", nullable = false)
+    @Column(name = "image_data")
     @Lob
     private String imageData;
 

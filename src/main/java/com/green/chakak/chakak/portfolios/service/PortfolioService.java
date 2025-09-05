@@ -1,5 +1,10 @@
 package com.green.chakak.chakak.portfolios.service;
 
+import com.green.chakak.chakak._global.errors.exception.Exception400;
+import com.green.chakak.chakak._global.errors.exception.Exception403;
+import com.green.chakak.chakak._global.errors.exception.Exception404;
+import com.green.chakak.chakak._global.errors.exception.Exception500;
+import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.portfolios.domain.Portfolio;
 import com.green.chakak.chakak.portfolios.domain.PortfolioCategory;
 import com.green.chakak.chakak.portfolios.domain.PortfolioMap;
@@ -66,52 +71,85 @@ public class PortfolioService {
 	 * 포트폴리오 생성
 	 */
 	@Transactional
-	public PortfolioResponse.DetailDTO createPortfolio(PortfolioRequest.CreateDTO request) {
-		log.info("포트폴리오 생성 시작: photographerId = {}", request.getPhotographerId());
+	public PortfolioResponse.DetailDTO createPortfolio(PortfolioRequest.CreateDTO request, LoginUser loginUser) {
+		try {
+			log.info("포트폴리오 생성 시작: userId = {}", loginUser.getId());
 
-		PhotographerProfile photographer = photographerRepository.findById(request.getPhotographerId())
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사진작가입니다: " + request.getPhotographerId()));
+			// 입력값 검증
+			validateCreateRequest(request);
+			validateLoginUser(loginUser);
 
-		Portfolio portfolio = request.toEntity(photographer);
-		Portfolio savedPortfolio = portfolioRepository.save(portfolio);
+			// 로그인한 사용자의 사진작가 프로필 조회
+			PhotographerProfile photographer = photographerRepository.findByUser_UserId(loginUser.getId())
+					.orElseThrow(() -> new Exception404("사진작가 프로필이 존재하지 않습니다. 사진작가 등록을 먼저 해주세요."));
 
-		// 카테고리 매핑 생성
-		if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
-			createCategoryMappings(savedPortfolio, request.getCategoryIds());
+			Portfolio portfolio = request.toEntity(photographer);
+			Portfolio savedPortfolio = portfolioRepository.save(portfolio);
+
+			// 카테고리 매핑 생성
+			if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
+				createCategoryMappings(savedPortfolio, request.getCategoryIds());
+			}
+
+			log.info("포트폴리오 생성 완료: ID = {}", savedPortfolio.getPortfolioId());
+			return PortfolioResponse.DetailDTO.from(savedPortfolio);
+
+		} catch (Exception404 | Exception400 e) {
+			throw e; // 이미 정의된 예외는 그대로 전파
+		} catch (Exception e) {
+			log.error("포트폴리오 생성 중 예상치 못한 오류 발생", e);
+			throw new Exception500("포트폴리오 생성 중 서버 오류가 발생했습니다");
 		}
-
-		log.info("포트폴리오 생성 완료: ID = {}", savedPortfolio.getPortfolioId());
-		return PortfolioResponse.DetailDTO.from(savedPortfolio);
 	}
 
 	/**
 	 * 포트폴리오 수정
 	 */
 	@Transactional
-	public PortfolioResponse.DetailDTO updatePortfolio(Long portfolioId, PortfolioRequest.UpdateDTO request) {
-		log.info("포트폴리오 수정 시작: portfolioId = {}", portfolioId);
+	public PortfolioResponse.DetailDTO updatePortfolio(Long portfolioId, PortfolioRequest.UpdateDTO request, LoginUser loginUser) {
+		try {
+			log.info("포트폴리오 수정 시작: portfolioId = {}", portfolioId);
 
-		Portfolio portfolio = portfolioRepository.findById(portfolioId)
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 포트폴리오입니다: " + portfolioId));
+			// 입력값 검증
+			validatePortfolioId(portfolioId);
+			validateUpdateRequest(request);
+			validateLoginUser(loginUser);
 
-		// 필드 업데이트
-		if (request.getTitle() != null) {
-			portfolio.setTitle(request.getTitle());
-		}
-		if (request.getDescription() != null) {
-			portfolio.setDescription(request.getDescription());
-		}
-		if (request.getThumbnailUrl() != null) {
-			portfolio.setThumbnailUrl(request.getThumbnailUrl());
-		}
+			Portfolio portfolio = portfolioRepository.findById(portfolioId)
+					.orElseThrow(() -> new Exception404("존재하지 않는 포트폴리오입니다: " + portfolioId));
 
-		// 카테고리 매핑 업데이트
-		if (request.getCategoryIds() != null) {
-			updateCategoryMappings(portfolio, request.getCategoryIds());
-		}
+			// 권한 체크 - 작성자 본인만 수정 가능
+			if (portfolio.getPhotographerProfile() != null &&
+					portfolio.getPhotographerProfile().getUser() != null &&
+					!portfolio.getPhotographerProfile().getUser().getUserId().equals(loginUser.getId())) {
+				throw new Exception403("포트폴리오 수정 권한이 없습니다");
+			}
 
-		log.info("포트폴리오 수정 완료: portfolioId = {}", portfolioId);
-		return PortfolioResponse.DetailDTO.from(portfolio);
+			// 필드 업데이트
+			if (request.getTitle() != null) {
+				portfolio.setTitle(request.getTitle());
+			}
+			if (request.getDescription() != null) {
+				portfolio.setDescription(request.getDescription());
+			}
+			if (request.getThumbnailUrl() != null) {
+				portfolio.setThumbnailUrl(request.getThumbnailUrl());
+			}
+
+			// 카테고리 매핑 업데이트
+			if (request.getCategoryIds() != null) {
+				updateCategoryMappings(portfolio, request.getCategoryIds());
+			}
+
+			log.info("포트폴리오 수정 완료: portfolioId = {}", portfolioId);
+			return PortfolioResponse.DetailDTO.from(portfolio);
+
+		} catch (Exception403 | Exception404 | Exception400 e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("포트폴리오 수정 중 예상치 못한 오류 발생", e);
+			throw new Exception500("포트폴리오 수정 중 서버 오류가 발생했습니다");
+		}
 	}
 
 	/**
@@ -119,32 +157,61 @@ public class PortfolioService {
 	 */
 	@Transactional
 	public PortfolioResponse.DetailDTO getPortfolioDetail(Long portfolioId) {
-		log.info("포트폴리오 상세 조회: portfolioId = {}", portfolioId);
+		try {
+			log.info("포트폴리오 상세 조회: portfolioId = {}", portfolioId);
 
-		Portfolio portfolio = portfolioRepository.findById(portfolioId)
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 포트폴리오입니다: " + portfolioId));
+			validatePortfolioId(portfolioId);
 
-		// 조회수 증가 로직은 엔티티에 없으므로 주석 처리
-		// portfolioRepository.incrementViewCount(portfolioId);
+			Portfolio portfolio = portfolioRepository.findById(portfolioId)
+					.orElseThrow(() -> new Exception404("존재하지 않는 포트폴리오입니다: " + portfolioId));
 
-		return PortfolioResponse.DetailDTO.from(portfolio);
+			// 조회수 증가 로직은 엔티티에 없으므로 주석 처리
+			// portfolioRepository.incrementViewCount(portfolioId);
+
+			return PortfolioResponse.DetailDTO.from(portfolio);
+
+		} catch (Exception404 | Exception400 e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("포트폴리오 상세 조회 중 예상치 못한 오류 발생", e);
+			throw new Exception500("포트폴리오 조회 중 서버 오류가 발생했습니다");
+		}
 	}
 
 	/**
 	 * 포트폴리오 삭제
 	 */
 	@Transactional
-	public void deletePortfolio(Long portfolioId) {
-		log.info("포트폴리오 삭제 시작: portfolioId = {}", portfolioId);
+	public void deletePortfolio(Long portfolioId, LoginUser loginUser) {
+		try {
+			log.info("포트폴리오 삭제 시작: portfolioId = {}", portfolioId);
 
-		// 연관된 매핑과 이미지부터 삭제
-		// PortfolioMapJpaRepository에 추가된 deleteByPortfolio 메서드 활용
-		portfolioMapRepository.deleteByPortfolio_PortfolioId(portfolioId);
-		// PortfolioImageJpaRepository에 추가된 deleteByPortfolio_PortfolioId 메서드 활용
-		portfolioImageRepository.deleteByPortfolio_PortfolioId(portfolioId);
+			validatePortfolioId(portfolioId);
+			validateLoginUser(loginUser);
 
-		portfolioRepository.deleteById(portfolioId);
-		log.info("포트폴리오 삭제 완료: portfolioId = {}", portfolioId);
+			Portfolio portfolio = portfolioRepository.findById(portfolioId)
+					.orElseThrow(() -> new Exception404("존재하지 않는 포트폴리오입니다: " + portfolioId));
+
+			// 권한 체크 - 작성자 본인만 삭제 가능
+			if (portfolio.getPhotographerProfile() != null &&
+					portfolio.getPhotographerProfile().getUser() != null &&
+					!portfolio.getPhotographerProfile().getUser().getUserId().equals(loginUser.getId())) {
+				throw new Exception403("포트폴리오 삭제 권한이 없습니다");
+			}
+
+			// 연관된 매핑과 이미지부터 삭제
+			portfolioMapRepository.deleteByPortfolio_PortfolioId(portfolioId);
+			portfolioImageRepository.deleteByPortfolio_PortfolioId(portfolioId);
+
+			portfolioRepository.deleteById(portfolioId);
+			log.info("포트폴리오 삭제 완료: portfolioId = {}", portfolioId);
+
+		} catch (Exception403 | Exception404 | Exception400 e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("포트폴리오 삭제 중 예상치 못한 오류 발생", e);
+			throw new Exception500("포트폴리오 삭제 중 서버 오류가 발생했습니다");
+		}
 	}
 
 	// ============ 포트폴리오 조회/검색 ============
@@ -153,46 +220,76 @@ public class PortfolioService {
 	 * 포트폴리오 목록 조회 (페이징)
 	 */
 	public Page<PortfolioResponse.ListDTO> getPortfolioList(PortfolioRequest.SearchDTO searchRequest) {
-		log.info("포트폴리오 목록 조회: sortBy = {}", searchRequest.getSortBy());
+		try {
+			log.info("포트폴리오 목록 조회: sortBy = {}", searchRequest.getSortBy());
 
-		Pageable pageable = PageRequest.of(searchRequest.getPage(), searchRequest.getSize());
-		Page<Portfolio> portfolioPage;
+			validateSearchRequest(searchRequest);
 
-		// 엔티티에 viewCount, likeCount, isPublic 필드가 없으므로, 최신순으로만 조회하도록 수정
-		portfolioPage = portfolioRepository.findAllByOrderByCreatedAtDesc(pageable);
+			Pageable pageable = PageRequest.of(searchRequest.getPage(), searchRequest.getSize());
+			Page<Portfolio> portfolioPage;
 
-		return portfolioPage.map(PortfolioResponse.ListDTO::from);
+			// 엔티티에 viewCount, likeCount, isPublic 필드가 없으므로, 최신순으로만 조회하도록 수정
+			portfolioPage = portfolioRepository.findAllByOrderByCreatedAtDesc(pageable);
+
+			return portfolioPage.map(PortfolioResponse.ListDTO::from);
+
+		} catch (Exception400 e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("포트폴리오 목록 조회 중 예상치 못한 오류 발생", e);
+			throw new Exception500("포트폴리오 목록 조회 중 서버 오류가 발생했습니다");
+		}
 	}
 
 	/**
 	 * 포트폴리오 검색
 	 */
 	public Page<PortfolioResponse.ListDTO> searchPortfolios(PortfolioRequest.SearchDTO searchRequest) {
-		log.info("포트폴리오 검색: keyword = {}", searchRequest.getKeyword());
+		try {
+			log.info("포트폴리오 검색: keyword = {}", searchRequest.getKeyword());
 
-		Pageable pageable = PageRequest.of(searchRequest.getPage(), searchRequest.getSize());
+			validateSearchRequest(searchRequest);
 
-		if (searchRequest.getKeyword() != null && !searchRequest.getKeyword().trim().isEmpty()) {
-			return portfolioRepository.findByTitleContaining(searchRequest.getKeyword(), pageable)
-					.map(PortfolioResponse.ListDTO::from);
+			Pageable pageable = PageRequest.of(searchRequest.getPage(), searchRequest.getSize());
+
+			if (searchRequest.getKeyword() != null && !searchRequest.getKeyword().trim().isEmpty()) {
+				return portfolioRepository.findByTitleContaining(searchRequest.getKeyword(), pageable)
+						.map(PortfolioResponse.ListDTO::from);
+			}
+			return getPortfolioList(searchRequest);
+
+		} catch (Exception400 e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("포트폴리오 검색 중 예상치 못한 오류 발생", e);
+			throw new Exception500("포트폴리오 검색 중 서버 오류가 발생했습니다");
 		}
-		return getPortfolioList(searchRequest);
 	}
 
 	/**
 	 * 사진작가별 포트폴리오 조회
 	 */
 	public List<PortfolioResponse.ListDTO> getPhotographerPortfolios(Long photographerId) {
-		log.info("사진작가 포트폴리오 조회: photographerId = {}", photographerId);
+		try {
+			log.info("사진작가 포트폴리오 조회: photographerId = {}", photographerId);
 
-		PhotographerProfile photographer = photographerRepository.findById(photographerId)
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사진작가입니다: " + photographerId));
+			validatePhotographerId(photographerId);
 
-		List<Portfolio> portfolios = portfolioRepository.findByPhotographerProfile(photographer);
+			PhotographerProfile photographer = photographerRepository.findById(photographerId)
+					.orElseThrow(() -> new Exception404("존재하지 않는 사진작가입니다: " + photographerId));
 
-		return portfolios.stream()
-				.map(PortfolioResponse.ListDTO::from)
-				.collect(Collectors.toList());
+			List<Portfolio> portfolios = portfolioRepository.findByPhotographerProfile(photographer);
+
+			return portfolios.stream()
+					.map(PortfolioResponse.ListDTO::from)
+					.collect(Collectors.toList());
+
+		} catch (Exception404 | Exception400 e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("사진작가 포트폴리오 조회 중 예상치 못한 오류 발생", e);
+			throw new Exception500("사진작가 포트폴리오 조회 중 서버 오류가 발생했습니다");
+		}
 	}
 
 	// ============ 이미지 관리 ============
@@ -202,29 +299,39 @@ public class PortfolioService {
 	 */
 	@Transactional
 	public PortfolioResponse.ImageDTO addImage(PortfolioRequest.AddImageDTO request) {
-		log.info("이미지 추가: portfolioId = {}", request.getPortfolioId());
+		try {
+			log.info("이미지 추가: portfolioId = {}", request.getPortfolioId());
 
-		Portfolio portfolio = portfolioRepository.findById(request.getPortfolioId())
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 포트폴리오입니다: " + request.getPortfolioId()));
+			validateAddImageRequest(request);
 
-		// isMain이 null일 경우 false로 설정
-		Boolean isMain = (request.getIsMain() != null) ? request.getIsMain() : false;
+			Portfolio portfolio = portfolioRepository.findById(request.getPortfolioId())
+					.orElseThrow(() -> new Exception404("존재하지 않는 포트폴리오입니다: " + request.getPortfolioId()));
 
-		// 이미 메인 이미지가 존재하면 해제
-		if (isMain) {
-			portfolioImageRepository.findByPortfolioAndIsMainTrue(portfolio)
-					.ifPresent(mainImage -> mainImage.setIsMain(false));
+			// isMain이 null일 경우 false로 설정
+			Boolean isMain = (request.getIsMain() != null) ? request.getIsMain() : false;
+
+			// 이미 메인 이미지가 존재하면 해제
+			if (isMain) {
+				portfolioImageRepository.findByPortfolioAndIsMainTrue(portfolio)
+						.ifPresent(mainImage -> mainImage.setIsMain(false));
+			}
+
+			PortfolioImage image = new PortfolioImage();
+			image.setPortfolio(portfolio);
+			image.setImageUrl(request.getImageUrl());
+			image.setIsMain(isMain);
+
+			PortfolioImage savedImage = portfolioImageRepository.save(image);
+			log.info("이미지 추가 완료: imageId = {}", savedImage.getPortfolioImageId());
+
+			return PortfolioResponse.ImageDTO.from(savedImage);
+
+		} catch (Exception404 | Exception400 e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("이미지 추가 중 예상치 못한 오류 발생", e);
+			throw new Exception500("이미지 추가 중 서버 오류가 발생했습니다");
 		}
-
-		PortfolioImage image = new PortfolioImage();
-		image.setPortfolio(portfolio);
-		image.setImageUrl(request.getImageUrl());
-		image.setIsMain(isMain);
-
-		PortfolioImage savedImage = portfolioImageRepository.save(image);
-		log.info("이미지 추가 완료: imageId = {}", savedImage.getPortfolioImageId());
-
-		return PortfolioResponse.ImageDTO.from(savedImage);
 	}
 
 	/**
@@ -232,10 +339,24 @@ public class PortfolioService {
 	 */
 	@Transactional
 	public void deleteImage(Long imageId) {
-		log.info("이미지 삭제: imageId = {}", imageId);
+		try {
+			log.info("이미지 삭제: imageId = {}", imageId);
 
-		portfolioImageRepository.deleteById(imageId);
-		log.info("이미지 삭제 완료: imageId = {}", imageId);
+			validateImageId(imageId);
+
+			if (!portfolioImageRepository.existsById(imageId)) {
+				throw new Exception404("존재하지 않는 이미지입니다: " + imageId);
+			}
+
+			portfolioImageRepository.deleteById(imageId);
+			log.info("이미지 삭제 완료: imageId = {}", imageId);
+
+		} catch (Exception404 | Exception400 e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("이미지 삭제 중 예상치 못한 오류 발생", e);
+			throw new Exception500("이미지 삭제 중 서버 오류가 발생했습니다");
+		}
 	}
 
 	// ============ 카테고리 매핑 관리 ============
@@ -245,30 +366,42 @@ public class PortfolioService {
 	 */
 	@Transactional
 	public void addCategoryToPortfolio(Long portfolioId, Long categoryId) {
-		log.info("카테고리 추가: portfolioId = {}, categoryId = {}", portfolioId, categoryId);
+		try {
+			log.info("카테고리 추가: portfolioId = {}, categoryId = {}", portfolioId, categoryId);
 
-		Portfolio portfolio = portfolioRepository.findById(portfolioId)
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 포트폴리오입니다: " + portfolioId));
+			validatePortfolioId(portfolioId);
+			validateCategoryId(categoryId);
 
-		PortfolioCategory category = categoryRepository.findById(categoryId)
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다: " + categoryId));
+			Portfolio portfolio = portfolioRepository.findById(portfolioId)
+					.orElseThrow(() -> new Exception404("존재하지 않는 포트폴리오입니다: " + portfolioId));
 
-		// existsByPortfolioAndPortfolioCategory 메서드 활용
-		if (!portfolioMapRepository.existsByPortfolioAndPortfolioCategory(portfolio, category)) {
-			PortfolioMap mapping = new PortfolioMap();
-			mapping.setPortfolio(portfolio);
-			mapping.setPortfolioCategory(category);
-			portfolioMapRepository.save(mapping);
+			PortfolioCategory category = categoryRepository.findById(categoryId)
+					.orElseThrow(() -> new Exception404("존재하지 않는 카테고리입니다: " + categoryId));
+
+			if (!portfolioMapRepository.existsByPortfolioAndPortfolioCategory(portfolio, category)) {
+				PortfolioMap mapping = new PortfolioMap();
+				mapping.setPortfolio(portfolio);
+				mapping.setPortfolioCategory(category);
+				portfolioMapRepository.save(mapping);
+			}
+
+		} catch (Exception404 | Exception400 e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("카테고리 추가 중 예상치 못한 오류 발생", e);
+			throw new Exception500("카테고리 추가 중 서버 오류가 발생했습니다");
 		}
 	}
 
 	// ============ Private 헬퍼 메서드 ============
+
 	private void createCategoryMappings(Portfolio portfolio, List<Long> categoryIds) {
 		for (Long categoryId : categoryIds) {
-			PortfolioCategory category = categoryRepository.findById(categoryId)
-					.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다: " + categoryId));
+			validateCategoryId(categoryId);
 
-			// existsByPortfolioAndPortfolioCategory 메서드 활용
+			PortfolioCategory category = categoryRepository.findById(categoryId)
+					.orElseThrow(() -> new Exception404("존재하지 않는 카테고리입니다: " + categoryId));
+
 			if (!portfolioMapRepository.existsByPortfolioAndPortfolioCategory(portfolio, category)) {
 				PortfolioMap mapping = new PortfolioMap();
 				mapping.setPortfolio(portfolio);
@@ -279,10 +412,81 @@ public class PortfolioService {
 	}
 
 	private void updateCategoryMappings(Portfolio portfolio, List<Long> categoryIds) {
-		// deleteByPortfolio 메서드 활용
 		portfolioMapRepository.deleteByPortfolio(portfolio);
 		if (categoryIds != null && !categoryIds.isEmpty()) {
 			createCategoryMappings(portfolio, categoryIds);
+		}
+	}
+
+	// ============ 유효성 검증 메서드 ============
+
+	private void validateCreateRequest(PortfolioRequest.CreateDTO request) {
+		if (request == null) {
+			throw new Exception400("포트폴리오 생성 요청 데이터가 없습니다");
+		}
+		if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
+			throw new Exception400("포트폴리오 제목은 필수입니다");
+		}
+	}
+
+	private void validateLoginUser(LoginUser loginUser) {
+		if (loginUser == null) {
+			throw new Exception400("로그인 사용자 정보가 없습니다");
+		}
+		if (loginUser.getId() == null || loginUser.getId() <= 0) {
+			throw new Exception400("유효하지 않은 사용자 ID입니다");
+		}
+	}
+
+	private void validateUpdateRequest(PortfolioRequest.UpdateDTO request) {
+		if (request == null) {
+			throw new Exception400("포트폴리오 수정 요청 데이터가 없습니다");
+		}
+	}
+
+	private void validateAddImageRequest(PortfolioRequest.AddImageDTO request) {
+		if (request == null) {
+			throw new Exception400("이미지 추가 요청 데이터가 없습니다");
+		}
+		validatePortfolioId(request.getPortfolioId());
+		if (request.getImageUrl() == null || request.getImageUrl().trim().isEmpty()) {
+			throw new Exception400("이미지 URL은 필수입니다");
+		}
+	}
+
+	private void validateSearchRequest(PortfolioRequest.SearchDTO request) {
+		if (request == null) {
+			throw new Exception400("검색 요청 데이터가 없습니다");
+		}
+		if (request.getPage() < 0) {
+			throw new Exception400("페이지 번호는 0 이상이어야 합니다");
+		}
+		if (request.getSize() <= 0 || request.getSize() > 100) {
+			throw new Exception400("페이지 크기는 1 이상 100 이하여야 합니다");
+		}
+	}
+
+	private void validatePortfolioId(Long portfolioId) {
+		if (portfolioId == null || portfolioId <= 0) {
+			throw new Exception400("유효하지 않은 포트폴리오 ID입니다: " + portfolioId);
+		}
+	}
+
+	private void validatePhotographerId(Long photographerId) {
+		if (photographerId == null || photographerId <= 0) {
+			throw new Exception400("유효하지 않은 사진작가 ID입니다: " + photographerId);
+		}
+	}
+
+	private void validateCategoryId(Long categoryId) {
+		if (categoryId == null || categoryId <= 0) {
+			throw new Exception400("유효하지 않은 카테고리 ID입니다: " + categoryId);
+		}
+	}
+
+	private void validateImageId(Long imageId) {
+		if (imageId == null || imageId <= 0) {
+			throw new Exception400("유효하지 않은 이미지 ID입니다: " + imageId);
 		}
 	}
 }

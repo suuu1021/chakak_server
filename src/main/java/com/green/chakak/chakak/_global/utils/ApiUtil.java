@@ -34,6 +34,18 @@ public class ApiUtil<T> {
         this.status = status;
         this.msg = msg;
         this.body = null;
+
     }
- //
+
+    /**
+     * 데이터와 커스텀 메시지를 포함하는 응답 생성자
+     *
+     */
+
+    public ApiUtil(T body, String msg){
+        this.status = 200;
+        this.msg = msg;
+        this.body = body;
+    }
+
 }
