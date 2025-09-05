@@ -33,21 +33,22 @@ public class PhotographerService {
     private final PhotographerMapRepository photographerMapRepository;
 
     /**
-     * 포토그래퍼 프로필 상세 정보 추가
+     * 포토그래퍼 프로필 저장
      */
-    public PhotographerResponse.SaveDTO joinAsPhotographer(LoginUser loginUser, PhotographerRequest.SaveProfile saveDTO) {
+    public PhotographerResponse.SaveDTO createProfile(PhotographerRequest.SaveProfile saveDTO) {
+
+        // 1. dto의 UserId로 회원 존재여부 조회
+        User searchUser = userJpaRepository.findById(saveDTO.getUserId()).orElseThrow(() -> new Exception404("해당 유저가 존재하지 않습니다."));
+
         // 1. 요청 사용자가 'photographer' 타입인지 확인 (권한 검사)
-        if (!"photographer".equalsIgnoreCase(loginUser.getUserTypeName())) {
+        if (!"photographer".equalsIgnoreCase(searchUser.getUserType().getTypeCode())) {
             throw new Exception403("포토그래퍼 회원만 프로필을 등록할 수 있습니다.");
         }
 
         // 2. 이미 프로필이 등록되어 있는지 확인 (중복 생성 방지)
-        if (photographerRepository.existsByUser_UserId(loginUser.getId())) {
+        if (photographerRepository.existsByUser_UserId(searchUser.getUserId())) {
             throw new Exception400("이미 등록된 프로필이 존재합니다.");
         }
-
-        // 3. 영속성 컨텍스트에 사용자 엔티티를 로드
-        User searchUser = userJpaRepository.findById(loginUser.getId()).orElseThrow(() -> new Exception404("해당 유저가 존재 하지 않습니다."));
 
         // 4. 포토그래퍼 프로필 생성 및 저장
         PhotographerProfile photographerProfile = saveDTO.toEntity(searchUser);
@@ -57,9 +58,9 @@ public class PhotographerService {
     }
 
     /**
-     * 포토그래퍼 프로필 상세 정보 수정
+     * 포토그래퍼 프로필 수정
      */
-    public PhotographerResponse.UpdateDTO updatePhotographer(Long photographerId, PhotographerRequest.UpdateProfile updateDTO, LoginUser loginUser) {
+    public PhotographerResponse.UpdateDTO updateProfile(Long photographerId, PhotographerRequest.UpdateProfile updateDTO, LoginUser loginUser) {
         PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
 
         // 정보 업데이트
@@ -73,7 +74,7 @@ public class PhotographerService {
      * 포토그래퍼 상세 조회
      */
     @Transactional(readOnly = true)
-    public PhotographerResponse.DetailDTO getPhotographerDetail(Long photographerId) {
+    public PhotographerResponse.DetailDTO getProfileDetail(Long photographerId) {
         PhotographerProfile photographer = photographerRepository.findById(photographerId)
                 .orElseThrow(() -> new Exception404("포토그래퍼를 찾을 수 없습니다."));
 
@@ -84,7 +85,7 @@ public class PhotographerService {
      * 활성 포토그래퍼 목록 조회
      */
     @Transactional(readOnly = true)
-    public List<PhotographerResponse.ListDTO> getActivePhotographers() {
+    public List<PhotographerResponse.ListDTO> getActiveProfile() {
         List<PhotographerProfile> photographers = photographerRepository.findByStatus("ACTIVE");
 
         return photographers.stream()

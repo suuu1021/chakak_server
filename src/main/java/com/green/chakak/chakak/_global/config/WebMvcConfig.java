@@ -20,11 +20,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
                         "/api/users/login",
                         "/api/users/signup",
+                        "/api/photographers",
                         "/api/photographers/{photographerId}",
                         "/api/photographers/search",
                         "/api/photographers/location/**",
                         "/api/photographers/user/{userId}",
-
                         "/api/photographer-categories/**",
                         "/api/portfolios/**"
                 );
