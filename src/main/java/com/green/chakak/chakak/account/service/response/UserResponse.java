@@ -16,6 +16,16 @@ public class UserResponse {
         private String userTypeCode;
         private User.UserStatus status;
         private LocalDateTime createdAt;
+
+        public static SignupResponse from(User user) {
+            return SignupResponse.builder()
+                    .userId(user.getUserId())
+                    .email(user.getEmail())
+                    .userTypeCode(user.getUserType().getTypeCode())
+                    .status(user.getStatus())
+                    .createdAt(user.getCreatedAt() != null ? user.getCreatedAt().toLocalDateTime() : LocalDateTime.now())
+                    .build();
+        }
     }
 
     @Getter
@@ -29,6 +39,16 @@ public class UserResponse {
         private String email;
         private String nickname;
         // 필요하면 refreshToken, roles 등 추가
+
+        public static LoginResponse of(User user, String token, String nickname) {
+            return LoginResponse.builder()
+                    .userId(user.getUserId())
+                    .email(user.getEmail())
+                    .nickname(nickname)
+                    .tokenType("Bearer")
+                    .accessToken(token)
+                    .build();
+        }
     }
 
     @Builder

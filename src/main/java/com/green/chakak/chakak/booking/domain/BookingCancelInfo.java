@@ -13,7 +13,7 @@ import java.sql.Timestamp;
 public class BookingCancelInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long cancellationId;
+    private Long cancellationId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_info_id")

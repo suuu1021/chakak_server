@@ -4,7 +4,6 @@ package com.green.chakak.chakak.account.service;
 
 import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.account.domain.User;
-import com.green.chakak.chakak.account.domain.UserProfile;
 import com.green.chakak.chakak.account.domain.UserType;
 import com.green.chakak.chakak.account.service.repository.UserJpaRepository;
 import com.green.chakak.chakak.account.service.repository.UserProfileJpaRepository;
@@ -46,22 +45,8 @@ public class UserService {
 
         User savedUser = userJpaRepository.save(user);
 
-        // UserProfile 생성 및 저장
-        UserProfile userProfile = UserProfile.builder()
-                .user(savedUser)
-                .nickName(req.getNickName())
-                .introduce("")
-                .imageData("")
-                .build();
-        userProfileJpaRepository.save(userProfile);
 
-        return UserResponse.SignupResponse.builder()
-                .userId(savedUser.getUserId())
-                .email(savedUser.getEmail())
-                .userTypeCode(savedUser.getUserType().getTypeCode())
-                .status(savedUser.getStatus())
-                .createdAt(savedUser.getCreatedAt() != null ? savedUser.getCreatedAt().toLocalDateTime() : java.time.LocalDateTime.now())
-                .build();
+        return UserResponse.SignupResponse.from(savedUser);
     }
 
     // 로그인 (JWT)
@@ -82,13 +67,7 @@ public class UserService {
                 .map(profile -> profile.getNickName())
                 .orElse("");
 
-        return UserResponse.LoginResponse.builder()
-                .userId(user.getUserId())
-                .email(user.getEmail())
-                .nickname(nickname)
-                .tokenType("Bearer")
-                .accessToken(token)
-                .build();
+        return UserResponse.LoginResponse.of(user, token, nickname);
     }
     // 회원 정보 수정
 

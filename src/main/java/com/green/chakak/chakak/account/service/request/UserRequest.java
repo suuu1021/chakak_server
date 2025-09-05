@@ -13,8 +13,6 @@ public class UserRequest {
         private String email;
         private String password;
         private String userTypeCode;
-        @JsonProperty("nickname")
-        private String nickName;
         public User toEntity() {
 
             return User.builder()
