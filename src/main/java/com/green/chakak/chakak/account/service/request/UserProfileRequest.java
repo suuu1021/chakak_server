@@ -3,6 +3,8 @@ package com.green.chakak.chakak.account.service.request;
 import com.green.chakak.chakak.account.domain.User;
 import com.green.chakak.chakak.account.domain.UserProfile;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -11,7 +13,8 @@ public class UserProfileRequest {
     @Data
     public static class CreateDTO {
 
-        @NotEmpty(message = "유저 아이디값은 필수 입니다.")
+        @NotNull(message = "유저 아이디값은 필수 입니다.")
+        @Positive
         private Long userInfoId;
 
         @NotEmpty(message = "닉네임을 입력하세요")
@@ -27,7 +30,6 @@ public class UserProfileRequest {
         public UserProfile toEntity(User user) {
             return UserProfile.builder()
                     .user(user)
-                    .userProfileId(userInfoId)
                     .nickName(nickName)
                     .introduce(introduce)
                     .imageData(imageData)

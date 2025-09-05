@@ -29,8 +29,9 @@ public class UserProfileService {
         User user = userJpaRepository.findById(createDTO.getUserInfoId()).orElseThrow(
                 () -> new Exception404("존재하지 않는 유저입니다.")
         );
-        if (!user.getUserType().equals("user")){
-            throw new Exception400("잘못된 접근입니다.");
+        log.info("user.getUserType(): {}", user.getUserType());
+        if (user.getUserType().getTypeCode() == null || !"user".equalsIgnoreCase(user.getUserType().getTypeCode())){
+            throw new Exception400("일반 사용자만 프로필을 생성할 수 있습니다.");
         }
         createDTO.getImageData();
         userProfileJpaRepository.findByUserId(user.getUserId()).ifPresent(up -> {
