@@ -5,6 +5,8 @@ import com.green.chakak.chakak.photographer.domain.PhotographerMap;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import lombok.Data;
 
+import java.util.List;
+
 public class PhotographerResponse {
 
     @Data
@@ -16,8 +18,9 @@ public class PhotographerResponse {
         private String location;
         private Integer experienceYears;
         private String status;
+        private List<CategoryDTO> categories;
 
-        public SaveDTO(PhotographerProfile profile) {
+        public SaveDTO(PhotographerProfile profile, List<PhotographerMap> maps) {
             this.photographerId = profile.getPhotographerProfileId();
             this.userId = profile.getUser().getUserId();
             this.businessName = profile.getBusinessName();
@@ -25,6 +28,10 @@ public class PhotographerResponse {
             this.location = profile.getLocation();
             this.experienceYears = profile.getExperienceYears();
             this.status = profile.getStatus();
+            // 전달받은 매핑 목록(maps)을 CategoryDTO 리스트로 변환
+            this.categories = maps.stream()
+                    .map(map -> new CategoryDTO(map.getPhotographerCategory()))
+                    .collect(java.util.stream.Collectors.toList());
         }
     }
 
@@ -35,13 +42,18 @@ public class PhotographerResponse {
         private String location;
         private Integer experienceYears;
         private String status;
+        private List<CategoryDTO> categories;
 
-        public UpdateDTO(PhotographerProfile profile) {
+        public UpdateDTO(PhotographerProfile profile, List<PhotographerMap> maps) {
             this.businessName = profile.getBusinessName();
             this.introduction = profile.getIntroduction();
             this.location = profile.getLocation();
             this.experienceYears = profile.getExperienceYears();
             this.status = profile.getStatus();
+            // 전달받은 매핑 목록(maps)을 CategoryDTO 리스트로 변환
+            this.categories = maps.stream()
+                    .map(map -> new CategoryDTO(map.getPhotographerCategory()))
+                    .collect(java.util.stream.Collectors.toList());
         }
     }
 
@@ -54,8 +66,9 @@ public class PhotographerResponse {
         private String location;
         private Integer experienceYears;
         private String status;
+        private List<CategoryDTO> categories;
 
-        public DetailDTO(PhotographerProfile profile) {
+        public DetailDTO(PhotographerProfile profile, List<PhotographerMap> maps) {
             this.photographerId = profile.getPhotographerProfileId();
             this.userId = profile.getUser().getUserId();
             this.businessName = profile.getBusinessName();
@@ -63,6 +76,10 @@ public class PhotographerResponse {
             this.location = profile.getLocation();
             this.experienceYears = profile.getExperienceYears();
             this.status = profile.getStatus();
+            // 전달받은 매핑 목록(maps)을 CategoryDTO 리스트로 변환
+            this.categories = maps.stream()
+                    .map(map -> new CategoryDTO(map.getPhotographerCategory()))
+                    .collect(java.util.stream.Collectors.toList());
         }
     }
 
