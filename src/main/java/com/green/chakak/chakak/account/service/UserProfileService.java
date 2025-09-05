@@ -25,11 +25,12 @@ public class UserProfileService {
 
 
     @Transactional
-    public UserProfileResponse.DetailDTO createdProfile(UserProfileRequest.CreateDTO createDTO){
-        User user = userJpaRepository.findById(createDTO.getUserInfoId()).orElseThrow(
+    public UserProfileResponse.DetailDTO createdProfile(UserProfileRequest.CreateDTO createDTO, LoginUser loginUser){
+        // DTO에서 ID를 받는 대신, 로그인한 사용자의 ID를 사용하도록 수정
+        User user = userJpaRepository.findById(loginUser.getId()).orElseThrow(
                 () -> new Exception404("존재하지 않는 유저입니다.")
         );
-        if (!user.getUserType().equals("user")){
+        if (!user.getUserType().getTypeCode().equals("USER")){
             throw new Exception400("잘못된 접근입니다.");
         }
         createDTO.getImageData();

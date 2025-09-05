@@ -24,8 +24,9 @@ public class UserProfileRestController {
     // 프로필 생성
     @PostMapping("/profile")
     public ResponseEntity<?> createProfile(@Valid @RequestBody UserProfileRequest.CreateDTO createDTO,
-                                         Errors errors){
-        UserProfileResponse.DetailDTO userProfileDetail = userProfileService.createdProfile(createDTO);
+                                         Errors errors,
+                                         @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser){ // loginUser 파라미터 추가
+        UserProfileResponse.DetailDTO userProfileDetail = userProfileService.createdProfile(createDTO, loginUser); // loginUser를 서비스에 전달
         return ResponseEntity.ok(new ApiUtil<>("처리가 완료 되었습니다."));
     }
 

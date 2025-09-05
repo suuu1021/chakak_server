@@ -4,6 +4,7 @@ import com.green.chakak.chakak.account.service.request.UserProfileRequest;
 import com.green.chakak.chakak.booking.domain.BookingCancelInfo;
 import com.green.chakak.chakak.booking.domain.BookingInfo;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,21 +14,20 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.sql.Timestamp;
 import java.util.List;
 
-//
 @Entity
 @Table(name = "user_profile")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class UserProfile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long UserProfileId;
+    private Long userProfileId; // 필드명을 userProfileId (소문자 u)로 수정
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
-
 
     @Column(length = 50, nullable = false, unique = true)
     private String nickName;
@@ -52,19 +52,14 @@ public class UserProfile {
     private List<BookingCancelInfo> bookingCancelInfos = new java.util.ArrayList<>();
 
     @Builder
-    public UserProfile(Long userProfileId, User user, String nickName, String introduce, String imageData, Timestamp createdAt, Timestamp updatedAt) {
-        this.UserProfileId = userProfileId;
+    public UserProfile(User user, String nickName, String introduce, String imageData) {
         this.user = user;
         this.nickName = nickName;
         this.introduce = introduce;
         this.imageData = imageData;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
-
     public void update(UserProfileRequest.UpdateDTO dto){
-
         if (dto.getNickName() != null) {
             this.nickName = dto.getNickName();
         }
@@ -75,7 +70,4 @@ public class UserProfile {
             this.imageData = dto.getImageData();
         }
     }
-
-
-
 }

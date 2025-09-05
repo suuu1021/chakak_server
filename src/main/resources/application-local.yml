@@ -12,6 +12,9 @@ logging:
     com.chakak: DEBUG
 
 spring:
+  config:
+    import: optional:application-secret.yml
+
   datasource:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
@@ -40,3 +43,12 @@ spring:
         default_batch_fetch_size: 10
     defer-datasource-initialization: true
 
+    mail:
+      host: smtp.gmail.com
+      port: 587
+      properties:
+        mail:
+          smtp:
+            auth: true
+            starttls:
+              enable: true

@@ -14,18 +14,19 @@ logging:
     org.hibernate.type.descriptor.sql: trace  # 쿼리 파라미터 값 출력
 
 spring:
+  config:
+    import: optional:application-secret.yml
+
   datasource:
-    driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    username: chakak
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.0.82:3306/chakak?useSSl=false&serverTimezone=Asia/Seoul
+    username: chakakAdmin
     password: chakak1234
 
   # H2 데이터베이스 웹 콘솔 활성화 (개발용)
   h2:
     console:
       enabled: true
-      settings:
-        web-allow-others: true
 
   #  sql:
   #    init:
@@ -36,10 +37,20 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: create #update
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true                # SQL 예쁘게 출력
         default_batch_fetch_size: 10
     defer-datasource-initialization: true
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
