@@ -31,6 +31,19 @@ public class UserRestController {
                 .header("Authorization", "Bearer " + jwtToken)
                 .body(new ApiUtil<>(null));
     }
+    // 회원 정보 수정
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody UserRequest.UpdateRequest req) {
+        UserResponse.UpdateResponse response = userService.updateUser(id, req);
+        return ResponseEntity.ok(response);
+    }
+
+    // 회원 탈퇴
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok(new ApiUtil<>("회원 탈퇴가 완료되었습니다."));
+    }
 
 
 

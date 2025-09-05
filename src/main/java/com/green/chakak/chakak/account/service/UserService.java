@@ -91,4 +91,11 @@ public class UserService {
                 .updatedAt(updatedUser.getUpdatedAt() != null ? updatedUser.getUpdatedAt().toLocalDateTime() : java.time.LocalDateTime.now())
                 .build();
     }
+
+    public void deleteUser(Long id) {
+        if (!userJpaRepository.existsById(id)) {
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
+        }
+        userJpaRepository.deleteById(id);
+    }
 }

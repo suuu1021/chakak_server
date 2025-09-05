@@ -1,6 +1,8 @@
 package com.green.chakak.chakak.account.domain;
 
 import com.green.chakak.chakak.account.service.request.UserProfileRequest;
+import com.green.chakak.chakak.booking.domain.BookingCancelInfo;
+import com.green.chakak.chakak.booking.domain.BookingInfo;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +11,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 //
 @Entity
@@ -41,6 +44,12 @@ public class UserProfile {
 
     @UpdateTimestamp
     private Timestamp updatedAt;
+
+    @OneToMany(mappedBy = "userProfile", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<BookingInfo> bookingInfos = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "userProfile", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<BookingCancelInfo> bookingCancelInfos = new java.util.ArrayList<>();
 
     @Builder
     public UserProfile(Long userProfileId, User user, String nickName, String introduce, String imageData, Timestamp createdAt, Timestamp updatedAt) {

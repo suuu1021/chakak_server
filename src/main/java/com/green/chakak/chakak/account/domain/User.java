@@ -17,7 +17,7 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-    //빌더 생성자 (필수값만) 아마 회원가입때 사용
+
     @Builder
     public User(String password, String email, UserType userType, UserStatus status) {
         this.password = password;
