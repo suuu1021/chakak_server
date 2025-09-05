@@ -26,12 +26,13 @@ public class UserProfileService {
 
     @Transactional
     public UserProfileResponse.DetailDTO createdProfile(UserProfileRequest.CreateDTO createDTO, LoginUser loginUser){
-        // DTO에서 ID를 받는 대신, 로그인한 사용자의 ID를 사용하도록 수정
         User user = userJpaRepository.findById(loginUser.getId()).orElseThrow(
                 () -> new Exception404("존재하지 않는 유저입니다.")
         );
-        if (!user.getUserType().getTypeCode().equals("USER")){
-            throw new Exception400("잘못된 접근입니다.");
+        // --- 충돌 해결: 더 안전하고 기능이 좋은 팀원의 코드를 채택 ---
+        log.info("user.getUserType(): {}", user.getUserType());
+        if (user.getUserType().getTypeCode() == null || !"user".equalsIgnoreCase(user.getUserType().getTypeCode())){
+            throw new Exception400("일반 사용자만 프로필을 생성할 수 있습니다.");
         }
         createDTO.getImageData();
         userProfileJpaRepository.findByUserId(user.getUserId()).ifPresent(up -> {

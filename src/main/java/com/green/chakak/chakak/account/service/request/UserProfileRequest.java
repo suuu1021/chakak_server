@@ -11,9 +11,7 @@ public class UserProfileRequest {
     @Data
     public static class CreateDTO {
 
-        // 이 필드는 User 객체를 통해 전달받으므로 DTO에서 불필요하여 제거합니다.
-        // @NotEmpty(message = "유저 아이디값은 필수 입니다.")
-        // private Long userInfoId;
+        // --- 충돌 해결: 로그인 정보를 사용하므로 DTO에서 ID 필드는 불필요하여 최종적으로 제거 ---
 
         @NotEmpty(message = "닉네임을 입력하세요")
         @Size(min = 2, max = 20, message = "닉네임은 2자 이상 20자 이하로 입력해주세요")
@@ -28,7 +26,6 @@ public class UserProfileRequest {
         public UserProfile toEntity(User user) {
             return UserProfile.builder()
                     .user(user)
-                    // ID는 DB가 자동 생성하므로 빌더에서 설정하는 코드 제거
                     .nickName(nickName)
                     .introduce(introduce)
                     .imageData(imageData)

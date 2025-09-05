@@ -31,7 +31,7 @@ public class UserProfileRestController {
     }
 
     // 프로필 수정
-    @PutMapping("/profile")
+    @PutMapping("/profile/update")
     public ResponseEntity<?> updateProfile(@Valid @RequestBody UserProfileRequest.UpdateDTO updateDTO,
                                            Errors errors,
                                            @RequestAttribute(Define.LOGIN_USER)LoginUser loginuser){
