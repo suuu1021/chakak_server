@@ -10,12 +10,14 @@ import com.green.chakak.chakak.account.service.response.UserProfileResponse;
 import com.green.chakak.chakak.global.errors.exception.Exception400;
 import com.green.chakak.chakak.global.errors.exception.Exception404;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)
+@Slf4j
 public class UserProfileService {
 
     private final UserProfileJpaRepository userProfileJpaRepository;
@@ -23,18 +25,21 @@ public class UserProfileService {
 
 
     @Transactional
-    public UserProfileResponse.DetailDTO createdProfile(UserProfileRequest.CreateDTO createDTO, LoginUser loginUser){
-        User user = userJpaRepository.findById(loginUser.getId())
-                .orElseThrow(() -> new Exception404("존재하지 않는 유저입니다."));
-
-        userProfileJpaRepository.findByUserId(loginUser.getId()).ifPresent(up -> {
+    public UserProfileResponse.DetailDTO createdProfile(UserProfileRequest.CreateDTO createDTO){
+        User user = userJpaRepository.findById(createDTO.getUserInfoId()).orElseThrow(
+                () -> new Exception404("존재하지 않는 유저입니다.")
+        );
+        if (!user.getUserType().equals("user")){
+            throw new Exception400("잘못된 접근입니다.");
+        }
+        createDTO.getImageData();
+        userProfileJpaRepository.findByUserId(user.getUserId()).ifPresent(up -> {
             throw new Exception400("이미 프로필을 작성하셨습니다.");
         });
         userProfileJpaRepository.findByNickName(createDTO.getNickName()).ifPresent(up -> {
             throw new Exception400("이미 사용중인 닉네임입니다.");
         });
         UserProfile savedProfile = userProfileJpaRepository.save(createDTO.toEntity(user));
-
         return new UserProfileResponse.DetailDTO(savedProfile);
     }
 

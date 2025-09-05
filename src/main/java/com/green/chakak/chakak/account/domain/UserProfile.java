@@ -32,7 +32,7 @@ public class UserProfile {
     @Column(length = 50)
     private String introduce;
 
-    @Column(name = "image_data", nullable = false)
+    @Column(name = "image_data")
     @Lob
     private String imageData;
 

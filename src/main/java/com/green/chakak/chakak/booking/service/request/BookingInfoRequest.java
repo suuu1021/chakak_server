@@ -2,6 +2,7 @@ package com.green.chakak.chakak.booking.service.request;
 
 import com.green.chakak.chakak.account.domain.UserProfile;
 import com.green.chakak.chakak.booking.domain.BookingInfo;
+import com.green.chakak.chakak.booking.domain.BookingStatus;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
 import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
@@ -56,7 +57,7 @@ public class BookingInfoRequest {
                  .location(this.location)                              // DTO 값
                  .budget(this.budget)                                  // DTO 값
                  .specialRequest(this.specialRequest)                  // DTO 값
-                 .status("예약대기")                               // 예약 초기 상태 (기본값)
+                 .status(BookingStatus.PENDING)                               // 예약 초기 상태 (기본값)
                  .participantCount(this.participantCount)              // DTO 값
                  .shootingDuration(this.shootingDuration)              // DTO 값
                  .build();

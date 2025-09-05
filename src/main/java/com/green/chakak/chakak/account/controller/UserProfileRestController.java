@@ -1,6 +1,7 @@
 package com.green.chakak.chakak.account.controller;
 
 import com.green.chakak.chakak.account.domain.LoginUser;
+import com.green.chakak.chakak.account.domain.User;
 import com.green.chakak.chakak.account.service.request.UserProfileRequest;
 import com.green.chakak.chakak.account.service.response.UserProfileResponse;
 import com.green.chakak.chakak.account.service.UserProfileService;
@@ -23,9 +24,8 @@ public class UserProfileRestController {
     // 프로필 생성
     @PostMapping("/profile")
     public ResponseEntity<?> createProfile(@Valid @RequestBody UserProfileRequest.CreateDTO createDTO,
-                                         Errors errors,
-                                         @RequestAttribute(value = Define.LOGIN_USER) LoginUser loginUser){
-        UserProfileResponse.DetailDTO userProfileDetail = userProfileService.createdProfile(createDTO,loginUser);
+                                         Errors errors){
+        UserProfileResponse.DetailDTO userProfileDetail = userProfileService.createdProfile(createDTO);
         return ResponseEntity.ok(new ApiUtil<>("처리가 완료 되었습니다."));
     }
 
