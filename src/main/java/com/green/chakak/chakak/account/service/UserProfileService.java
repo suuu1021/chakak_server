@@ -25,19 +25,15 @@ public class UserProfileService {
 
 
     @Transactional
-    public UserProfileResponse.DetailDTO createdProfile(UserProfileRequest.CreateDTO createDTO, LoginUser loginUser){
-        User user = userJpaRepository.findById(loginUser.getId()).orElseThrow(
+    public UserProfileResponse.DetailDTO createdProfile(UserProfileRequest.CreateDTO createDTO){
+        User user = userJpaRepository.findById(createDTO.getUserInfoId()).orElseThrow(
                 () -> new Exception404("존재하지 않는 유저입니다.")
         );
-        // --- 충돌 해결: 더 안전하고 기능이 좋은 팀원의 코드를 채택 ---
         log.info("user.getUserType(): {}", user.getUserType());
         if (user.getUserType().getTypeCode() == null || !"user".equalsIgnoreCase(user.getUserType().getTypeCode())){
             throw new Exception400("일반 사용자만 프로필을 생성할 수 있습니다.");
         }
-        createDTO.getImageData();
-        userProfileJpaRepository.findByUserId(user.getUserId()).ifPresent(up -> {
-            throw new Exception400("이미 프로필을 작성하셨습니다.");
-        });
+
         userProfileJpaRepository.findByNickName(createDTO.getNickName()).ifPresent(up -> {
             throw new Exception400("이미 사용중인 닉네임입니다.");
         });

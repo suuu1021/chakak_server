@@ -50,8 +50,8 @@ public class UserService {
 
         User savedUser = userJpaRepository.save(user);
 
-        // UserProfile 생성 로직을 별도 메소드로 분리
-        createAndSaveUserProfile(savedUser, req.getNickName());
+//        // UserProfile 생성 로직을 별도 메소드로 분리
+//        createAndSaveUserProfile(savedUser, req.getNickName());
 
         // 인증 이메일 발송
         emailService.sendVerificationEmail(req.getEmail());
@@ -65,16 +65,16 @@ public class UserService {
                 .build();
     }
 
-    // UserProfile을 생성하고 저장하는 private 헬퍼 메소드
-    private void createAndSaveUserProfile(User user, String nickName) {
-        UserProfile userProfile = UserProfile.builder()
-                .user(user)
-                .nickName(nickName)
-                .introduce("")
-                .imageData("")
-                .build();
-        userProfileJpaRepository.save(userProfile);
-    }
+//    // UserProfile을 생성하고 저장하는 private 헬퍼 메소드
+//    private void createAndSaveUserProfile(User user, String nickName) {
+//        UserProfile userProfile = UserProfile.builder()
+//                .user(user)
+//                .nickName(nickName)
+//                .introduce("")
+//                .imageData("")
+//                .build();
+//        userProfileJpaRepository.save(userProfile);
+//    }
 
     // 이메일 인증 완료 처리
     @Transactional
