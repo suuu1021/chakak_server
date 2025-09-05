@@ -36,7 +36,7 @@ public class BookingInfoResponse {
             this.location = bookingInfo.getLocation();
             this.budget = bookingInfo.getBudget();
             this.specialRequest = bookingInfo.getSpecialRequest();
-            this.status = bookingInfo.getStatus();
+            this.status = bookingInfo.getStatus().name();
             this.participantCount = bookingInfo.getParticipantCount();
             this.shootingDuration = bookingInfo.getShootingDuration();
         }
