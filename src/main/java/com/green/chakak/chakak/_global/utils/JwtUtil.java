@@ -28,7 +28,7 @@ public class JwtUtil {
                 .sign(Algorithm.HMAC512(SECRET_KEY));
     }
 
-    // 토큰 → LoginUser 복원
+    // 토큰 → LoginUser
     public static LoginUser verify(String jwt) {
         DecodedJWT decoded = JWT.require(Algorithm.HMAC512(SECRET_KEY))
                 .withSubject(SUBJECT)
@@ -50,7 +50,7 @@ public class JwtUtil {
                 .build();
     }
 
-    // Authorization 헤더 "Bearer xxx" → xxx 추출
+    // Authorization 헤더추출
     public static String resolveToken(String authHeader) {
         if (authHeader == null) return null;
         if (!authHeader.startsWith("Bearer ")) return null;

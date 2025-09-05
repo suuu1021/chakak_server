@@ -1,6 +1,9 @@
 package com.green.chakak.chakak.account.domain;
 
 
+import com.green.chakak.chakak.account.domain.UserProfile;
+import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
+import com.green.chakak.chakak.photo.domain.PhotoServiceReview;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +13,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Entity
 @Table(name = "user_account")
@@ -54,6 +58,15 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private Timestamp updatedAt;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private UserProfile userProfile;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private PhotographerProfile photographerProfile;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<PhotoServiceReview> photoServiceReviews = new java.util.ArrayList<>();
+
     public enum UserStatus {
         ACTIVE,
         INACTIVE,
@@ -70,4 +83,3 @@ public class User {
 
     }
 }
-

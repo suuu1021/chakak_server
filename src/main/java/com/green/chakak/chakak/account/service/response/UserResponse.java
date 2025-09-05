@@ -1,8 +1,7 @@
 package com.green.chakak.chakak.account.service.response;
 
 import com.green.chakak.chakak.account.domain.User;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -17,25 +16,19 @@ public class UserResponse {
         private String userTypeCode;
         private User.UserStatus status;
         private LocalDateTime createdAt;
+    }
 
-
-//        public SignupResponse(Long userId, String email, String userTypeCode, User.UserStatus status, LocalDateTime createdAt) {
-//            this.userId = userId;
-//            this.email = email;
-//            this.userTypeCode = userTypeCode;
-//            this.status = status;
-//            this.createdAt = createdAt;
-//        }
-
-//        @Getter
-//        @Builder
-//        public static class LoginResponse {
-//            private String tokenType;    // 예: "Bearer"
-//            private String accessToken;  // JWT 액세스 토큰
-//            private Timestamp issuedAt;  // 발급 시각(옵션)
-//            private Timestamp expiresAt; // 만료 시각(옵션)
-//            private LoginUser user;      // 로그인된 최소 유저 정보
-//        }
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class LoginResponse {
+        private String tokenType;     // ex)"Bearer"
+        private String accessToken;   // JWT
+        private Long userId;
+        private String email;
+        private String nickname;
+        // 필요하면 refreshToken, roles 등 추가
     }
 
     @Builder
@@ -46,5 +39,15 @@ public class UserResponse {
         private String userTypeCode;
         private User.UserStatus status;
         private LocalDateTime updatedAt;
+
+        public static UpdateResponse from(User user) {
+            return UpdateResponse.builder()
+                    .userId(user.getUserId())
+                    .email(user.getEmail())
+                    .userTypeCode(user.getUserType().getTypeCode())
+                    .status(user.getStatus())
+                    .updatedAt(user.getUpdatedAt() != null ? user.getUpdatedAt().toLocalDateTime() : java.time.LocalDateTime.now())
+                    .build();
+        }
     }
 }

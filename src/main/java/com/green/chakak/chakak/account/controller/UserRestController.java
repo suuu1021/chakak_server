@@ -1,9 +1,11 @@
 package com.green.chakak.chakak.account.controller;
 
+import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.account.service.request.UserRequest;
 import com.green.chakak.chakak.account.service.response.UserResponse;
 import com.green.chakak.chakak.account.service.UserService;
 import com.green.chakak.chakak._global.utils.ApiUtil;
+import com.green.chakak.chakak._global.utils.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,23 +27,34 @@ public class UserRestController {
     }
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserRequest.LoginRequest req) {
-        String jwtToken = userService.login(req);
+    public ResponseEntity<?> login(@Valid @RequestBody UserRequest.LoginRequest req) {
+        UserResponse.LoginResponse response = userService.login(req); // 토큰 + 유저정보
         return ResponseEntity.ok()
-                .header("Authorization", "Bearer " + jwtToken)
-                .body(new ApiUtil<>(null));
+                .header("Authorization", "Bearer " + response.getAccessToken())
+                .body(new ApiUtil<>(response));
     }
     // 회원 정보 수정
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody UserRequest.UpdateRequest req) {
-        UserResponse.UpdateResponse response = userService.updateUser(id, req);
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody UserRequest.UpdateRequest req,
+                                        @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        LoginUser loginUser = JwtUtil.verify(token);
+        if (!loginUser.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("본인만 수정할 수 있습니다.");
+        }
+        UserResponse.UpdateResponse response = userService.updateUser(id, req, loginUser);
         return ResponseEntity.ok(response);
     }
 
     // 회원 탈퇴
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+    public ResponseEntity<?> deleteUser(@PathVariable Long id, @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        LoginUser loginUser = JwtUtil.verify(token);
+        if (!loginUser.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("본인만 탈퇴할 수 있습니다.");
+        }
+        userService.deleteUser(id, loginUser);
         return ResponseEntity.ok(new ApiUtil<>("회원 탈퇴가 완료되었습니다."));
     }
 

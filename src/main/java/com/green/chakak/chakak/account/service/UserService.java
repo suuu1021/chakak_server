@@ -4,8 +4,10 @@ package com.green.chakak.chakak.account.service;
 
 import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.account.domain.User;
+import com.green.chakak.chakak.account.domain.UserProfile;
 import com.green.chakak.chakak.account.domain.UserType;
 import com.green.chakak.chakak.account.service.repository.UserJpaRepository;
+import com.green.chakak.chakak.account.service.repository.UserProfileJpaRepository;
 import com.green.chakak.chakak.account.service.repository.UserTypeRepository;
 import com.green.chakak.chakak.account.service.request.UserRequest;
 import com.green.chakak.chakak.account.service.response.UserResponse;
@@ -21,6 +23,7 @@ public class UserService {
 
     private final UserJpaRepository userJpaRepository;
     private final UserTypeRepository userTypeRepository;
+    private final UserProfileJpaRepository userProfileJpaRepository;
 
 
     // 회원가입
@@ -43,17 +46,27 @@ public class UserService {
 
         User savedUser = userJpaRepository.save(user);
 
+        // UserProfile 생성 및 저장
+        UserProfile userProfile = UserProfile.builder()
+                .user(savedUser)
+                .nickName(req.getNickName())
+                .introduce("")
+                .imageData("")
+                .build();
+        userProfileJpaRepository.save(userProfile);
+
         return UserResponse.SignupResponse.builder()
                 .userId(savedUser.getUserId())
                 .email(savedUser.getEmail())
                 .userTypeCode(savedUser.getUserType().getTypeCode())
                 .status(savedUser.getStatus())
+                .createdAt(savedUser.getCreatedAt() != null ? savedUser.getCreatedAt().toLocalDateTime() : java.time.LocalDateTime.now())
                 .build();
     }
 
     // 로그인 (JWT)
     @Transactional(readOnly = true)
-    public String login(UserRequest.LoginRequest req) {
+    public UserResponse.LoginResponse login(UserRequest.LoginRequest req) {
         User user = userJpaRepository.findByEmailAndUserPassword(req.getEmail(), req.getPassword())
                 .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다."));
 
@@ -62,37 +75,46 @@ public class UserService {
         }
 
         LoginUser loginUser = LoginUser.fromEntity(user); // (id, email, typeCode, status)
-        return JwtUtil.create(loginUser);
+        String token = JwtUtil.create(loginUser);
+
+        // 유저 프로필에서 닉네임 조회
+        String nickname = userProfileJpaRepository.findByUserId(user.getUserId())
+                .map(profile -> profile.getNickName())
+                .orElse("");
+
+        return UserResponse.LoginResponse.builder()
+                .userId(user.getUserId())
+                .email(user.getEmail())
+                .nickname(nickname)
+                .tokenType("Bearer")
+                .accessToken(token)
+                .build();
     }
     // 회원 정보 수정
 
-    public UserResponse.UpdateResponse updateUser(Long userId, UserRequest.UpdateRequest req) {
+    public UserResponse.UpdateResponse updateUser(Long userId, UserRequest.UpdateRequest req, LoginUser loginUser) {
+        if (!loginUser.getId().equals(userId)) {
+            throw new IllegalArgumentException("본인만 수정할 수 있습니다.");
+        }
         User user = userJpaRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
-
         if (req.getEmail() != null && !req.getEmail().isEmpty()) {
             if (!user.getEmail().equals(req.getEmail()) && userJpaRepository.existsByEmail(req.getEmail())) {
                 throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
             }
             user.changeEmail(req.getEmail());
         }
-
         if (req.getPassword() != null && !req.getPassword().isEmpty()) {
             user.setPassword(req.getPassword());
         }
-
         User updatedUser = userJpaRepository.save(user);
-
-        return UserResponse.UpdateResponse.builder()
-                .userId(updatedUser.getUserId())
-                .email(updatedUser.getEmail())
-                .userTypeCode(updatedUser.getUserType().getTypeCode())
-                .status(updatedUser.getStatus())
-                .updatedAt(updatedUser.getUpdatedAt() != null ? updatedUser.getUpdatedAt().toLocalDateTime() : java.time.LocalDateTime.now())
-                .build();
+        return UserResponse.UpdateResponse.from(updatedUser);
     }
 
-    public void deleteUser(Long id) {
+    public void deleteUser(Long id, LoginUser loginUser) {
+        if (!loginUser.getId().equals(id)) {
+            throw new IllegalArgumentException("본인만 탈퇴할 수 있습니다.");
+        }
         if (!userJpaRepository.existsById(id)) {
             throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
         }

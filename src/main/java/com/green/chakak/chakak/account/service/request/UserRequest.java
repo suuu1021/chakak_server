@@ -1,5 +1,6 @@
 package com.green.chakak.chakak.account.service.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.green.chakak.chakak.account.domain.User;
 import lombok.Data;
 
@@ -12,6 +13,8 @@ public class UserRequest {
         private String email;
         private String password;
         private String userTypeCode;
+        @JsonProperty("nickname")
+        private String nickName;
         public User toEntity() {
 
             return User.builder()
