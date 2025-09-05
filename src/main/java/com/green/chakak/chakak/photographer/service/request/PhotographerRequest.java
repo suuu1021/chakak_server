@@ -13,6 +13,9 @@ public class PhotographerRequest {
     @NoArgsConstructor
     public static class SaveProfile {
 
+        @NotNull(message = "회원 id값은 필수 입니다.")
+        private Long userId;
+
         @Size(max = 100, message = "상호명은 100자를 초과할 수 없습니다.")
         private String businessName;
 
