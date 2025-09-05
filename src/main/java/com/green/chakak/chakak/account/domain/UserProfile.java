@@ -14,6 +14,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.sql.Timestamp;
 import java.util.List;
 
+//
 @Entity
 @Table(name = "user_profile")
 @Data
@@ -23,11 +24,12 @@ public class UserProfile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userProfileId; // 필드명을 userProfileId (소문자 u)로 수정
+    private Long userProfileId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
+
 
     @Column(length = 50, nullable = false, unique = true)
     private String nickName;
@@ -52,14 +54,19 @@ public class UserProfile {
     private List<BookingCancelInfo> bookingCancelInfos = new java.util.ArrayList<>();
 
     @Builder
-    public UserProfile(User user, String nickName, String introduce, String imageData) {
+    public UserProfile(Long userProfileId, User user, String nickName, String introduce, String imageData, Timestamp createdAt, Timestamp updatedAt) {
+        this.userProfileId = userProfileId;
         this.user = user;
         this.nickName = nickName;
         this.introduce = introduce;
         this.imageData = imageData;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
+
     public void update(UserProfileRequest.UpdateDTO dto){
+
         if (dto.getNickName() != null) {
             this.nickName = dto.getNickName();
         }
@@ -70,4 +77,7 @@ public class UserProfile {
             this.imageData = dto.getImageData();
         }
     }
+
+
+
 }

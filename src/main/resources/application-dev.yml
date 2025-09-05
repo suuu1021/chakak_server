@@ -29,11 +29,11 @@ spring:
       settings:
         web-allow-others: true
 
-  #  sql:
-  #    init:
-  #      mode: always
-  #      data-locations:
-  #        - classpath:db/data.sql
+  sql:
+     init:
+       mode: always
+       data-locations:
+         - classpath:db/data.sql
 
   jpa:
     open-in-view: false
