@@ -62,7 +62,7 @@ public class PhotographerCategoryController {
     @DeleteMapping("/delete/{categoryId}")
     public ResponseEntity<?> deleteCategory(@PathVariable Long categoryId) {
         photographerCategoryService.deleteCategory(categoryId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new ApiUtil<>(null, "카테고리 삭제가 완료되었습니다."));
     }
 
     /**
