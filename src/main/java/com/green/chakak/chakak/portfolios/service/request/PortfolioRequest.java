@@ -14,22 +14,26 @@ public class PortfolioRequest {
 	@NoArgsConstructor
 	public static class CreateDTO {
 
-		@NotNull(message = "사진작가 ID는 필수입니다")
-		private Long photographerId;
+		// photographerId 제거 - LoginUser에서 가져와야 함
+		// @NotNull(message = "사진작가 ID는 필수입니다")
+		// private Long photographerId;
 
 		@NotBlank(message = "포트폴리오 제목은 필수입니다")
 		@Size(max = 255, message = "제목은 255자 이내여야 합니다")
 		private String title;
 
-		@Size(max = 1000, message = "설명은 텍스트 필드입니다")
+		@Size(max = 2000, message = "설명은 2000자 이내여야 합니다") // 1000자 → 2000자로 증가
 		private String description;
 
 		@NotBlank(message = "썸네일 URL은 필수입니다")
 		@Size(max = 512, message = "썸네일 URL은 512자 이내여야 합니다")
+		@Pattern(regexp = "^https?://.*\\.(jpg|jpeg|png|gif|webp)$",
+				message = "올바른 이미지 URL 형식이어야 합니다")
 		private String thumbnailUrl;
 
-		// 카테고리 ID 목록
-		private List<Long> categoryIds;
+		// 카테고리 ID 목록 - Long 타입이 맞음
+		@Size(max = 10, message = "카테고리는 최대 10개까지 선택 가능합니다")
+		private List<@NotNull @Positive Long> categoryIds;
 
 		public Portfolio toEntity(PhotographerProfile photographerProfile) {
 			Portfolio portfolio = new Portfolio();
@@ -49,14 +53,17 @@ public class PortfolioRequest {
 		@Size(max = 255, message = "제목은 255자 이내여야 합니다")
 		private String title;
 
-		@Size(max = 1000, message = "설명은 텍스트 필드입니다")
+		@Size(max = 2000, message = "설명은 2000자 이내여야 합니다")
 		private String description;
 
 		@Size(max = 512, message = "썸네일 URL은 512자 이내여야 합니다")
+		@Pattern(regexp = "^https?://.*\\.(jpg|jpeg|png|gif|webp)$",
+				message = "올바른 이미지 URL 형식이어야 합니다")
 		private String thumbnailUrl;
 
 		// 카테고리 ID 목록 (수정 시 기존 매핑 삭제 후 새로 등록)
-		private List<Long> categoryIds;
+		@Size(max = 10, message = "카테고리는 최대 10개까지 선택 가능합니다")
+		private List<@NotNull @Positive Long> categoryIds;
 	}
 
 	// 이미지 추가
@@ -65,13 +72,16 @@ public class PortfolioRequest {
 	public static class AddImageDTO {
 
 		@NotNull(message = "포트폴리오 ID는 필수입니다")
+		@Positive(message = "포트폴리오 ID는 양수여야 합니다")
 		private Long portfolioId;
 
 		@NotBlank(message = "이미지 URL은 필수입니다")
 		@Size(max = 512, message = "이미지 URL은 512자 이내여야 합니다")
+		@Pattern(regexp = "^https?://.*\\.(jpg|jpeg|png|gif|webp)$",
+				message = "올바른 이미지 URL 형식이어야 합니다")
 		private String imageUrl;
 
-		private Boolean isMain;
+		private Boolean isMain = false; // 기본값 설정
 	}
 
 	// 포트폴리오 검색
@@ -79,8 +89,14 @@ public class PortfolioRequest {
 	@NoArgsConstructor
 	public static class SearchDTO {
 
+		@Size(max = 100, message = "검색 키워드는 100자 이내여야 합니다")
 		private String keyword; // 제목, 설명, 키워드
-		private List<Long> categoryIds; // 카테고리 필터
+
+		@Size(max = 10, message = "카테고리 필터는 최대 10개까지 가능합니다")
+		private List<@NotNull @Positive Long> categoryIds; // 카테고리 필터
+
+		@Pattern(regexp = "^(latest|popular|viewed)$",
+				message = "정렬 기준은 latest, popular, viewed 중 하나여야 합니다")
 		private String sortBy = "latest"; // latest, popular, viewed
 
 		@Min(value = 0, message = "페이지는 0 이상이어야 합니다")
