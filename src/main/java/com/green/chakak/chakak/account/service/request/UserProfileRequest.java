@@ -13,7 +13,7 @@ public class UserProfileRequest {
     @Data
     public static class CreateDTO {
 
-        @NotNull(message = "유저 아이디값은 필수 입니다.")
+        @NotNull(message = "유저 정보를 선택하세요")
         @Positive
         private Long userInfoId;
 

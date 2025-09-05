@@ -1,5 +1,8 @@
 package com.green.chakak.chakak.portfolios.service;
 
+import com.green.chakak.chakak._global.errors.exception.Exception400;
+import com.green.chakak.chakak._global.errors.exception.Exception404;
+import com.green.chakak.chakak._global.errors.exception.Exception500;
 import com.green.chakak.chakak.portfolios.domain.PortfolioCategory;
 import com.green.chakak.chakak.portfolios.service.repository.PortfolioCategoryJpaRepository;
 import com.green.chakak.chakak.portfolios.service.request.PortfolioCategoryRequest;
@@ -39,27 +42,42 @@ public class PortfolioCategoryService {
 	 */
 	@Transactional
 	public PortfolioCategoryResponse.DetailDTO createCategory(PortfolioCategoryRequest.CreateDTO request) {
-		log.info("카테고리 생성 시작: {}", request.getCategoryName());
+		try {
+			log.info("카테고리 생성 시작: {}", request.getCategoryName());
 
-		// 중복 체크
-		if (portfolioCategoryRepository.existsByCategoryName(request.getCategoryName())) {
-			throw new IllegalArgumentException("이미 존재하는 카테고리명입니다: " + request.getCategoryName());
+			// 입력값 검증
+			validateCreateRequest(request);
+
+			// 중복 체크
+			if (portfolioCategoryRepository.existsByCategoryName(request.getCategoryName())) {
+				throw new Exception400("이미 존재하는 카테고리명입니다: " + request.getCategoryName());
+			}
+
+			PortfolioCategory category = new PortfolioCategory();
+			category.setCategoryName(request.getCategoryName());
+
+			// 부모 카테고리 설정
+			if (request.getParentId() != null) {
+				validateCategoryId(request.getParentId());
+				PortfolioCategory parentCategory = portfolioCategoryRepository.findById(request.getParentId())
+						.orElseThrow(() -> new Exception404("존재하지 않는 부모 카테고리입니다: " + request.getParentId()));
+				category.setParent(parentCategory);
+			}
+
+			// 정렬 순서 설정 (기본값 처리)
+			category.setSortOrder(request.getSortOrder() != null ? request.getSortOrder() : 0);
+
+			PortfolioCategory savedCategory = portfolioCategoryRepository.save(category);
+			log.info("카테고리 생성 완료: ID = {}", savedCategory.getPortfolioCategoryId());
+
+			return PortfolioCategoryResponse.DetailDTO.from(savedCategory);
+
+		} catch (Exception400 | Exception404 e) {
+			throw e; // 이미 정의된 예외는 그대로 전파
+		} catch (Exception e) {
+			log.error("카테고리 생성 중 예상치 못한 오류 발생", e);
+			throw new Exception500("카테고리 생성 중 서버 오류가 발생했습니다");
 		}
-
-		PortfolioCategory category = new PortfolioCategory();
-		category.setCategoryName(request.getCategoryName());
-
-		if (request.getParentId() != null) {
-			PortfolioCategory parentCategory = portfolioCategoryRepository.findById(request.getParentId())
-					.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 부모 카테고리입니다: " + request.getParentId()));
-			category.setParent(parentCategory);
-		}
-		category.setSortOrder(request.getSortOrder());
-
-		PortfolioCategory savedCategory = portfolioCategoryRepository.save(category);
-		log.info("카테고리 생성 완료: ID = {}", savedCategory.getPortfolioCategoryId());
-
-		return PortfolioCategoryResponse.DetailDTO.from(savedCategory);
 	}
 
 	/**
@@ -67,81 +85,122 @@ public class PortfolioCategoryService {
 	 */
 	@Transactional
 	public PortfolioCategoryResponse.DetailDTO updateCategory(Long categoryId, PortfolioCategoryRequest.UpdateDTO request) {
-		log.info("카테고리 수정 시작: ID = {}", categoryId);
+		try {
+			log.info("카테고리 수정 시작: ID = {}", categoryId);
 
-		PortfolioCategory category = portfolioCategoryRepository.findById(categoryId)
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다: " + categoryId));
+			// 입력값 검증
+			validateCategoryId(categoryId);
+			validateUpdateRequest(request);
 
-		// 카테고리명 중복 체크 (자기 자신 제외)
-		if (request.getCategoryName() != null &&
-				!request.getCategoryName().equals(category.getCategoryName()) &&
-				portfolioCategoryRepository.existsByCategoryName(request.getCategoryName())) {
-			throw new IllegalArgumentException("이미 존재하는 카테고리명입니다: " + request.getCategoryName());
-		}
+			PortfolioCategory category = portfolioCategoryRepository.findById(categoryId)
+					.orElseThrow(() -> new Exception404("존재하지 않는 카테고리입니다: " + categoryId));
 
-		// 필드 업데이트
-		if (request.getCategoryName() != null) {
-			category.setCategoryName(request.getCategoryName());
-		}
-		if (request.getParentId() != null) {
-			if (request.getParentId().equals(categoryId)) {
-				throw new IllegalArgumentException("자신을 부모 카테고리로 설정할 수 없습니다.");
+			// 카테고리명 중복 체크 (자기 자신 제외)
+			if (request.getCategoryName() != null &&
+					!request.getCategoryName().equals(category.getCategoryName()) &&
+					portfolioCategoryRepository.existsByCategoryName(request.getCategoryName())) {
+				throw new Exception400("이미 존재하는 카테고리명입니다: " + request.getCategoryName());
 			}
-			PortfolioCategory parentCategory = portfolioCategoryRepository.findById(request.getParentId())
-					.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 부모 카테고리입니다: " + request.getParentId()));
-			category.setParent(parentCategory);
-		} else if (request.getParentId() == null && category.getParent() != null) {
-			category.setParent(null);
-		}
-		if (request.getSortOrder() != null) {
-			category.setSortOrder(request.getSortOrder());
-		}
-		if (request.getIsActive() != null) {
-			category.setIsActive(request.getIsActive());
-		}
 
-		PortfolioCategory updatedCategory = portfolioCategoryRepository.save(category);
-		log.info("카테고리 수정 완료: ID = {}", categoryId);
+			// 필드 업데이트
+			if (request.getCategoryName() != null) {
+				category.setCategoryName(request.getCategoryName());
+			}
 
-		return PortfolioCategoryResponse.DetailDTO.from(updatedCategory);
+			// 부모 카테고리 설정
+			if (request.getParentId() != null) {
+				// 자기 자신을 부모로 설정하는 것을 방지
+				if (request.getParentId().equals(categoryId)) {
+					throw new Exception400("자신을 부모 카테고리로 설정할 수 없습니다");
+				}
+
+				validateCategoryId(request.getParentId());
+				PortfolioCategory parentCategory = portfolioCategoryRepository.findById(request.getParentId())
+						.orElseThrow(() -> new Exception404("존재하지 않는 부모 카테고리입니다: " + request.getParentId()));
+				category.setParent(parentCategory);
+			} else if (request.getParentId() == null && category.getParent() != null) {
+				// 명시적으로 null을 전달한 경우 부모 카테고리 제거
+				category.setParent(null);
+			}
+
+			if (request.getSortOrder() != null) {
+				category.setSortOrder(request.getSortOrder());
+			}
+			if (request.getIsActive() != null) {
+				category.setIsActive(request.getIsActive());
+			}
+
+			PortfolioCategory updatedCategory = portfolioCategoryRepository.save(category);
+			log.info("카테고리 수정 완료: ID = {}", categoryId);
+
+			return PortfolioCategoryResponse.DetailDTO.from(updatedCategory);
+
+		} catch (Exception400 | Exception404 e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("카테고리 수정 중 예상치 못한 오류 발생", e);
+			throw new Exception500("카테고리 수정 중 서버 오류가 발생했습니다");
+		}
 	}
 
 	/**
 	 * 카테고리 단건 조회
 	 */
 	public PortfolioCategoryResponse.DetailDTO getCategory(Long categoryId) {
-		log.info("카테고리 조회: ID = {}", categoryId);
+		try {
+			log.info("카테고리 조회: ID = {}", categoryId);
 
-		PortfolioCategory category = portfolioCategoryRepository.findById(categoryId)
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다: " + categoryId));
+			validateCategoryId(categoryId);
 
-		return PortfolioCategoryResponse.DetailDTO.from(category);
+			PortfolioCategory category = portfolioCategoryRepository.findById(categoryId)
+					.orElseThrow(() -> new Exception404("존재하지 않는 카테고리입니다: " + categoryId));
+
+			return PortfolioCategoryResponse.DetailDTO.from(category);
+
+		} catch (Exception400 | Exception404 e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("카테고리 조회 중 예상치 못한 오류 발생", e);
+			throw new Exception500("카테고리 조회 중 서버 오류가 발생했습니다");
+		}
 	}
 
 	/**
 	 * 활성화된 카테고리 목록 조회
 	 */
 	public List<PortfolioCategoryResponse.DetailDTO> getActiveCategories() {
-		log.info("활성화된 카테고리 목록 조회");
+		try {
+			log.info("활성화된 카테고리 목록 조회");
 
-		List<PortfolioCategory> categories = portfolioCategoryRepository.findByIsActiveTrue();
+			List<PortfolioCategory> categories = portfolioCategoryRepository.findByIsActiveTrue();
 
-		return categories.stream()
-				.map(PortfolioCategoryResponse.DetailDTO::from)
-				.collect(Collectors.toList());
+			return categories.stream()
+					.map(PortfolioCategoryResponse.DetailDTO::from)
+					.collect(Collectors.toList());
+
+		} catch (Exception e) {
+			log.error("활성화된 카테고리 목록 조회 중 예상치 못한 오류 발생", e);
+			throw new Exception500("카테고리 목록 조회 중 서버 오류가 발생했습니다");
+		}
 	}
 
 	/**
 	 * 전체 카테고리 목록 조회 (관리자용)
 	 */
 	public List<PortfolioCategoryResponse.DetailDTO> getAllCategories() {
-		log.info("전체 카테고리 목록 조회");
+		try {
+			log.info("전체 카테고리 목록 조회");
 
-		List<PortfolioCategory> categories = portfolioCategoryRepository.findAll();
+			List<PortfolioCategory> categories = portfolioCategoryRepository.findAll();
 
-		return categories.stream()
-				.map(PortfolioCategoryResponse.DetailDTO::from)
-				.collect(Collectors.toList());
+			return categories.stream()
+					.map(PortfolioCategoryResponse.DetailDTO::from)
+					.collect(Collectors.toList());
+
+		} catch (Exception e) {
+			log.error("전체 카테고리 목록 조회 중 예상치 못한 오류 발생", e);
+			throw new Exception500("카테고리 목록 조회 중 서버 오류가 발생했습니다");
+		}
 	}
 
 	/**
@@ -149,14 +208,78 @@ public class PortfolioCategoryService {
 	 */
 	@Transactional
 	public void deleteCategory(Long categoryId) {
-		log.info("카테고리 비활성화: ID = {}", categoryId);
+		try {
+			log.info("카테고리 비활성화: ID = {}", categoryId);
 
-		PortfolioCategory category = portfolioCategoryRepository.findById(categoryId)
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다: " + categoryId));
+			validateCategoryId(categoryId);
 
-		category.setIsActive(false);
-		portfolioCategoryRepository.save(category);
+			PortfolioCategory category = portfolioCategoryRepository.findById(categoryId)
+					.orElseThrow(() -> new Exception404("존재하지 않는 카테고리입니다: " + categoryId));
 
-		log.info("카테고리 비활성화 완료: ID = {}", categoryId);
+			// 이미 비활성화된 카테고리인지 확인
+			if (!category.getIsActive()) {
+				throw new Exception400("이미 비활성화된 카테고리입니다: " + categoryId);
+			}
+
+			category.setIsActive(false);
+			portfolioCategoryRepository.save(category);
+
+			log.info("카테고리 비활성화 완료: ID = {}", categoryId);
+
+		} catch (Exception400 | Exception404 e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("카테고리 비활성화 중 예상치 못한 오류 발생", e);
+			throw new Exception500("카테고리 비활성화 중 서버 오류가 발생했습니다");
+		}
+	}
+
+	// ============ 유효성 검증 메서드 ============
+
+	/**
+	 * 카테고리 생성 요청 유효성 검증
+	 */
+	private void validateCreateRequest(PortfolioCategoryRequest.CreateDTO request) {
+		if (request == null) {
+			throw new Exception400("카테고리 생성 요청 데이터가 없습니다");
+		}
+		if (request.getCategoryName() == null || request.getCategoryName().trim().isEmpty()) {
+			throw new Exception400("카테고리명은 필수입니다");
+		}
+		if (request.getCategoryName().length() > 50) {
+			throw new Exception400("카테고리명은 50자를 초과할 수 없습니다");
+		}
+		if (request.getSortOrder() != null && request.getSortOrder() < 0) {
+			throw new Exception400("정렬 순서는 0 이상이어야 합니다");
+		}
+	}
+
+	/**
+	 * 카테고리 수정 요청 유효성 검증
+	 */
+	private void validateUpdateRequest(PortfolioCategoryRequest.UpdateDTO request) {
+		if (request == null) {
+			throw new Exception400("카테고리 수정 요청 데이터가 없습니다");
+		}
+		if (request.getCategoryName() != null) {
+			if (request.getCategoryName().trim().isEmpty()) {
+				throw new Exception400("카테고리명은 빈 값일 수 없습니다");
+			}
+			if (request.getCategoryName().length() > 50) {
+				throw new Exception400("카테고리명은 50자를 초과할 수 없습니다");
+			}
+		}
+		if (request.getSortOrder() != null && request.getSortOrder() < 0) {
+			throw new Exception400("정렬 순서는 0 이상이어야 합니다");
+		}
+	}
+
+	/**
+	 * 카테고리 ID 유효성 검증
+	 */
+	private void validateCategoryId(Long categoryId) {
+		if (categoryId == null || categoryId <= 0) {
+			throw new Exception400("유효하지 않은 카테고리 ID입니다: " + categoryId);
+		}
 	}
 }

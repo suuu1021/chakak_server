@@ -10,7 +10,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.w3c.dom.Text;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -23,10 +22,11 @@ public class PhotoServiceInfo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "photo_service_info_id")
     private Long serviceId;
 
-    @JoinColumn(nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "photographer_profile_id", nullable = false)
     private PhotographerProfile photographerProfile;
 
     @Column(nullable = false, length = 100)
@@ -37,6 +37,7 @@ public class PhotoServiceInfo {
     private String description;
 
     @Lob
+    @Column(name = "image_data")
     private String imageData;
 
     @CreationTimestamp

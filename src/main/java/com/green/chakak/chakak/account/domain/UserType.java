@@ -25,4 +25,6 @@ public class UserType {
 
     @Column(name = "UPDATED_AT", nullable = false)
     private LocalDateTime updatedAt;
+
+
 }

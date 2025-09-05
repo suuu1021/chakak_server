@@ -4,6 +4,7 @@ import com.green.chakak.chakak.account.service.request.UserProfileRequest;
 import com.green.chakak.chakak.booking.domain.BookingCancelInfo;
 import com.green.chakak.chakak.booking.domain.BookingInfo;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,11 +19,12 @@ import java.util.List;
 @Table(name = "user_profile")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class UserProfile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long UserProfileId;
+    private Long userProfileId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
@@ -53,7 +55,7 @@ public class UserProfile {
 
     @Builder
     public UserProfile(Long userProfileId, User user, String nickName, String introduce, String imageData, Timestamp createdAt, Timestamp updatedAt) {
-        this.UserProfileId = userProfileId;
+        this.userProfileId = userProfileId;
         this.user = user;
         this.nickName = nickName;
         this.introduce = introduce;

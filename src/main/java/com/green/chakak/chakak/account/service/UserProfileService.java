@@ -33,10 +33,7 @@ public class UserProfileService {
         if (user.getUserType().getTypeCode() == null || !"user".equalsIgnoreCase(user.getUserType().getTypeCode())){
             throw new Exception400("일반 사용자만 프로필을 생성할 수 있습니다.");
         }
-        createDTO.getImageData();
-        userProfileJpaRepository.findByUserId(user.getUserId()).ifPresent(up -> {
-            throw new Exception400("이미 프로필을 작성하셨습니다.");
-        });
+
         userProfileJpaRepository.findByNickName(createDTO.getNickName()).ifPresent(up -> {
             throw new Exception400("이미 사용중인 닉네임입니다.");
         });

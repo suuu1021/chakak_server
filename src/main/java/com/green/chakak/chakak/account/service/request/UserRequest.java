@@ -13,6 +13,8 @@ public class UserRequest {
         private String email;
         private String password;
         private String userTypeCode;
+        //private String nickName; // @JsonProperty 제거하여 충돌 해결
+
         public User toEntity() {
 
             return User.builder()

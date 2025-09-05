@@ -1,7 +1,5 @@
 package com.green.chakak.chakak.account.domain;
 
-
-import com.green.chakak.chakak.account.domain.UserProfile;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photo.domain.PhotoServiceReview;
 import jakarta.persistence.*;
@@ -23,14 +21,14 @@ import java.util.List;
 public class User {
 
     @Builder
-    public User(String password, String email, UserType userType, UserStatus status) {
+    public User(String password, String email, UserType userType, UserStatus status, boolean emailVerified) {
         this.password = password;
         this.email = email;
         this.userType = userType;
         this.status = status;
+        this.emailVerified = emailVerified;
     }
-//
-     //
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
@@ -49,6 +47,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserStatus status; // ACTIVE / INACTIVE / PENDING / SUSPENDED
+
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -73,13 +74,18 @@ public class User {
         PENDING,
         SUSPENDED
     }
+
     public void changeEmail(String newEmail) {
         this.email = newEmail;
-
     }
 
     public void changePassword(String newPassword) {
         this.password = newPassword;
+    }
 
+    // 이메일 인증 완료 처리
+    public void completeEmailVerification() {
+        this.emailVerified = true;
+        this.status = UserStatus.ACTIVE;
     }
 }
