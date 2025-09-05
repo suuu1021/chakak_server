@@ -3,8 +3,8 @@ package com.green.chakak.chakak.photographer.controller;
 import com.green.chakak.chakak._global.utils.ApiUtil;
 import com.green.chakak.chakak._global.utils.Define;
 import com.green.chakak.chakak.account.domain.LoginUser;
-import com.green.chakak.chakak.account.domain.User;
 import com.green.chakak.chakak.photographer.service.PhotographerService;
+import com.green.chakak.chakak.photographer.service.request.PhotographerCategoryRequest;
 import com.green.chakak.chakak.photographer.service.request.PhotographerRequest;
 import com.green.chakak.chakak.photographer.service.response.PhotographerResponse;
 import jakarta.validation.Valid;
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,7 +32,7 @@ public class PhotographerController {
     }
 
     // 포토그래퍼 프로필 상세 조회
-    @GetMapping("/{photographerId}")
+    @GetMapping("/detail/{photographerId}")
     public ResponseEntity<?> getPhotographerDetail(@PathVariable Long photographerId) {
         PhotographerResponse.DetailDTO response = photographerService.getProfileDetail(photographerId);
         return ResponseEntity.ok(new ApiUtil<>(response));
@@ -47,10 +46,10 @@ public class PhotographerController {
     }
 
     // 포토그래퍼 프로필 수정
-    @PutMapping("/{photographerId}")
+    @PutMapping("/update/{photographerId}")
     public ResponseEntity<?> updateProfile(@PathVariable Long photographerId,
-                                                @Valid @RequestBody PhotographerRequest.UpdateProfile updateProfile,
-                                                @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
+                                           @Valid @RequestBody PhotographerRequest.UpdateProfile updateProfile,
+                                           @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
         PhotographerResponse.UpdateDTO response = photographerService.updateProfile(photographerId, updateProfile, loginUser);
         return ResponseEntity.ok(new ApiUtil<>("프로필 정보 수정이 완료 되었습니다"));
     }
@@ -58,7 +57,7 @@ public class PhotographerController {
     // 프로필 활성화
     @PatchMapping("/{photographerId}/activate")
     public ResponseEntity<?> activateProfile(@PathVariable Long photographerId,
-                                                  @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
+                                             @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
         PhotographerResponse.UpdateDTO response = photographerService.activatePhotographer(photographerId, loginUser);
         return ResponseEntity.ok(new ApiUtil<>("프로필 활성화가 완료되었습니다"));
     }
@@ -66,7 +65,7 @@ public class PhotographerController {
     // 프로필 비활성화
     @PatchMapping("/{photographerId}/deactivate")
     public ResponseEntity<?> deactivateProfile(@PathVariable Long photographerId,
-                                                    @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
+                                               @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
         PhotographerResponse.UpdateDTO response = photographerService.deactivatePhotographer(photographerId, loginUser);
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
@@ -85,19 +84,20 @@ public class PhotographerController {
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
-    // 사용자 ID로 조회
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getPhotographerByUserId(@PathVariable Long userId) {
-        Optional<PhotographerResponse.DetailDTO> response = photographerService.getPhotographerByUserId(userId);
-        return response.map(dto -> ResponseEntity.ok(new ApiUtil<>(dto)))
-                .orElse(ResponseEntity.notFound().build());
-    }
-
     // 포토그래퍼 프로필 삭제
-    @DeleteMapping("/{photographerId}")
+    @DeleteMapping("/delete/{photographerId}")
     public ResponseEntity<?> removePhotographer(@PathVariable Long photographerId,
                                                 @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
         photographerService.removePhotographer(photographerId, loginUser);
         return ResponseEntity.noContent().build();
+    }
+
+    // 포토그래퍼에게 카테고리 추가
+    @PostMapping("/{photographerId}/categories")
+    public ResponseEntity<?> addCategoryToPhotographer(@PathVariable Long photographerId,
+                                                       @Valid @RequestBody PhotographerCategoryRequest.AddCategoryToPhotographer request,
+                                                       @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
+        PhotographerResponse.mapDTO response = photographerService.addCategoryToPhotographer(photographerId, request, loginUser);
+        return ResponseEntity.ok(new ApiUtil<>(response));
     }
 }

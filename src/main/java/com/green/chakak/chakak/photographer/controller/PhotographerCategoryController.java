@@ -40,7 +40,7 @@ public class PhotographerCategoryController {
     /**
      * 카테고리 상세 조회
      */
-    @GetMapping("/{categoryId}")
+    @GetMapping("/detail/{categoryId}")
     public ResponseEntity<?> getCategoryDetail(@PathVariable Long categoryId) {
         PhotographerResponse.CategoryDTO response = photographerCategoryService.getCategoryById(categoryId);
         return ResponseEntity.ok(new ApiUtil<>(response));
@@ -49,7 +49,7 @@ public class PhotographerCategoryController {
     /**
      * 카테고리 수정
      */
-    @PutMapping("/{categoryId}")
+    @PutMapping("/update/{categoryId}")
     public ResponseEntity<?> updateCategory(@PathVariable Long categoryId,
                                             @Valid @RequestBody PhotographerCategoryRequest.UpdateCategory updateCategory) {
         PhotographerResponse.CategoryDTO response = photographerCategoryService.updateCategory(categoryId, updateCategory);
@@ -59,7 +59,7 @@ public class PhotographerCategoryController {
     /**
      * 카테고리 삭제
      */
-    @DeleteMapping("/{categoryId}")
+    @DeleteMapping("/delete/{categoryId}")
     public ResponseEntity<?> deleteCategory(@PathVariable Long categoryId) {
         photographerCategoryService.deleteCategory(categoryId);
         return ResponseEntity.noContent().build();

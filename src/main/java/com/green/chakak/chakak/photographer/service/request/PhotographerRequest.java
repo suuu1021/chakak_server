@@ -6,6 +6,8 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 public class PhotographerRequest {
 
     // 포토그래퍼 프로필 저장
@@ -32,6 +34,8 @@ public class PhotographerRequest {
         @NotBlank(message = "상태는 필수입니다.")
         @Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "상태는 ACTIVE 또는 INACTIVE만 가능합니다.")
         private String status;
+
+        private List<Long> categoryIds;
 
         public PhotographerProfile toEntity(User searchUser) {
             return PhotographerProfile.builder()
@@ -65,5 +69,7 @@ public class PhotographerRequest {
 
         @Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "상태는 ACTIVE 또는 INACTIVE만 가능합니다.")
         private String status;
+
+        private List<Long> categoryIds;
     }
 }

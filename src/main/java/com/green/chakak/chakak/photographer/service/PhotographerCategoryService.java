@@ -80,7 +80,7 @@ public class PhotographerCategoryService {
             throw new Exception400("이미 존재하는 카테고리명입니다.");
         }
 
-        // 카테고리 업데이트 (update 메서드가 있다고 가정)
+        // 카테고리 업데이트
         category.update(updateCategory.getCategoryName());
         return new PhotographerResponse.CategoryDTO(category);
     }

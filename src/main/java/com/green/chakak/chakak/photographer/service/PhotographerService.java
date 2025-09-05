@@ -5,19 +5,25 @@ import com.green.chakak.chakak._global.errors.exception.Exception403;
 import com.green.chakak.chakak._global.errors.exception.Exception404;
 import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.account.domain.User;
+import com.green.chakak.chakak.account.domain.UserType;
 import com.green.chakak.chakak.account.service.repository.UserJpaRepository;
+import com.green.chakak.chakak.account.service.repository.UserTypeRepository;
 import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
 import com.green.chakak.chakak.photographer.domain.PhotographerMap;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photographer.service.repository.PhotographerCategoryRepository;
+import com.green.chakak.chakak.photographer.service.request.PhotographerCategoryRequest;
 import com.green.chakak.chakak.photographer.service.repository.PhotographerMapRepository;
 import com.green.chakak.chakak.photographer.service.repository.PhotographerRepository;
 import com.green.chakak.chakak.photographer.service.request.PhotographerRequest;
 import com.green.chakak.chakak.photographer.service.response.PhotographerResponse;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -50,11 +56,44 @@ public class PhotographerService {
             throw new Exception400("이미 등록된 프로필이 존재합니다.");
         }
 
-        // 4. 포토그래퍼 프로필 생성 및 저장
+        // 3. 포토그래퍼 프로필 생성 및 저장
         PhotographerProfile photographerProfile = saveDTO.toEntity(searchUser);
         PhotographerProfile saved = photographerRepository.save(photographerProfile);
+        List<PhotographerMap> maps = new ArrayList<>();
 
-        return new PhotographerResponse.SaveDTO(saved);
+        // 4. 카테고리 매핑 생성
+        if (saveDTO.getCategoryIds() != null && !saveDTO.getCategoryIds().isEmpty()) {
+            createCategoryMappings(saved, saveDTO.getCategoryIds());
+            maps = photographerMapRepository.findByPhotographerProfileWithCategory(saved);
+        }
+        return new PhotographerResponse.SaveDTO(saved, maps);
+    }
+
+
+    // 포토그래퍼 프로필과 카테고리 목록을 받아 매핑 데이터를 생성하고 저장
+    private void createCategoryMappings(PhotographerProfile profile, List<Long> categoryIds) {
+        // 1. 요청된 ID에 해당하는 카테고리들을 한 번의 쿼리로 모두 조회
+        List<Long> distinctIds = categoryIds.stream().distinct().collect(Collectors.toList());
+        List<PhotographerCategory> categories = photographerCategoryRepository.findAllById(distinctIds);
+
+        if (categories.size() != distinctIds.size()) {
+            // 요청된 ID 개수와 실제 조회된 카테고리 개수가 다를 경우, 존재하지 않는 ID를 찾아서 에러 메시지에 포함
+            List<Long> foundIds = categories.stream()
+                    .map(PhotographerCategory::getCategoryId)
+                    .collect(Collectors.toList());
+            List<Long> notFoundIds = distinctIds.stream()
+                    .filter(id -> !foundIds.contains(id))
+                    .collect(Collectors.toList());
+            throw new Exception404("다음 ID에 해당하는 카테고리를 찾을 수 없습니다: " + notFoundIds);
+        }
+
+        // 2. 조회된 카테고리들로 매핑 객체 리스트를 생성
+        List<PhotographerMap> mappings = categories.stream()
+                .map(category -> PhotographerMap.builder().photographerProfile(profile).photographerCategory(category).build())
+                .collect(Collectors.toList());
+
+        // 3. 생성된 매핑들을 한 번의 쿼리로 모두 저장
+        photographerMapRepository.saveAll(mappings);
     }
 
     /**
@@ -63,11 +102,26 @@ public class PhotographerService {
     public PhotographerResponse.UpdateDTO updateProfile(Long photographerId, PhotographerRequest.UpdateProfile updateDTO, LoginUser loginUser) {
         PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
 
-        // 정보 업데이트
+        // 1. 프로필 기본 정보 업데이트
         photographer.update(updateDTO.getBusinessName(), updateDTO.getIntroduction(),
                 updateDTO.getLocation(), updateDTO.getExperienceYears(), updateDTO.getStatus());
 
-        return new PhotographerResponse.UpdateDTO(photographer);
+        // 2. 카테고리 정보 업데이트
+        // categoryIds 필드가 요청에 포함된 경우에만 카테고리 업데이트 수행
+        if (updateDTO.getCategoryIds() != null) {
+            // 기존 매핑을 모두 삭제
+            List<PhotographerMap> existingMappings = photographerMapRepository.findByPhotographerProfile(photographer);
+            photographerMapRepository.deleteAll(existingMappings);
+
+            // 새로운 카테고리 목록이 비어있지 않다면, 다시 생성
+            if (!updateDTO.getCategoryIds().isEmpty()) {
+                createCategoryMappings(photographer, updateDTO.getCategoryIds());
+            }
+        }
+
+        // 3. 업데이트된 카테고리 정보를 포함하여 DTO 반환
+        List<PhotographerMap> updatedMaps = photographerMapRepository.findByPhotographerProfileWithCategory(photographer);
+        return new PhotographerResponse.UpdateDTO(photographer, updatedMaps);
     }
 
     /**
@@ -75,10 +129,12 @@ public class PhotographerService {
      */
     @Transactional(readOnly = true)
     public PhotographerResponse.DetailDTO getProfileDetail(Long photographerId) {
-        PhotographerProfile photographer = photographerRepository.findById(photographerId)
-                .orElseThrow(() -> new Exception404("포토그래퍼를 찾을 수 없습니다."));
+        // 1. 포토그래퍼 프로필 조회
+        PhotographerProfile photographer = getPhotographerById(photographerId);
 
-        return new PhotographerResponse.DetailDTO(photographer);
+        // 2. N+1 문제 없이 연관된 카테고리 목록을 함께 조회
+        List<PhotographerMap> maps = photographerMapRepository.findByPhotographerProfileWithCategory(photographer);
+        return new PhotographerResponse.DetailDTO(photographer, maps);
     }
 
     /**
@@ -118,16 +174,6 @@ public class PhotographerService {
     }
 
     /**
-     * 사용자 ID로 포토그래퍼 조회
-     */
-    @Transactional(readOnly = true)
-    public Optional<PhotographerResponse.DetailDTO> getPhotographerByUserId(Long userId) {
-        Optional<PhotographerProfile> photographer = photographerRepository.findByUser_UserId(userId);
-
-        return photographer.map(PhotographerResponse.DetailDTO::new);
-    }
-
-    /**
      * 포토그래퍼 ID로 조회 (내부 사용)
      */
     @Transactional(readOnly = true)
@@ -143,7 +189,8 @@ public class PhotographerService {
         PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
         photographer.changeStatus("ACTIVE");
 
-        return new PhotographerResponse.UpdateDTO(photographer);
+        List<PhotographerMap> maps = photographerMapRepository.findByPhotographerProfileWithCategory(photographer);
+        return new PhotographerResponse.UpdateDTO(photographer, maps);
     }
 
     /**
@@ -153,15 +200,16 @@ public class PhotographerService {
         PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
         photographer.changeStatus("INACTIVE");
 
-        return new PhotographerResponse.UpdateDTO(photographer);
+        List<PhotographerMap> maps = photographerMapRepository.findByPhotographerProfileWithCategory(photographer);
+        return new PhotographerResponse.UpdateDTO(photographer, maps);
     }
 
     /**
      * 포토그래퍼에 카테고리 추가
      */
-    public PhotographerResponse.mapDTO addCategoryToPhotographer(Long photographerId, Long categoryId, LoginUser loginUser) {
+    public PhotographerResponse.mapDTO addCategoryToPhotographer(Long photographerId, PhotographerCategoryRequest.AddCategoryToPhotographer request, LoginUser loginUser) {
         PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
-        PhotographerCategory category = photographerCategoryRepository.findById(categoryId)
+        PhotographerCategory category = photographerCategoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new Exception404("카테고리를 찾을 수 없습니다."));
 
         // 중복 매핑 확인
