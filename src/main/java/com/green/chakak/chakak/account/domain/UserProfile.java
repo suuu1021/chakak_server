@@ -22,7 +22,7 @@ public class UserProfile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long UserProfileId;
+    private Long userProfileId;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
@@ -53,7 +53,7 @@ public class UserProfile {
 
     @Builder
     public UserProfile(Long userProfileId, User user, String nickName, String introduce, String imageData, Timestamp createdAt, Timestamp updatedAt) {
-        this.UserProfileId = userProfileId;
+        this.userProfileId = userProfileId;
         this.user = user;
         this.nickName = nickName;
         this.introduce = introduce;

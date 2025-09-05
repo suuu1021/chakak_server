@@ -10,6 +10,11 @@ import com.green.chakak.chakak.account.service.repository.UserProfileJpaReposito
 import com.green.chakak.chakak.account.service.repository.UserTypeRepository;
 import com.green.chakak.chakak.account.service.request.UserRequest;
 import com.green.chakak.chakak.account.service.response.UserResponse;
+import com.green.chakak.chakak._global.errors.exception.Exception400;
+import com.green.chakak.chakak._global.errors.exception.Exception401;
+import com.green.chakak.chakak._global.errors.exception.Exception403;
+import com.green.chakak.chakak._global.errors.exception.Exception404;
+import com.green.chakak.chakak._global.errors.exception.Exception500;
 import com.green.chakak.chakak._global.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,11 +34,11 @@ public class UserService {
     public UserResponse.SignupResponse signup(UserRequest.SignupRequest req) {
 
         if (userJpaRepository.existsByEmail(req.getEmail())) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+            throw new Exception400("이미 사용 중인 이메일입니다.");
         }
 
         UserType userType = userTypeRepository.findByTypeCode(req.getUserTypeCode())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자 유형 코드입니다."));
+                .orElseThrow(() -> new Exception400("존재하지 않는 사용자 유형 코드입니다."));
 
 
         User user = User.builder()
@@ -53,7 +58,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponse.LoginResponse login(UserRequest.LoginRequest req) {
         User user = userJpaRepository.findByEmailAndUserPassword(req.getEmail(), req.getPassword())
-                .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다."));
+                .orElseThrow(() -> new Exception401("이메일 또는 비밀번호가 올바르지 않습니다."));
 
         if (user.getStatus() == User.UserStatus.SUSPENDED || user.getStatus() == User.UserStatus.INACTIVE) {
             throw new IllegalStateException("현재 상태로는 로그인할 수 없습니다. (정지/비활성)");
@@ -73,13 +78,13 @@ public class UserService {
 
     public UserResponse.UpdateResponse updateUser(Long userId, UserRequest.UpdateRequest req, LoginUser loginUser) {
         if (!loginUser.getId().equals(userId)) {
-            throw new IllegalArgumentException("본인만 수정할 수 있습니다.");
+            throw new Exception403("본인만 수정할 수 있습니다.");
         }
         User user = userJpaRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new Exception404("존재하지 않는 사용자입니다."));
         if (req.getEmail() != null && !req.getEmail().isEmpty()) {
             if (!user.getEmail().equals(req.getEmail()) && userJpaRepository.existsByEmail(req.getEmail())) {
-                throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+                throw new Exception400("이미 사용 중인 이메일입니다.");
             }
             user.changeEmail(req.getEmail());
         }
@@ -92,10 +97,10 @@ public class UserService {
 
     public void deleteUser(Long id, LoginUser loginUser) {
         if (!loginUser.getId().equals(id)) {
-            throw new IllegalArgumentException("본인만 탈퇴할 수 있습니다.");
+            throw new Exception403("본인만 탈퇴할 수 있습니다.");
         }
         if (!userJpaRepository.existsById(id)) {
-            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
+            throw new Exception404("존재하지 않는 사용자입니다.");
         }
         userJpaRepository.deleteById(id);
     }
