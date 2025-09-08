@@ -21,6 +21,7 @@ import com.green.chakak.chakak.photo.service.response.PriceInfoResponse;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photographer.service.repository.PhotographerRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Service
@@ -59,6 +61,15 @@ public class PhotoService {
 
         for (PhotoServiceInfo serviceInfo : photoServiceInfosPage.getContent()) {
             PhotoServiceResponse.PhotoServiceListDTO mainDTO = new PhotoServiceResponse.PhotoServiceListDTO(serviceInfo);
+
+            // 가격 정보 조회 및 설정
+            List<PriceInfoResponse.PriceInfoListDTO> priceInfoList = getPriceInfoListByPhotoServiceId(serviceInfo.getServiceId());
+            mainDTO.setPriceInfoList(priceInfoList);
+
+            // 카테고리 정보 조회 및 설정
+            List<PhotoCategoryResponse.PhotoCategoryListDTO> categoryList = getServiceCategories(serviceInfo.getServiceId());
+            mainDTO.setCategoryList(categoryList);
+
             serviceInfoList.add(mainDTO);
         }
         return serviceInfoList;
@@ -66,8 +77,7 @@ public class PhotoService {
 
     public PhotoServiceResponse.PhotoServiceDetailDTO serviceDetail(Long id, LoginUser loginUser) {
 
-        PhotoServiceInfo photoServiceInfo = photoServiceJpaRepository.findById(id).orElseThrow(() -> new Exception404("해당 게시물이 존재하지 않습니다."));
-
+        PhotoServiceInfo photoServiceInfo = photoServiceJpaRepository.findByIdWithUser(id).orElseThrow(() -> new Exception404("해당 게시물이 존재하지 않습니다."));
 
         // 수정 권한 체크
         boolean canEdit = false;
@@ -89,6 +99,8 @@ public class PhotoService {
     @Transactional
     public void saveService(PhotoServiceInfoRequest.SaveDTO saveDTO, LoginUser loginUser) {
 
+        log.info("saveDTO 값 확인 : {}", saveDTO);
+
         PhotographerProfile userProfileInfo = photographerRepository.findByUser_UserId(loginUser.getId()).orElseThrow(() -> new Exception404("해당 유저가 존재하지 않습니다."));
 
         PhotoServiceInfo savedInfo = photoServiceJpaRepository.save(saveDTO.toEntity(userProfileInfo));
@@ -100,6 +112,19 @@ public class PhotoService {
         // 2. 가격 정보들 등록 (새로 추가)
         if (saveDTO.getPriceInfoList() != null && !saveDTO.getPriceInfoList().isEmpty()) {
             createPriceInfos(savedInfo, saveDTO.getPriceInfoList());
+        } else {
+            throw new Exception400("서비스의 가격 정보가 없습니다");
+        }
+
+
+        // 3. 카테고리 매핑 생성
+        if (saveDTO.getCategoryIdList() != null && !saveDTO.getCategoryIdList().isEmpty()) {
+            PhotoMappingRequest.SaveDTO mappingDTO = PhotoMappingRequest.SaveDTO.builder()
+                    .serviceId(savedInfo.getServiceId())
+                    .categoryIdList(saveDTO.getCategoryIdList())
+                    .build();
+
+            createMapping(mappingDTO, loginUser); // 같은 메서드 재사용!
         }
     }
 
@@ -124,6 +149,47 @@ public class PhotoService {
         // 4. 엔티티 수정
         photoService.updateFromDto(reqDTO);
 
+        // 5. 가격 정보 수정 (기존 삭제 후 새로 생성)
+        if (reqDTO.getPriceInfoList() != null && !reqDTO.getPriceInfoList().isEmpty()) {
+            // 기존 가격 정보 삭제
+            priceInfoJpaRepository.deleteByPhotoServiceInfo_serviceId(id);
+
+            // 새로운 가격 정보 생성
+            updatePriceInfos(photoService, reqDTO.getPriceInfoList());
+        }
+
+        // 6. 카테고리 매핑 수정 (기존 삭제 후 새로 생성)
+        if (reqDTO.getCategoryIdList() != null && !reqDTO.getCategoryIdList().isEmpty()) {
+            // 기존 매핑 삭제
+            photoMappingRepository.deleteByPhotoServiceInfo_ServiceId(id);
+
+            // 새로운 매핑 생성
+            updateCategoryMappings(photoService, reqDTO.getCategoryIdList());
+        }
+
+    }
+
+    // 가격 정보 업데이트 헬퍼 메서드
+    private void updatePriceInfos(PhotoServiceInfo savedInfo, List<PriceInfoRequest.CreateDTO> priceInfoList) {
+        for (PriceInfoRequest.CreateDTO priceInfoDTO : priceInfoList) {
+            PriceInfo priceInfo = priceInfoDTO.toEntity(savedInfo);
+            priceInfoJpaRepository.save(priceInfo);
+        }
+    }
+
+    // 카테고리 매핑 업데이트 헬퍼 메서드
+    private void updateCategoryMappings(PhotoServiceInfo savedInfo, List<Long> categoryIdList) {
+        for (Long categoryId : categoryIdList) {
+            PhotoServiceCategory category = photoCategoryJpaRepository.findById(categoryId)
+                    .orElseThrow(() -> new Exception404("카테고리 ID " + categoryId + "가 존재하지 않습니다."));
+
+            PhotoServiceMapping mapping = PhotoServiceMapping.builder()
+                    .photoServiceInfo(savedInfo)
+                    .photoServiceCategory(category)
+                    .build();
+
+            photoMappingRepository.save(mapping);
+        }
     }
 
     @Transactional
@@ -146,6 +212,8 @@ public class PhotoService {
         // 4. 삭제 실행
         photoServiceJpaRepository.deleteById(id);
     }
+
+
 
 
     // ========== PhotoServiceCategory 관련 메서드들 ==========
@@ -263,11 +331,7 @@ public class PhotoService {
         PhotoServiceInfo photoServiceInfo = photoServiceJpaRepository.findById(saveDTO.getServiceId())
                 .orElseThrow(() -> new Exception404("해당 서비스가 존재하지 않습니다."));
 
-        // 카테고리 존재 여부 확인
-        PhotoServiceCategory photoServiceCategory = photoCategoryJpaRepository.findById(saveDTO.getCategoryId())
-                .orElseThrow(() -> new Exception404("해당 카테고리가 존재하지 않습니다."));
-
-        // 권한 체크 (서비스 소유자만 매핑 가능)
+        // 권한 체크
         if (loginUser != null) {
             PhotographerProfile photographerProfile = photoServiceInfo.getPhotographerProfile();
             if (!photographerProfile.getUser().getUserId().equals(loginUser.getId())) {
@@ -275,13 +339,25 @@ public class PhotoService {
             }
         }
 
-        // 중복 매핑 체크
-        if (photoMappingRepository.existsByPhotoServiceInfoAndPhotoServiceCategory(photoServiceInfo, photoServiceCategory)) {
-            throw new Exception400("이미 연결된 서비스-카테고리입니다.");
-        }
+        // 여러 카테고리 처리
+        for (Long categoryId : saveDTO.getCategoryIdList()) {
+            // 카테고리 존재 여부 확인
+            PhotoServiceCategory photoServiceCategory = photoCategoryJpaRepository.findById(categoryId)
+                    .orElseThrow(() -> new Exception404("카테고리 ID " + categoryId + "가 존재하지 않습니다."));
 
-        PhotoServiceMapping mapping = saveDTO.toEntity(photoServiceInfo, photoServiceCategory);
-        photoMappingRepository.save(mapping);
+            // 중복 매핑 체크
+            if (photoMappingRepository.existsByPhotoServiceInfoAndPhotoServiceCategory(photoServiceInfo, photoServiceCategory)) {
+                log.warn("이미 연결된 서비스-카테고리입니다. serviceId: {}, categoryId: {}", saveDTO.getServiceId(), categoryId);
+                continue;
+            }
+
+            // 매핑 생성
+            PhotoServiceMapping mapping = PhotoServiceMapping.builder()
+                    .photoServiceInfo(photoServiceInfo)
+                    .photoServiceCategory(photoServiceCategory)
+                    .build();
+            photoMappingRepository.save(mapping);
+        }
     }
 
     // 매핑 삭제
@@ -344,6 +420,7 @@ public class PhotoService {
     }
 
     // 특정 PhotoService의 모든 가격 정보 조회
+    /*
     public PriceInfoResponse.PriceInfosDTO getPriceInfosByPhotoServiceId(Long photoServiceInfoId) {
         // PhotoService 존재 확인
         if (!photoServiceJpaRepository.existsById(photoServiceInfoId)) {
@@ -352,6 +429,23 @@ public class PhotoService {
 
         List<PriceInfo> priceInfoList = priceInfoJpaRepository.findByPhotoServiceInfo_serviceId(photoServiceInfoId);
         return new PriceInfoResponse.PriceInfosDTO(photoServiceInfoId, priceInfoList);
+    }
+    */
+
+    // 새로운 메서드 추가
+    public List<PriceInfoResponse.PriceInfoListDTO> getPriceInfoListByPhotoServiceId(Long photoServiceInfoId) {
+        if (!photoServiceJpaRepository.existsById(photoServiceInfoId)) {
+            throw new Exception404("PhotoService를 찾을 수 없습니다: " + photoServiceInfoId);
+        }
+
+        List<PriceInfo> priceInfoList = priceInfoJpaRepository.findByPhotoServiceInfo_serviceId(photoServiceInfoId);
+
+        List<PriceInfoResponse.PriceInfoListDTO> result = new ArrayList<>();
+        for (PriceInfo priceInfo : priceInfoList) {
+            PriceInfoResponse.PriceInfoListDTO dto = new PriceInfoResponse.PriceInfoListDTO(priceInfo);
+            result.add(dto);
+        }
+        return result;
     }
 
     // 가격 정보 단일 조회
@@ -403,6 +497,7 @@ public class PhotoService {
     // PhotoService 등록 시 가격 정보들 일괄 등록 (PhotoService에서 호출)
     @Transactional
     public List<PriceInfo> createPriceInfos(PhotoServiceInfo photoServiceInfo, List<PriceInfoRequest.CreateDTO> priceInfoRequests) {
+
         if (priceInfoRequests == null || priceInfoRequests.isEmpty()) {
             return Collections.emptyList();
         }

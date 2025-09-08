@@ -14,10 +14,9 @@ public class PhotoServiceInfoRequest {
         private String title;
         private String description;
         private String imageData;
-
-        // 추가할 필드
-        @Valid
         private List<PriceInfoRequest.CreateDTO> priceInfoList;  // 가격정보 리스트
+        private List<Long> categoryIdList; // 서비스 카테고리 정보 리스트
+
 
         public PhotoServiceInfo toEntity(PhotographerProfile userInfo) {
             return PhotoServiceInfo.builder()
@@ -34,15 +33,8 @@ public class PhotoServiceInfoRequest {
         private String title;
         private String description;
         private String imageData;
-
-        public PhotoServiceInfo toEntity(PhotographerProfile userInfo) {
-            return PhotoServiceInfo.builder()
-                    .photographerProfile(userInfo)
-                    .title(title)
-                    .description(description)
-                    .imageData(imageData)
-                    .build();
-        }
+        private List<PriceInfoRequest.CreateDTO> priceInfoList;  // 가격정보 리스트
+        private List<Long> categoryIdList; // 서비스 카테고리 정보 리스트
     }
 
 }

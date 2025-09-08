@@ -21,7 +21,7 @@ public class PriceInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long priceInfoId;
 
-    @JoinColumn(nullable = false)
+    @JoinColumn(nullable = false, name = "service_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private PhotoServiceInfo photoServiceInfo;
 
