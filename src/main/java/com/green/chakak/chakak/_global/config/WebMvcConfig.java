@@ -34,12 +34,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/email/verify",
                         "/api/email/send",
                         "/api/v1/users/profile",
-                        "/api/photo/services",
-                        "/api/photo/services/{id}",
-                        "/api/photo/categories",
-                        "/api/photo/categories/{id}",
-                        "/api/photo/mappings",
-                        "/api/photo/mappings/{id}"
+                        "/api/photo/services/list",
+                        "/api/photo/services/detail/{id}",
+                        "/api/photo/categories/list",
+                        "/api/photo/mappings/list",
+                        "/api/photo/mappings/detail/{id}"
                 );
     }
 

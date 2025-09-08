@@ -23,7 +23,7 @@ public class PhotoMappingRestController {
     private final PhotoService photoService;
 
     // 매핑 목록 조회
-    @GetMapping("")
+    @GetMapping("/list")
     public ResponseEntity<ApiUtil<List<PhotoMappingResponse.PhotoMappingListDTO>>> getMappingList(
             @RequestParam(required = false) Long serviceId,
             @RequestParam(required = false) Long categoryId) {
@@ -34,7 +34,7 @@ public class PhotoMappingRestController {
     }
 
     // 매핑 상세 조회
-    @GetMapping("/{id}")
+    @GetMapping("/detail/{id}")
     public ResponseEntity<ApiUtil<PhotoMappingResponse.PhotoMappingDetailDTO>> getMappingDetail(@PathVariable Long id) {
         PhotoMappingResponse.PhotoMappingDetailDTO mappingDetail = photoService.getMappingDetail(id);
         return ResponseEntity.ok(new ApiUtil<>(mappingDetail));

@@ -20,7 +20,7 @@ public class PhotoCategoryRestController {
     private final PhotoService photoCategoryService;
 
     // 카테고리 목록 조회
-    @GetMapping("")
+    @GetMapping("/list")
     public ResponseEntity<?> list() {
         List<PhotoCategoryResponse.PhotoCategoryListDTO> categoryList = photoCategoryService.categoryList();
         return ResponseEntity.ok(new ApiUtil<>(categoryList));

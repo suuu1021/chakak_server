@@ -38,9 +38,7 @@ public class UserService {
         UserType userType = userTypeRepository.findByTypeCode(req.getUserTypeCode())
                 .orElseThrow(() -> new Exception400("존재하지 않는 사용자 유형 코드입니다."));
 
-        User user = new User();
-        user.buildUser(req);
-        User savedUser = userJpaRepository.save(user);
+        User savedUser = userJpaRepository.save(req.toEntity(userType));
 
         // 인증 이메일 발송
         emailService.sendVerificationEmail(req.getEmail());

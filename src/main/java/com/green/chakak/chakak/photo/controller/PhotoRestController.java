@@ -23,7 +23,7 @@ public class PhotoRestController {
     private final PhotoService photoService;
 
     // 포토그래퍼 서비스 목록 조회
-    @GetMapping("")
+    @GetMapping("/list")
     public ResponseEntity<?> list(@RequestParam(required = false) String keyword,
                                   @RequestParam(defaultValue = "0") int page,
                                   @RequestParam(defaultValue = "10") int size){
@@ -35,7 +35,7 @@ public class PhotoRestController {
     }
 
     // 포토그래퍼 서비스 상세 조회
-    @GetMapping("{id}")
+    @GetMapping("/detail/{id}")
     public ResponseEntity<?> detail(@PathVariable Long id,
                                     @RequestAttribute(value = Define.LOGIN_USER, required = false) LoginUser loginUser) {
 
