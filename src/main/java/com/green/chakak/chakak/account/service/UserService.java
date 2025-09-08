@@ -1,20 +1,18 @@
 package com.green.chakak.chakak.account.service;
 
+import com.green.chakak.chakak._global.errors.exception.Exception400;
+import com.green.chakak.chakak._global.errors.exception.Exception401;
+import com.green.chakak.chakak._global.errors.exception.Exception403;
+import com.green.chakak.chakak._global.errors.exception.Exception404;
+import com.green.chakak.chakak._global.utils.JwtUtil;
 import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.account.domain.User;
-import com.green.chakak.chakak.account.domain.UserProfile;
 import com.green.chakak.chakak.account.domain.UserType;
 import com.green.chakak.chakak.account.service.repository.UserJpaRepository;
 import com.green.chakak.chakak.account.service.repository.UserProfileJpaRepository;
 import com.green.chakak.chakak.account.service.repository.UserTypeRepository;
 import com.green.chakak.chakak.account.service.request.UserRequest;
 import com.green.chakak.chakak.account.service.response.UserResponse;
-import com.green.chakak.chakak._global.errors.exception.Exception400;
-import com.green.chakak.chakak._global.errors.exception.Exception401;
-import com.green.chakak.chakak._global.errors.exception.Exception403;
-import com.green.chakak.chakak._global.errors.exception.Exception404;
-import com.green.chakak.chakak._global.errors.exception.Exception500;
-import com.green.chakak.chakak._global.utils.JwtUtil;
 import com.green.chakak.chakak.email_verification.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -40,45 +38,21 @@ public class UserService {
         UserType userType = userTypeRepository.findByTypeCode(req.getUserTypeCode())
                 .orElseThrow(() -> new Exception400("존재하지 않는 사용자 유형 코드입니다."));
 
-        User user = User.builder()
-                .email(req.getEmail())
-                .password(req.getPassword())
-                .userType(userType)
-                .status(User.UserStatus.ACTIVE)//TODO: INACTIVE로 수정하기
-                .emailVerified(false)
-                .build();
-
+        User user = new User();
+        user.buildUser(req);
         User savedUser = userJpaRepository.save(user);
-
-//        // UserProfile 생성 로직을 별도 메소드로 분리
-//        createAndSaveUserProfile(savedUser, req.getNickName());
 
         // 인증 이메일 발송
         emailService.sendVerificationEmail(req.getEmail());
 
-        return UserResponse.SignupResponse.builder()
-                .userId(savedUser.getUserId())
-                .email(savedUser.getEmail())
-                .userTypeCode(savedUser.getUserType().getTypeCode())
-                .status(savedUser.getStatus())
-                .createdAt(savedUser.getCreatedAt() != null ? savedUser.getCreatedAt().toLocalDateTime() : java.time.LocalDateTime.now())
-                .build();
+        return UserResponse.SignupResponse.from(savedUser);
     }
 
-//    // UserProfile을 생성하고 저장하는 private 헬퍼 메소드
-//    private void createAndSaveUserProfile(User user, String nickName) {
-//        UserProfile userProfile = UserProfile.builder()
-//                .user(user)
-//                .nickName(nickName)
-//                .introduce("")
-//                .imageData("")
-//                .build();
-//        userProfileJpaRepository.save(userProfile);
-//    }
 
     // 이메일 인증 완료 처리
     @Transactional
     public void completeEmailVerification(String email) {
+
         User user = userJpaRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
         user.completeEmailVerification();

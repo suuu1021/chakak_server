@@ -1,5 +1,6 @@
 package com.green.chakak.chakak.account.domain;
 
+import com.green.chakak.chakak.account.service.request.UserRequest;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photo.domain.PhotoServiceReview;
 import jakarta.persistence.*;
@@ -87,5 +88,15 @@ public class User {
     public void completeEmailVerification() {
         this.emailVerified = true;
         this.status = UserStatus.ACTIVE;
+    }
+    public User buildUser (UserRequest.SignupRequest req) {
+
+        return User.builder()
+                .email(req.getEmail())
+                .password(req.getPassword())
+                .userType(userType)
+                .status(User.UserStatus.ACTIVE)//TODO: INACTIVE로 수정하기
+                .emailVerified(false)
+                .build();
     }
 }
