@@ -47,7 +47,7 @@ public class PortfolioController {
 	private final PortfolioService portfolioService;
 
 	// 포트폴리오 생성 - 로그인 필요
-	@PostMapping
+	@PostMapping("/create")
 	public ResponseEntity<?> createPortfolio(@Valid @RequestBody PortfolioRequest.CreateDTO createRequest,
 											 HttpServletRequest httpRequest) {
 		LoginUser loginUser = (LoginUser) httpRequest.getAttribute(Define.LOGIN_USER);
@@ -80,7 +80,7 @@ public class PortfolioController {
 	}
 
 	// 포트폴리오 수정 - 로그인 필요
-	@PutMapping("/{portfolioId}")
+	@PutMapping("/{portfolioId}/update")
 	public ResponseEntity<?> updatePortfolio(@PathVariable Long portfolioId,
 											 @Valid @RequestBody PortfolioRequest.UpdateDTO updateRequest,
 											 HttpServletRequest httpRequest) {
@@ -90,7 +90,7 @@ public class PortfolioController {
 	}
 
 	// 포트폴리오 삭제 - 로그인 필요
-	@DeleteMapping("/{portfolioId}")
+	@DeleteMapping("/{portfolioId}/delete")
 	public ResponseEntity<?> deletePortfolio(@PathVariable Long portfolioId,
 											 HttpServletRequest httpRequest) {
 		LoginUser loginUser = (LoginUser) httpRequest.getAttribute(Define.LOGIN_USER);
