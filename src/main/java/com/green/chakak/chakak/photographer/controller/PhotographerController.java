@@ -38,7 +38,7 @@ public class PhotographerController {
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
-    // 활성 포토그래퍼 프로필 목록
+    // 포토그래퍼 프로필 목록 조회
     @GetMapping
     public ResponseEntity<?> getActivePhotographers() {
         List<PhotographerResponse.ListDTO> response = photographerService.getActiveProfile();
@@ -78,7 +78,7 @@ public class PhotographerController {
     }
 
     // 상호명 검색
-    @GetMapping("/search")
+    @GetMapping("/search/{business-name}")
     public ResponseEntity<?> searchByBusinessName(@RequestParam String businessName) {
         List<PhotographerResponse.ListDTO> response = photographerService.searchByBusinessName(businessName);
         return ResponseEntity.ok(new ApiUtil<>(response));

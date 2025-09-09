@@ -18,6 +18,7 @@ public class PhotographerResponse {
         private String location;
         private Integer experienceYears;
         private String status;
+        private String profileImageUrl;
         private List<CategoryDTO> categories;
 
         public SaveDTO(PhotographerProfile profile, List<PhotographerMap> maps) {
@@ -28,6 +29,7 @@ public class PhotographerResponse {
             this.location = profile.getLocation();
             this.experienceYears = profile.getExperienceYears();
             this.status = profile.getStatus();
+            this.profileImageUrl = profile.getProfileImageUrl();
             // 전달받은 매핑 목록(maps)을 CategoryDTO 리스트로 변환
             this.categories = maps.stream()
                     .map(map -> new CategoryDTO(map.getPhotographerCategory()))
@@ -42,6 +44,7 @@ public class PhotographerResponse {
         private String location;
         private Integer experienceYears;
         private String status;
+        private String profileImageUrl;
         private List<CategoryDTO> categories;
 
         public UpdateDTO(PhotographerProfile profile, List<PhotographerMap> maps) {
@@ -50,6 +53,7 @@ public class PhotographerResponse {
             this.location = profile.getLocation();
             this.experienceYears = profile.getExperienceYears();
             this.status = profile.getStatus();
+            this.profileImageUrl = profile.getProfileImageUrl();
             // 전달받은 매핑 목록(maps)을 CategoryDTO 리스트로 변환
             this.categories = maps.stream()
                     .map(map -> new CategoryDTO(map.getPhotographerCategory()))
@@ -66,6 +70,7 @@ public class PhotographerResponse {
         private String location;
         private Integer experienceYears;
         private String status;
+        private String profileImageUrl;
         private List<CategoryDTO> categories;
 
         public DetailDTO(PhotographerProfile profile, List<PhotographerMap> maps) {
@@ -76,6 +81,7 @@ public class PhotographerResponse {
             this.location = profile.getLocation();
             this.experienceYears = profile.getExperienceYears();
             this.status = profile.getStatus();
+            this.profileImageUrl = profile.getProfileImageUrl();
             // 전달받은 매핑 목록(maps)을 CategoryDTO 리스트로 변환
             this.categories = maps.stream()
                     .map(map -> new CategoryDTO(map.getPhotographerCategory()))
