@@ -1,6 +1,7 @@
 package com.green.chakak.chakak.photographer.domain;
 
 import com.green.chakak.chakak.account.domain.User;
+import com.green.chakak.chakak.photographer.service.request.PhotographerRequest;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
@@ -40,18 +41,22 @@ public class PhotographerProfile {
     private Timestamp createdAt;
 
     @UpdateTimestamp
-    private Timestamp updateAt;
+    private Timestamp updatedAt;
 
+    @Lob
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
 
     @Builder
     public PhotographerProfile(User user, String businessName, String introduction,
-                               String location, Integer experienceYears, String status) {
+                               String location, Integer experienceYears, String status, String profileImageUrl) {
         this.user = user;
         this.businessName = businessName;
         this.introduction = introduction;
         this.location = location;
         this.experienceYears = experienceYears;
         this.status = status;
+        this.profileImageUrl = profileImageUrl;
     }
 
 //    public String getTime() {
@@ -62,22 +67,24 @@ public class PhotographerProfile {
         this.status = newStatus;
     }
 
-    public void update(String businessName, String introduction,
-                       String location, Integer experienceYears, String status) {
-        if (businessName != null) {
-            this.businessName = businessName;
+    public void update(PhotographerRequest.UpdateProfile updateProfile) {
+        if (updateProfile.getBusinessName() != null) {
+            this.businessName = updateProfile.getBusinessName();
         }
-        if (introduction != null) {
-            this.introduction = introduction;
+        if ( updateProfile.getIntroduction() != null) {
+            this.introduction = updateProfile.getIntroduction();
         }
-        if (location != null) {
-            this.location = location;
+        if (updateProfile.getLocation() != null) {
+            this.location = updateProfile.getLocation();
         }
-        if (experienceYears != null) {
-            this.experienceYears = experienceYears;
+        if (updateProfile.getExperienceYears() != null) {
+            this.experienceYears = updateProfile.getExperienceYears();
         }
-        if (status != null) {
-            this.status = status;
+        if (updateProfile.getStatus() != null) {
+            this.status = updateProfile.getStatus();
+        }
+        if (updateProfile.getProfileImageUrl() != null) {
+            this.profileImageUrl = updateProfile.getProfileImageUrl();
         }
     }
 }

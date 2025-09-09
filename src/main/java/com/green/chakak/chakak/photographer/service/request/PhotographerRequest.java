@@ -37,6 +37,8 @@ public class PhotographerRequest {
 
         private List<Long> categoryIds;
 
+        private String profileImageUrl;
+
         public PhotographerProfile toEntity(User searchUser) {
             return PhotographerProfile.builder()
                     .user(searchUser)
@@ -45,6 +47,7 @@ public class PhotographerRequest {
                     .location(this.location)
                     .experienceYears(this.experienceYears)
                     .status(this.status)
+                    .profileImageUrl(profileImageUrl)
                     .build();
         }
     }
@@ -71,5 +74,7 @@ public class PhotographerRequest {
         private String status;
 
         private List<Long> categoryIds;
+
+        private String profileImageUrl;
     }
 }
