@@ -78,7 +78,7 @@ public class PhotographerController {
     }
 
     // 상호명 검색
-    @GetMapping("/search/{business-name}")
+    @GetMapping("/search")
     public ResponseEntity<?> searchByBusinessName(@RequestParam String businessName) {
         List<PhotographerResponse.ListDTO> response = photographerService.searchByBusinessName(businessName);
         return ResponseEntity.ok(new ApiUtil<>(response));
@@ -99,5 +99,14 @@ public class PhotographerController {
                                                        @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
         PhotographerResponse.mapDTO response = photographerService.addCategoryToPhotographer(photographerId, request, loginUser);
         return ResponseEntity.ok(new ApiUtil<>(response));
+    }
+
+    // 포토그래퍼에게서 카테고리 제거
+    @DeleteMapping("/{photographerId}/categories/{categoryId}")
+    public ResponseEntity<?> removeCategoryFromPhotographer(@PathVariable Long photographerId,
+                                                            @PathVariable Long categoryId,
+                                                            @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
+        photographerService.removeCategoryFromPhotographer(photographerId, categoryId, loginUser);
+        return ResponseEntity.ok(new ApiUtil<>("카테고리가 성공적으로 제거되었습니다."));
     }
 }
