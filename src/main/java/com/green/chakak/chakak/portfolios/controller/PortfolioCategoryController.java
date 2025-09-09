@@ -34,7 +34,7 @@ public class PortfolioCategoryController {
 	private final PortfolioCategoryService portfolioCategoryService;
 
 	// 카테고리 생성
-	@PostMapping
+	@PostMapping("/create")
 	public ResponseEntity<?> createCategory(@Valid @RequestBody PortfolioCategoryRequest.CreateDTO categoryRequest) {
 		PortfolioCategoryResponse.DetailDTO response = portfolioCategoryService.createCategory(categoryRequest);
 		URI location = URI.create(String.format("/api/portfolio-categories/%d", response.getCategoryId()));
@@ -63,7 +63,7 @@ public class PortfolioCategoryController {
 	}
 
 	// 카테고리 수정
-	@PutMapping("/{categoryId}")
+	@PutMapping("/{categoryId}/update")
 	public ResponseEntity<?> updateCategory(@PathVariable Long categoryId,
 											@Valid @RequestBody PortfolioCategoryRequest.UpdateDTO categoryRequest) {
 		PortfolioCategoryResponse.DetailDTO response = portfolioCategoryService.updateCategory(categoryId, categoryRequest);
@@ -71,7 +71,7 @@ public class PortfolioCategoryController {
 	}
 
 	// 카테고리 삭제 (비활성화)
-	@DeleteMapping("/{categoryId}")
+	@DeleteMapping("/{categoryId}/delete")
 	public ResponseEntity<?> deleteCategory(@PathVariable Long categoryId) {
 		portfolioCategoryService.deleteCategory(categoryId);
 		return ResponseEntity.noContent().build();
