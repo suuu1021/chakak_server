@@ -23,7 +23,7 @@ public class PhotographerController {
     private final PhotographerService photographerService;
 
     // 포토그래퍼 프로필 저장
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<?> createProfile(@Valid @RequestBody PhotographerRequest.SaveProfile saveProfile
     ) {
         PhotographerResponse.SaveDTO response = photographerService.createProfile(saveProfile);
@@ -32,7 +32,7 @@ public class PhotographerController {
     }
 
     // 포토그래퍼 프로필 상세 조회
-    @GetMapping("/detail/{photographerId}")
+    @GetMapping("/{photographerId}")
     public ResponseEntity<?> getPhotographerDetail(@PathVariable Long photographerId) {
         PhotographerResponse.DetailDTO response = photographerService.getProfileDetail(photographerId);
         return ResponseEntity.ok(new ApiUtil<>(response));
@@ -46,7 +46,7 @@ public class PhotographerController {
     }
 
     // 포토그래퍼 프로필 수정
-    @PutMapping("/update/{photographerId}")
+    @PutMapping("/{photographerId}/update")
     public ResponseEntity<?> updateProfile(@PathVariable Long photographerId,
                                            @Valid @RequestBody PhotographerRequest.UpdateProfile updateProfile,
                                            @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
@@ -74,7 +74,7 @@ public class PhotographerController {
     @GetMapping("/location/{location}")
     public ResponseEntity<?> getPhotographersByLocation(@PathVariable String location) {
         List<PhotographerResponse.ListDTO> response = photographerService.getPhotographersByLocation(location);
-        return ResponseEntity.ok(new ApiUtil<>("프로필 비활성화가 완료되었습니다"));
+        return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
     // 상호명 검색
@@ -85,7 +85,7 @@ public class PhotographerController {
     }
 
     // 포토그래퍼 프로필 삭제
-    @DeleteMapping("/delete/{photographerId}")
+    @DeleteMapping("/{photographerId}/delete")
     public ResponseEntity<?> removePhotographer(@PathVariable Long photographerId,
                                                 @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
         photographerService.removePhotographer(photographerId, loginUser);

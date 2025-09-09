@@ -21,10 +21,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/users/login",
                         "/api/users/signup",
                         "/api/photographers",
-                        "/api/photographers/detail/{photographerId}",
-                        "/api/photographers/search",
+                        "/api/photographers/*",
                         "/api/photographers/location/**",
-                        "/api/photographers/user/{userId}",
+                        "/api/photographers/search",
                         "/api/photographer-categories/**",
                         "/api/portfolios/**",
                         // --- 충돌 해결: 두 사람의 코드를 모두 반영 ---

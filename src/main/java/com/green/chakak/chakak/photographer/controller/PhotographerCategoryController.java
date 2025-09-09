@@ -21,7 +21,7 @@ public class PhotographerCategoryController {
     /**
      * 카테고리 생성
      */
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<?> createCategory(@Valid @RequestBody PhotographerCategoryRequest.SaveCategory saveCategory) {
         PhotographerResponse.CategoryDTO response = photographerCategoryService.createCategory(saveCategory);
         URI location = URI.create(String.format("/api/photographer-categories/%d", response.getCategoryId()));
@@ -40,7 +40,7 @@ public class PhotographerCategoryController {
     /**
      * 카테고리 상세 조회
      */
-    @GetMapping("/detail/{categoryId}")
+    @GetMapping("/{categoryId}")
     public ResponseEntity<?> getCategoryDetail(@PathVariable Long categoryId) {
         PhotographerResponse.CategoryDTO response = photographerCategoryService.getCategoryById(categoryId);
         return ResponseEntity.ok(new ApiUtil<>(response));
@@ -49,7 +49,7 @@ public class PhotographerCategoryController {
     /**
      * 카테고리 수정
      */
-    @PutMapping("/update/{categoryId}")
+    @PutMapping("/{categoryId}/update")
     public ResponseEntity<?> updateCategory(@PathVariable Long categoryId,
                                             @Valid @RequestBody PhotographerCategoryRequest.UpdateCategory updateCategory) {
         PhotographerResponse.CategoryDTO response = photographerCategoryService.updateCategory(categoryId, updateCategory);
@@ -59,7 +59,7 @@ public class PhotographerCategoryController {
     /**
      * 카테고리 삭제
      */
-    @DeleteMapping("/delete/{categoryId}")
+    @DeleteMapping("/{categoryId}/delete")
     public ResponseEntity<?> deleteCategory(@PathVariable Long categoryId) {
         photographerCategoryService.deleteCategory(categoryId);
         return ResponseEntity.ok(new ApiUtil<>(null, "카테고리 삭제가 완료되었습니다."));
