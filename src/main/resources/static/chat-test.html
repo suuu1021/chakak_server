@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatak WebSocket Test</title>
+    <style>
+        body { font-family: sans-serif; }
+        #controls, #inputs, #log { margin-bottom: 10px; }
+        input { margin-right: 10px; }
+        #conversation { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
+    </style>
+    <!-- [수정] SockJS 라이브러리 제거, Stomp.js만 남김 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+
+<h2>Chakak WebSocket Test Page (Pure WebSocket)</h2>
+
+<div id="controls">
+    <label for="chatRoomId">ChatRoom ID:</label>
+    <input type="text" id="chatRoomId" value="1" />
+    <button id="connect" onclick="connect();">Connect & Subscribe</button>
+    <button id="disconnect" onclick="disconnect();" disabled>Disconnect</button>
+</div>
+
+<div id="inputs">
+    <label for="senderId">My User ID:</label>
+    <input type="text" id="senderId" placeholder="e.g., 1 for user, 11 for photo" />
+    <label for="senderType">My Type:</label>
+    <select id="senderType">
+        <option value="USER">USER</option>
+        <option value="PHOTOGRAPHER">PHOTOGRAPHER</option>
+    </select>
+    <br/><br/>
+    <label for="message">Message:</label>
+    <input type="text" id="message" placeholder="Write a message..." size="50"/>
+    <button id="send" onclick="sendMessage();">Send</button>
+</div>
+
+<div id="log">
+    <h3>Conversation:</h3>
+    <div id="conversation"></div>
+</div>
+
+<script type="text/javascript">
+    let stompClient = null;
+
+    function setConnected(connected) {
+        document.getElementById('connect').disabled = connected;
+        document.getElementById('disconnect').disabled = !connected;
+        document.getElementById('conversation').innerHTML = '';
+    }
+
+    // [수정] 순수 웹소켓(Pure WebSocket) 방식으로 연결
+    function connect() {
+        // 1. WebSocket 객체를 직접 생성합니다.
+        const socket = new WebSocket('ws://localhost:8080/ws'); // 서버의 웹소켓 엔드포인트
+
+        // 2. Stomp 클라이언트가 WebSocket 위에서 동작하도록 설정합니다.
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function (frame) {
+            setConnected(true);
+            console.log('Connected: ' + frame);
+
+            const chatRoomId = document.getElementById('chatRoomId').value;
+            const subscriptionUrl = '/topic/chat/room/' + chatRoomId;
+            console.log('Subscribing to: ' + subscriptionUrl);
+
+            stompClient.subscribe(subscriptionUrl, function (message) {
+                showMessage(JSON.parse(message.body));
+            });
+        });
+    }
+
+    function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect();
+        }
+        setConnected(false);
+        console.log("Disconnected");
+    }
+
+    function sendMessage() {
+        const chatRoomId = document.getElementById('chatRoomId').value;
+        const senderId = document.getElementById('senderId').value;
+        const senderType = document.getElementById('senderType').value;
+        const message = document.getElementById('message').value;
+
+        const messageDto = {
+            chatRoomId: parseInt(chatRoomId),
+            senderType: senderType,
+            senderId: parseInt(senderId),
+            messageType: 'TEXT',
+            message: message
+        };
+
+        stompClient.send("/app/chat/message", {}, JSON.stringify(messageDto));
+        document.getElementById('message').value = '';
+    }
+
+    function showMessage(message) {
+        const conversation = document.getElementById('conversation');
+        const p = document.createElement('p');
+        p.style.wordWrap = 'break-word';
+        p.appendChild(document.createTextNode(
+            `[${message.senderType} ${message.senderId}] (${message.createdAt}): ${message.message}`
+        ));
+        conversation.appendChild(p);
+    }
+</script>
+
+</body>
+</html>
