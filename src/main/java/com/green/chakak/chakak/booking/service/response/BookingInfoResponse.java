@@ -8,7 +8,7 @@ import java.time.LocalTime;
 
 public class BookingInfoResponse {
 
-
+    /*
     @Data
     public static class SaveDTO{
         private Long bookingInfoId;
@@ -42,6 +42,8 @@ public class BookingInfoResponse {
         }
     }
 
+     */
+
 
     // 예약 리스트(유저 입장)
     @Data
@@ -56,8 +58,6 @@ public class BookingInfoResponse {
          this.photographerProfileId = bookingInfo.getPhotographerProfile().getPhotographerProfileId();
          this.bookingDate = bookingInfo.getBookingDate();
          this.bookingTime = bookingInfo.getBookingTime();
-         this.location = bookingInfo.getLocation();
-         this.budget = bookingInfo.getBudget();
         }
     }
 
@@ -74,8 +74,6 @@ public class BookingInfoResponse {
             this.userProfileId = bookingInfo.getUserProfile().getUserProfileId();
             this.bookingDate = bookingInfo.getBookingDate();
             this.bookingTime = bookingInfo.getBookingTime();
-            this.location = bookingInfo.getLocation();
-            this.budget = bookingInfo.getBudget();
         }
     }
 
@@ -96,11 +94,6 @@ public class BookingInfoResponse {
             this.userProfileId = bookingInfo.getUserProfile().getUserProfileId();
             this.bookingDate = bookingInfo.getBookingDate();
             this.bookingTime = bookingInfo.getBookingTime();
-            this.location = bookingInfo.getLocation();
-            this.budget = bookingInfo.getBudget();
-            this.participantCount = bookingInfo.getParticipantCount();
-            this.shootingDuration = bookingInfo.getShootingDuration();
-            this.specialRequest = bookingInfo.getSpecialRequest();
         }
     }
 

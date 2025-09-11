@@ -1,11 +1,13 @@
 package com.green.chakak.chakak.booking.service.repository;
 
 import com.green.chakak.chakak.booking.domain.BookingInfo;
+import com.green.chakak.chakak.payment.domain.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface BookingInfoJpaRepository extends JpaRepository<BookingInfo, Long> {
 
@@ -21,5 +23,7 @@ public interface BookingInfoJpaRepository extends JpaRepository<BookingInfo, Lon
             "JOIN FETCH b.userProfile up " +
             "WHERE pp.photographerProfileId = :photographerProfileId")
     List<BookingInfo> findByPhotographerId(@Param("photographerProfileId") Long photographerProfileId);
+
+    Optional<BookingInfo> findByPayment(Payment payment);
 
 }

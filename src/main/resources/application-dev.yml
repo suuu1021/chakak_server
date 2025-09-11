@@ -4,6 +4,7 @@ server:
       charset: utf-8
       force: true
   port: 8080
+  domain: ${SERVER_DOMAIN:http://localhost:8080}
 
 # 로그 레벨 설정
 logging:
@@ -12,6 +13,13 @@ logging:
     com.chakak: DEBUG            # 내 프로젝트는 DEBUG 이상 모두 출력
     org.hibernate.SQL: debug    # Hibernate 실행 쿼리 출력
     org.hibernate.type.descriptor.sql: trace  # 쿼리 파라미터 값 출력
+
+# 카카오페이 설정 (환경변수 사용)
+kakao:
+  pay:
+    secret-key: ${KAKAO_PAY_SECRET_KEY}
+    cid: ${KAKAO_PAY_CID:TC0ONETIME}  # 기본값: 테스트용 CID
+    api-url: ${KAKAO_PAY_API_URL:https://open-api.kakaopay.com}
 
 spring:
   config:

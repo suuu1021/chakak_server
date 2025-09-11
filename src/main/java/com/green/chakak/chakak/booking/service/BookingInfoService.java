@@ -14,7 +14,9 @@ import com.green.chakak.chakak._global.errors.exception.Exception400;
 import com.green.chakak.chakak._global.errors.exception.Exception403;
 import com.green.chakak.chakak._global.errors.exception.Exception404;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
+import com.green.chakak.chakak.photo.domain.PriceInfo;
 import com.green.chakak.chakak.photo.service.repository.PhotoServiceJpaRepository;
+import com.green.chakak.chakak.photo.service.repository.PriceInfoJpaRepository;
 import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photographer.service.repository.PhotographerCategoryRepository;
@@ -36,6 +38,7 @@ public class BookingInfoService {
     private final PhotographerRepository photographerRepository;
     private final PhotoServiceJpaRepository photoServiceJpaRepository;
     private final PhotographerCategoryRepository photographerCategoryRepository;
+    private final PriceInfoJpaRepository priceInfoJpaRepository;
 
 
     // 예약 조회(유저 입장)
@@ -88,26 +91,21 @@ public class BookingInfoService {
 
     // 예약하기
     @Transactional
-    public BookingInfoResponse.SaveDTO save(BookingInfoRequest.CreateDTO createDTO, LoginUser loginUser){
+    public void save(BookingInfoRequest.CreateDTO createDTO, LoginUser loginUser){
         UserProfile userProfile = userProfileJpaRepository.findByUserId(loginUser.getId())
                 .orElseThrow(() -> new Exception404("존재하지 않는 일반 사용자입니다."));
 
         PhotographerProfile photographerProfile = photographerRepository.findById(createDTO.getPhotographerProfileId())
                 .orElseThrow(() -> new Exception404("존재하지 않는 작가입니다."));
 
-        PhotographerCategory photographerCategory = photographerCategoryRepository.findById(createDTO.getPhotographerCategoryId())
-                .orElseThrow(() -> new Exception404("존재하지 않는 카테고리입니다."));
-
         PhotoServiceInfo photoServiceInfo = photoServiceJpaRepository.findById(createDTO.getPhotoServiceId())
                 .orElseThrow(() -> new Exception404("존재하지 않는 포토서비스입니다"));
-//        BookingInfo bookingInfo = BookingInfo.builder()
-//                .userProfile(userProfile)
-//                .photographerProfile(photographerProfile)
-//                .photoServiceInfo(photoServiceInfo)
-//                .build();
-        BookingInfo bookingInfo = createDTO.toEntity(userProfile, photographerProfile, photographerCategory, photoServiceInfo);
-         BookingInfo savedBookingInfo = bookingInfoJpaRepository.save(bookingInfo);
-        return new BookingInfoResponse.SaveDTO(savedBookingInfo);
+
+        PriceInfo priceInfo = priceInfoJpaRepository.findById(createDTO.getPriceInfoId())
+                .orElseThrow(() -> new Exception404("존재하지 않는 가격정보 입니다."));
+
+        BookingInfo bookingInfo = createDTO.toEntity(userProfile, photographerProfile, priceInfo, photoServiceInfo);
+        bookingInfoJpaRepository.save(bookingInfo);
     }
 
 

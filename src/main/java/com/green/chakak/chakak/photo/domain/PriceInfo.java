@@ -25,6 +25,9 @@ public class PriceInfo {
     @ManyToOne(fetch = FetchType.LAZY)
     private PhotoServiceInfo photoServiceInfo;
 
+    @Column(nullable = false)
+    private int price; // 가격 필드 추가
+
     @Column(nullable = false, length = 30)
     private String title;
 
@@ -51,7 +54,10 @@ public class PriceInfo {
     private Timestamp updatedAt;
 
     @Builder
-    public PriceInfo(Long priceInfoId, PhotoServiceInfo photoServiceInfo, String title, int participantCount, int shootingDuration, int outfitChanges, String specialEquipment, boolean isMakeupService, Timestamp createdAt, Timestamp updatedAt) {
+    public PriceInfo(Long priceInfoId, PhotoServiceInfo photoServiceInfo,
+                     String title, int participantCount, int shootingDuration,
+                     int outfitChanges, String specialEquipment, boolean isMakeupService,
+                     int price, Timestamp createdAt, Timestamp updatedAt) { // price 추가
         this.priceInfoId = priceInfoId;
         this.photoServiceInfo = photoServiceInfo;
         this.title = title;
@@ -60,6 +66,7 @@ public class PriceInfo {
         this.outfitChanges = outfitChanges;
         this.specialEquipment = specialEquipment;
         this.isMakeupService = isMakeupService;
+        this.price = price; // 할당 추가
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }

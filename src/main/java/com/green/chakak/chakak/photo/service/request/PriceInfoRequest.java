@@ -23,6 +23,10 @@ public class PriceInfoRequest {
         @Min(value = 5, message = "타이틀 명은 최소 5글자 이상이어야 합니다.")
         private String title;
 
+        @NotNull(message = "가격 값은 필수입니다.")
+        @Min(value = 100, message = "가격은 최소 100원 이상이어야 합니다")
+        private Integer price;
+
         @NotNull(message = "참가자 수는 필수입니다")
         @Min(value = 1, message = "참가자 수는 1명 이상이어야 합니다")
         private Integer participantCount;
@@ -42,8 +46,9 @@ public class PriceInfoRequest {
         private Boolean isMakeupService;
 
         @Builder
-        public CreateDTO(String title, Integer participantCount, Integer shootingDuration, Integer outfitChanges, String specialEquipment, Boolean isMakeupService) {
+        public CreateDTO(String title, Integer price, Integer participantCount, Integer shootingDuration, Integer outfitChanges, String specialEquipment, Boolean isMakeupService) {
             this.title = title;
+            this.price = price;
             this.participantCount = participantCount;
             this.shootingDuration = shootingDuration;
             this.outfitChanges = outfitChanges;
@@ -54,6 +59,7 @@ public class PriceInfoRequest {
         public PriceInfo toEntity(PhotoServiceInfo photoServiceInfo) {
             return PriceInfo.builder()
                     .title(this.title)
+                    .price(this.price)
                     .photoServiceInfo(photoServiceInfo)
                     .participantCount(this.participantCount)
                     .shootingDuration(this.shootingDuration)
