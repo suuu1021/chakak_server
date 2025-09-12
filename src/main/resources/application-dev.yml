@@ -20,6 +20,11 @@ kakao:
     secret-key: ${KAKAO_PAY_SECRET_KEY}
     cid: ${KAKAO_PAY_CID:TC0ONETIME}  # 기본값: 테스트용 CID
     api-url: ${KAKAO_PAY_API_URL:https://open-api.kakaopay.com}
+  api:
+    client-id: ${KAKAO_CLIENT_ID}
+    redirect-uri: http://localhost:8080/api/auth/kakao/callback
+    token-uri: https://kauth.kakao.com/oauth/token
+    user-info-uri: https://kapi.kakao.com/v2/user/me
 
 spring:
   config:
@@ -64,9 +69,4 @@ spring:
           starttls:
             enable: true
 
-kakao:
-  api:
-    client-id: ${KAKAO_CLIENT_ID}
-    redirect-uri: http://localhost:8080/api/auth/kakao/callback
-    token-uri: https://kauth.kakao.com/oauth/token
-    user-info-uri: https://kapi.kakao.com/v2/user/me
+
