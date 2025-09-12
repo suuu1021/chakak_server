@@ -1,5 +1,6 @@
 package com.green.chakak.chakak.account.domain;
 
+import com.green.chakak.chakak._global.utils.HashUtil;
 import com.green.chakak.chakak.account.service.request.UserRequest;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photo.domain.PhotoServiceReview;
@@ -13,6 +14,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "user_account")
@@ -22,12 +24,15 @@ import java.util.List;
 public class User {
 
     @Builder
-    public User(String password, String email, UserType userType, UserStatus status, boolean emailVerified) {
+    public User(String password, String email, UserType userType, UserStatus status, boolean emailVerified,
+                String provider, String providerId) {
         this.password = password;
         this.email = email;
         this.userType = userType;
         this.status = status;
         this.emailVerified = emailVerified;
+        this.provider = provider;
+        this.providerId = providerId;
     }
 
     @Id
@@ -69,6 +74,12 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<PhotoServiceReview> photoServiceReviews = new java.util.ArrayList<>();
 
+    private String provider; // 소셜 로그인 제공자(KAKAO, GOOGLE, NAVER 등)
+
+    @Column(name = "provider_id", unique = true)
+    private String providerId; // 카카오에서 내려주는 유저 고유 ID
+
+
     public enum UserStatus {
         ACTIVE,
         INACTIVE,
@@ -97,6 +108,24 @@ public class User {
                 .userType(userType)
                 .status(User.UserStatus.ACTIVE)//TODO: INACTIVE로 수정하기
                 .emailVerified(false)
+                .build();
+    }
+
+
+
+    public static User fromKakao(String email, String providerId, UserType defaultType){
+
+        String randomPassword = UUID.randomUUID().toString();
+        String hashedPassword = HashUtil.sha256(randomPassword);
+
+        return User.builder()
+                .email(email != null ? email : providerId + "@kakao.com")
+                .password(hashedPassword)
+                .userType(defaultType)
+                .status(User.UserStatus.ACTIVE)
+                .emailVerified(true)
+                .provider("KAKAO")
+                .providerId(providerId)
                 .build();
     }
 }
