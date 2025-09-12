@@ -38,7 +38,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/photo/services/detail/{id}",
                         "/api/photo/categories/list",
                         "/api/photo/mappings/list",
-                        "/api/photo/mappings/detail/{id}"
+                        "/api/photo/mappings/detail/{id}",
+                        "/api/auth/kakao/**"
                 );
     }
 

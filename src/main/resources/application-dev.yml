@@ -55,3 +55,10 @@ spring:
           auth: true
           starttls:
             enable: true
+
+kakao:
+  api:
+    client-id: ${KAKAO_CLIENT_ID}
+    redirect-uri: http://localhost:8080/api/auth/kakao/callback
+    token-uri: https://kauth.kakao.com/oauth/token
+    user-info-uri: https://kapi.kakao.com/v2/user/me
