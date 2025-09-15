@@ -37,4 +37,11 @@ public class UserProfileRestController {
         UserProfileResponse.UpdateDTO updateProfileDTO = userProfileService.updateProfile(updateDTO, loginuser);
         return ResponseEntity.ok(new ApiUtil<>("처리가 완료 되었습니다."));
     }
+
+    // 프로필 조회
+    @GetMapping("/profile/detail")
+    public ResponseEntity<?> getMyProfile(@RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
+        UserProfileResponse.DetailDTO profileDetail = userProfileService.getMyProfile(loginUser);
+        return ResponseEntity.ok(new ApiUtil<>(profileDetail));
+    }
 }

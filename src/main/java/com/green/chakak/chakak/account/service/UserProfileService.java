@@ -55,4 +55,10 @@ public class UserProfileService {
         return new UserProfileResponse.UpdateDTO(userProfile);
     }
 
+    public UserProfileResponse.DetailDTO getMyProfile(LoginUser loginUser) {
+        UserProfile userProfile = userProfileJpaRepository.findByUserId(loginUser.getId())
+                .orElseThrow(() -> new Exception404("프로필이 존재하지 않습니다."));
+        return new UserProfileResponse.DetailDTO(userProfile);
+    }
+
 }
