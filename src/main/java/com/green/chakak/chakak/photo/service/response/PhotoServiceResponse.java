@@ -19,6 +19,7 @@ public class PhotoServiceResponse {
         private String title;
         private String description;
         private String imageData;
+        private int price; // 가격 옵션 중 제일 낮은 가격대 설정
         private Timestamp createdAt;
         private Timestamp updatedAt;
 
@@ -29,6 +30,7 @@ public class PhotoServiceResponse {
         public PhotoServiceListDTO(PhotoServiceInfo photoServiceInfo) {
             this.serviceId = photoServiceInfo.getServiceId();
             this.title = photoServiceInfo.getTitle();
+            this.price = 0;
             this.description = photoServiceInfo.getDescription();
             this.imageData = photoServiceInfo.getImageData();
             this.createdAt = photoServiceInfo.getCreatedAt();

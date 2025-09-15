@@ -17,6 +17,7 @@ public class PriceInfoResponse {
     public static class PriceInfoListDTO {
         private Long priceInfoId;
         private Long photoServiceInfoId;
+        private int price;
         private int participantCount;
         private int shootingDuration;
         private int outfitChanges;
@@ -29,6 +30,7 @@ public class PriceInfoResponse {
         public PriceInfoListDTO(PriceInfo priceInfo) {
             this.priceInfoId = priceInfo.getPriceInfoId();
             this.photoServiceInfoId = priceInfo.getPhotoServiceInfo().getServiceId();
+            this.price = priceInfo.getPrice();
             this.participantCount = priceInfo.getParticipantCount();
             this.shootingDuration = priceInfo.getShootingDuration();
             this.outfitChanges = priceInfo.getOutfitChanges();
@@ -45,6 +47,7 @@ public class PriceInfoResponse {
     public static class PriceInfoDetailDTO {
         private Long priceInfoId;
         private PhotoServiceResponse.PhotoServiceDetailDTO photoService;
+        private int price;
         private int participantCount;
         private int shootingDuration;
         private int outfitChanges;
@@ -57,6 +60,7 @@ public class PriceInfoResponse {
         public PriceInfoDetailDTO(PriceInfo priceInfo) {
             this.priceInfoId = priceInfo.getPriceInfoId();
             this.photoService = new PhotoServiceResponse.PhotoServiceDetailDTO(priceInfo.getPhotoServiceInfo());
+            this.price = priceInfo.getPrice();
             this.participantCount = priceInfo.getParticipantCount();
             this.shootingDuration = priceInfo.getShootingDuration();
             this.outfitChanges = priceInfo.getOutfitChanges();

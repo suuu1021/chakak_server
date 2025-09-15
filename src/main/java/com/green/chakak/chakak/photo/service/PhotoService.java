@@ -64,6 +64,7 @@ public class PhotoService {
 
             // 가격 정보 조회 및 설정
             List<PriceInfoResponse.PriceInfoListDTO> priceInfoList = getPriceInfoListByPhotoServiceId(serviceInfo.getServiceId());
+            mainDTO.setPrice(priceInfoList.getFirst().getPrice());
             mainDTO.setPriceInfoList(priceInfoList);
 
             // 카테고리 정보 조회 및 설정
