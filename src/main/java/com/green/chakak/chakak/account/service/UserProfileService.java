@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
+
 @RequiredArgsConstructor
 @Service
 @Transactional(readOnly = true)
@@ -29,28 +31,44 @@ public class UserProfileService {
         User user = userJpaRepository.findById(createDTO.getUserInfoId()).orElseThrow(
                 () -> new Exception404("존재하지 않는 유저입니다.")
         );
-        log.info("user.getUserType(): {}", user.getUserType());
-        if (user.getUserType().getTypeCode() == null || !"user".equalsIgnoreCase(user.getUserType().getTypeCode())){
+
+        // 1. 해당 유저로 이미 생성된 프로필이 있는지 확인 (1인 1프로필 보장)
+        userProfileJpaRepository.findByUserId(user.getUserId()).ifPresent(profile -> {
+            throw new Exception400("이미 프로필이 존재합니다.");
+        });
+
+        // 2. "일반 유저"만 생성 가능한지 확인
+        if (!"user".equalsIgnoreCase(user.getUserType().getTypeCode())){
             throw new Exception400("일반 사용자만 프로필을 생성할 수 있습니다.");
         }
 
+        // 3. 닉네임 중복 확인
         userProfileJpaRepository.findByNickName(createDTO.getNickName()).ifPresent(up -> {
             throw new Exception400("이미 사용중인 닉네임입니다.");
         });
+
+        // 4. 프로필 저장
         UserProfile savedProfile = userProfileJpaRepository.save(createDTO.toEntity(user));
         return new UserProfileResponse.DetailDTO(savedProfile);
     }
 
     @Transactional
     public UserProfileResponse.UpdateDTO updateProfile(UserProfileRequest.UpdateDTO updateDTO, LoginUser loginUser){
+        // 1. 수정할 프로필 조회
         UserProfile userProfile = userProfileJpaRepository.findByUserId(loginUser.getId())
                 .orElseThrow(() -> new Exception404("수정할 프로필이 존재하지 않습니다."));
 
-        userProfileJpaRepository.findByNickName(updateDTO.getNickName()).ifPresent(userProfile1 -> {
-            if(!userProfile1.getNickName().equals(userProfile.getNickName()))
-                throw new Exception400("이미 사용중인 닉네임입니다.");
-        });
+        // 2. 닉네임 변경 시, 중복 여부 확인 (버그 수정 완료)
+        if (updateDTO.getNickName() != null && !Objects.equals(updateDTO.getNickName(), userProfile.getNickName())) {
+            userProfileJpaRepository.findByNickName(updateDTO.getNickName()).ifPresent(foundProfile -> {
+                // 내가 아닌 다른 사람이 해당 닉네임을 사용 중인 경우
+                if (!foundProfile.getUserProfileId().equals(userProfile.getUserProfileId())) {
+                    throw new Exception400("이미 사용중인 닉네임입니다.");
+                }
+            });
+        }
 
+        // 3. 프로필 업데이트
         userProfile.update(updateDTO);
         return new UserProfileResponse.UpdateDTO(userProfile);
     }

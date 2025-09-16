@@ -1,5 +1,6 @@
 package com.green.chakak.chakak.chat.service;
 
+import com.green.chakak.chakak._global.errors.exception.Exception400;
 import com.green.chakak.chakak._global.errors.exception.Exception403;
 import com.green.chakak.chakak._global.errors.exception.Exception404;
 import com.green.chakak.chakak.account.domain.LoginUser;
@@ -14,6 +15,7 @@ import com.green.chakak.chakak.chat.repository.ChatRoomRepository;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photographer.service.repository.PhotographerRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -35,17 +38,48 @@ public class ChatService {
     private final PhotographerRepository photographerRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public ChatRoom findOrCreateRoom(Long userProfileId, Long photographerProfileId) {
-        UserProfile userProfile = userProfileJpaRepository.findById(userProfileId)
-                .orElseThrow(() -> new Exception404("해당 유저 프로필을 찾을 수 없습니다: " + userProfileId));
+    /**
+     * 채팅방을 생성하거나 기존 채팅방을 조회합니다.
+     * 로그인한 사용자의 역할(USER, PHOTOGRAPHER)에 따라 분기하여 처리합니다.
+     * @param requestDto 상대방의 프로필 ID를 담은 DTO
+     * @param loginUser 현재 로그인한 사용자 정보
+     * @return 조회되거나 생성된 ChatRoom 엔티티
+     */
+    public ChatRoom findOrCreateRoom(ChatRoomRequestDto requestDto, LoginUser loginUser) {
+        UserProfile userProfile;
+        PhotographerProfile photographerProfile;
 
-        PhotographerProfile photographerProfile = photographerRepository.findById(photographerProfileId)
-                .orElseThrow(() -> new Exception404("해당 사진작가 프로필을 찾을 수 없습니다: " + photographerProfileId));
+        String role = loginUser.getUserTypeName();
 
-        //UserProfile을 직접 사용하여 채팅방 조회
+        if ("user".equalsIgnoreCase(role)) {
+            // 요청자가 일반 유저인 경우
+            userProfile = userProfileJpaRepository.findByUserId(loginUser.getId())
+                    .orElseThrow(() -> new Exception404("로그인한 유저의 프로필을 찾을 수 없습니다. ID: " + loginUser.getId()));
+
+            if (requestDto.getPhotographerProfileId() == null) {
+                throw new Exception400("상대방(사진작가)의 프로필 ID가 필요합니다.");
+            }
+            photographerProfile = photographerRepository.findById(requestDto.getPhotographerProfileId())
+                    .orElseThrow(() -> new Exception404("해당 사진작가 프로필을 찾을 수 없습니다: " + requestDto.getPhotographerProfileId()));
+
+        } else if ("photographer".equalsIgnoreCase(role)) {
+            // 요청자가 사진작가인 경우
+            photographerProfile = photographerRepository.findByUser_UserId(loginUser.getId())
+                    .orElseThrow(() -> new Exception404("로그인한 작가의 프로필을 찾을 수 없습니다. ID: " + loginUser.getId()));
+
+            if (requestDto.getUserProfileId() == null) {
+                throw new Exception400("상대방(유저)의 프로필 ID가 필요합니다.");
+            }
+            userProfile = userProfileJpaRepository.findById(requestDto.getUserProfileId())
+                    .orElseThrow(() -> new Exception404("해당 유저 프로필을 찾을 수 없습니다: " + requestDto.getUserProfileId()));
+        } else {
+            throw new Exception403("채팅방을 생성할 수 없는 사용자 유형입니다: " + role);
+        }
+
+        // 두 프로필을 모두 찾은 후, 채팅방을 조회하거나 생성
         return chatRoomRepository.findByUserProfileAndPhotographerProfile(userProfile, photographerProfile)
                 .orElseGet(() -> {
-                    // UserProfile을 사용하여 채팅방 생성
+                    log.info("Creating new chat room between user {} and photographer {}", userProfile.getUserProfileId(), photographerProfile.getPhotographerProfileId());
                     ChatRoom newChatRoom = ChatRoom.builder()
                             .userProfile(userProfile)
                             .photographerProfile(photographerProfile)
@@ -55,6 +89,7 @@ public class ChatService {
     }
 
     public void processMessage(ChatMessageDto messageDto) {
+        log.info("Processing message in service for room {}", messageDto.getChatRoomId());
         ChatRoom chatRoom = chatRoomRepository.findById(messageDto.getChatRoomId())
                 .orElseThrow(() -> new Exception404("채팅방을 찾을 수 없습니다: " + messageDto.getChatRoomId()));
 
@@ -62,6 +97,7 @@ public class ChatService {
         ChatMessage savedMessage = chatMessageRepository.save(chatMessage);
 
         ChatMessageResponseDto responseDto = ChatMessageResponseDto.from(savedMessage);
+        log.info("Broadcasting message to /topic/chat/room/{}", responseDto.getChatRoomId());
         messagingTemplate.convertAndSend("/topic/chat/room/" + responseDto.getChatRoomId(), responseDto);
     }
 
