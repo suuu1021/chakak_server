@@ -1,8 +1,10 @@
 package com.green.chakak.chakak.portfolios.controller;
 
+import com.green.chakak.chakak._global.errors.exception.Exception403;
 import com.green.chakak.chakak._global.utils.ApiUtil;
 import com.green.chakak.chakak._global.utils.Define;
 import com.green.chakak.chakak.account.domain.LoginUser;
+import com.green.chakak.chakak.admin.domain.LoginAdmin;
 import com.green.chakak.chakak.portfolios.service.PortfolioService;
 import com.green.chakak.chakak.portfolios.service.request.PortfolioRequest;
 import com.green.chakak.chakak.portfolios.service.response.PortfolioResponse;
@@ -59,9 +61,9 @@ public class PortfolioController {
 	// 포트폴리오 상세 조회 - 인증 불필요
 	@GetMapping("/{portfolioId}")
 	public ResponseEntity<?> getPortfolioDetail(@PathVariable Long portfolioId) {
-		PortfolioResponse.DetailDTO response = portfolioService.getPortfolioDetail(portfolioId);
-		return ResponseEntity.ok(new ApiUtil<>(response));
-	}
+                    PortfolioResponse.DetailDTO response = portfolioService.getPortfolioDetail(portfolioId);
+        return ResponseEntity.ok(new ApiUtil<>(response));
+    }
 
 	// 포트폴리오 목록 조회 (페이징) - 인증 불필요
 	@GetMapping
@@ -83,8 +85,8 @@ public class PortfolioController {
 	@PutMapping("/{portfolioId}/update")
 	public ResponseEntity<?> updatePortfolio(@PathVariable Long portfolioId,
 											 @Valid @RequestBody PortfolioRequest.UpdateDTO updateRequest,
-											 HttpServletRequest httpRequest) {
-		LoginUser loginUser = (LoginUser) httpRequest.getAttribute(Define.LOGIN_USER);
+                                            HttpServletRequest httpRequest) {
+        LoginUser loginUser = (LoginUser) httpRequest.getAttribute(Define.LOGIN_USER);
 		PortfolioResponse.DetailDTO response = portfolioService.updatePortfolio(portfolioId, updateRequest, loginUser);
 		return ResponseEntity.ok(new ApiUtil<>(response));
 	}

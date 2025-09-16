@@ -3,6 +3,7 @@ package com.green.chakak.chakak.portfolios.service;
 import com.green.chakak.chakak._global.errors.exception.Exception400;
 import com.green.chakak.chakak._global.errors.exception.Exception404;
 import com.green.chakak.chakak._global.errors.exception.Exception500;
+import com.green.chakak.chakak.admin.domain.LoginAdmin;
 import com.green.chakak.chakak.portfolios.domain.PortfolioCategory;
 import com.green.chakak.chakak.portfolios.service.repository.PortfolioCategoryJpaRepository;
 import com.green.chakak.chakak.portfolios.service.request.PortfolioCategoryRequest;
@@ -41,7 +42,7 @@ public class PortfolioCategoryService {
 	 * 카테고리 생성
 	 */
 	@Transactional
-	public PortfolioCategoryResponse.DetailDTO createCategory(PortfolioCategoryRequest.CreateDTO request) {
+	public PortfolioCategoryResponse.DetailDTO createCategory(PortfolioCategoryRequest.CreateDTO request, LoginAdmin loginAdmin) {
 		try {
 			log.info("카테고리 생성 시작: {}", request.getCategoryName());
 
@@ -84,7 +85,7 @@ public class PortfolioCategoryService {
 	 * 카테고리 수정
 	 */
 	@Transactional
-	public PortfolioCategoryResponse.DetailDTO updateCategory(Long categoryId, PortfolioCategoryRequest.UpdateDTO request) {
+	public PortfolioCategoryResponse.DetailDTO updateCategory(Long categoryId, PortfolioCategoryRequest.UpdateDTO request, LoginAdmin loginAdmin) {
 		try {
 			log.info("카테고리 수정 시작: ID = {}", categoryId);
 
@@ -187,7 +188,7 @@ public class PortfolioCategoryService {
 	/**
 	 * 전체 카테고리 목록 조회 (관리자용)
 	 */
-	public List<PortfolioCategoryResponse.DetailDTO> getAllCategories() {
+	public List<PortfolioCategoryResponse.DetailDTO> getAllCategories(LoginAdmin loginAdmin) {
 		try {
 			log.info("전체 카테고리 목록 조회");
 
@@ -207,7 +208,7 @@ public class PortfolioCategoryService {
 	 * 카테고리 삭제 (비활성화)
 	 */
 	@Transactional
-	public void deleteCategory(Long categoryId) {
+	public void deleteCategory(Long categoryId, LoginAdmin loginAdmin) {
 		try {
 			log.info("카테고리 비활성화: ID = {}", categoryId);
 

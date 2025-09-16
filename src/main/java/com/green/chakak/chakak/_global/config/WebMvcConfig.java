@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -47,7 +48,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/photo/mappings/detail/{id}",
                         "/api/payment/success",
                         "/api/payment/fail",
-                        "/api/payment/cancel"
+                        "/api/payment/cancel",
+                        "/api/photo/mappings/detail/{id}",
+                      "/api/admin/login"
                 );
     }
 

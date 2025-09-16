@@ -7,7 +7,7 @@ import com.green.chakak.chakak._global.errors.exception.Exception500;
 import com.green.chakak.chakak._global.utils.Define;
 import com.green.chakak.chakak._global.utils.JwtUtil;
 import com.green.chakak.chakak.account.domain.LoginUser;
-
+import com.green.chakak.chakak.admin.domain.LoginAdmin;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -39,16 +39,37 @@ public class LoginInterceptor implements HandlerInterceptor {
         jwt = jwt.replace(Define.BEARER, "");
 
         try {
-            LoginUser loginUser = JwtUtil.verify(jwt);
 
-            request.setAttribute(Define.LOGIN_USER, loginUser);
-            return true;
+
+            if (jwt != null) {
+                // 2. 토큰에서 userTypeName "엿보기"
+                String userTypeName = JwtUtil.getUserTypeName(jwt);
+                log.info("Decoded userTypeName from token: '{}'", userTypeName); // 디버깅용 로그 추가
+                String uri = request.getRequestURI();
+                if (uri.startsWith("/api/admin")) {
+                    //  관리자 전용 API인데 관리자가 아니면 차단
+                    if (!"admin".equals(userTypeName)) {
+                        throw new Exception401("관리자 권한이 필요합니다.");
+                    }
+                    LoginAdmin loginAdmin = JwtUtil.verifyAdmin(jwt);
+                    request.setAttribute(Define.LOGIN_ADMIN, loginAdmin);
+                } else {
+                    // 3. 일반 사용자 토큰 검증
+                    LoginUser loginUser = JwtUtil.verify(jwt);
+                    request.setAttribute(Define.LOGIN_USER, loginUser);
+                }
+            }
+
+            return true; // 다음 단계로 진행
+
+
 
         } catch (TokenExpiredException e) {
             throw new Exception401("토큰 만료 시간이 지났습니다. 다시 로그인 해주세요.");
         } catch (JWTDecodeException e) {
             throw new Exception401("토큰이 유효하지 않습니다.");
         } catch (Exception e) {
+            log.error("Unhandled exception in LoginInterceptor", e); // 에러 로깅 개선
             throw new Exception500(e.getMessage());
         }
     }
@@ -65,4 +86,3 @@ public class LoginInterceptor implements HandlerInterceptor {
         HandlerInterceptor.super.afterCompletion(request, response, handler, ex);
     }
 }
-

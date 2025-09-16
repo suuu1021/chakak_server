@@ -1,6 +1,9 @@
 package com.green.chakak.chakak.photographer.controller;
 
+import com.green.chakak.chakak._global.errors.exception.Exception403;
 import com.green.chakak.chakak._global.utils.ApiUtil;
+import com.green.chakak.chakak._global.utils.Define;
+import com.green.chakak.chakak.admin.domain.LoginAdmin;
 import com.green.chakak.chakak.photographer.service.PhotographerCategoryService;
 import com.green.chakak.chakak.photographer.service.request.PhotographerCategoryRequest;
 import com.green.chakak.chakak.photographer.service.response.PhotographerResponse;
@@ -21,9 +24,14 @@ public class PhotographerCategoryController {
     /**
      * 카테고리 생성
      */
-    @PostMapping("/create")
-    public ResponseEntity<?> createCategory(@Valid @RequestBody PhotographerCategoryRequest.SaveCategory saveCategory) {
-        PhotographerResponse.CategoryDTO response = photographerCategoryService.createCategory(saveCategory);
+    @PostMapping
+    public ResponseEntity<?> createCategory(@Valid @RequestBody PhotographerCategoryRequest.SaveCategory saveCategory,
+                                            @RequestAttribute(value = Define.LOGIN_ADMIN, required = false) LoginAdmin loginAdmin) {
+
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+        PhotographerResponse.CategoryDTO response = photographerCategoryService.createCategory(saveCategory, loginAdmin);
         URI location = URI.create(String.format("/api/photographer-categories/%d", response.getCategoryId()));
         return ResponseEntity.created(location).body(new ApiUtil<>(response));
     }
@@ -49,19 +57,27 @@ public class PhotographerCategoryController {
     /**
      * 카테고리 수정
      */
-    @PutMapping("/{categoryId}/update")
+    @PutMapping("/update/{categoryId}")
     public ResponseEntity<?> updateCategory(@PathVariable Long categoryId,
-                                            @Valid @RequestBody PhotographerCategoryRequest.UpdateCategory updateCategory) {
-        PhotographerResponse.CategoryDTO response = photographerCategoryService.updateCategory(categoryId, updateCategory);
+                                            @Valid @RequestBody PhotographerCategoryRequest.UpdateCategory updateCategory,
+                                            @RequestAttribute(Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+        PhotographerResponse.CategoryDTO response = photographerCategoryService.updateCategory(categoryId, updateCategory, loginAdmin);
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
     /**
      * 카테고리 삭제
      */
-    @DeleteMapping("/{categoryId}/delete")
-    public ResponseEntity<?> deleteCategory(@PathVariable Long categoryId) {
-        photographerCategoryService.deleteCategory(categoryId);
+    @DeleteMapping("/delete/{categoryId}")
+    public ResponseEntity<?> deleteCategory(@PathVariable Long categoryId,
+                                            @RequestAttribute(Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+        photographerCategoryService.deleteCategory(categoryId, loginAdmin);
         return ResponseEntity.ok(new ApiUtil<>(null, "카테고리 삭제가 완료되었습니다."));
     }
 

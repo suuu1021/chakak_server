@@ -32,4 +32,7 @@ public interface PhotoMappingRepository extends JpaRepository<PhotoServiceMappin
 
     // 카테고리별 매핑 개수
     long countByPhotoServiceCategory_CategoryId(Long categoryId);
+
+    // 매핑 테이블 삭제 (serviceId 기준)
+    void deleteByPhotoServiceInfo_serviceId(Long serviceId);
 }

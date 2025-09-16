@@ -1,6 +1,9 @@
 package com.green.chakak.chakak.portfolios.controller;
 
+import com.green.chakak.chakak._global.errors.exception.Exception403;
 import com.green.chakak.chakak._global.utils.ApiUtil;
+import com.green.chakak.chakak._global.utils.Define;
+import com.green.chakak.chakak.admin.domain.LoginAdmin;
 import com.green.chakak.chakak.portfolios.service.PortfolioCategoryService;
 import com.green.chakak.chakak.portfolios.service.request.PortfolioCategoryRequest;
 import com.green.chakak.chakak.portfolios.service.response.PortfolioCategoryResponse;
@@ -34,9 +37,13 @@ public class PortfolioCategoryController {
 	private final PortfolioCategoryService portfolioCategoryService;
 
 	// 카테고리 생성
-	@PostMapping("/create")
-	public ResponseEntity<?> createCategory(@Valid @RequestBody PortfolioCategoryRequest.CreateDTO categoryRequest) {
-		PortfolioCategoryResponse.DetailDTO response = portfolioCategoryService.createCategory(categoryRequest);
+	@PostMapping
+	public ResponseEntity<?> createCategory(@Valid @RequestBody PortfolioCategoryRequest.CreateDTO categoryRequest,
+                                            @RequestAttribute(Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+        PortfolioCategoryResponse.DetailDTO response = portfolioCategoryService.createCategory(categoryRequest, loginAdmin);
 		URI location = URI.create(String.format("/api/portfolio-categories/%d", response.getCategoryId()));
 		return ResponseEntity.created(location).body(new ApiUtil<>(response));
 	}
@@ -57,23 +64,34 @@ public class PortfolioCategoryController {
 
 	// 전체 카테고리 목록 조회 (관리자용)
 	@GetMapping("/all")
-	public ResponseEntity<?> getAllCategories() {
-		List<PortfolioCategoryResponse.DetailDTO> response = portfolioCategoryService.getAllCategories();
+	public ResponseEntity<?> getAllCategories(@RequestAttribute(Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+		List<PortfolioCategoryResponse.DetailDTO> response = portfolioCategoryService.getAllCategories(loginAdmin);
 		return ResponseEntity.ok(new ApiUtil<>(response));
 	}
 
 	// 카테고리 수정
-	@PutMapping("/{categoryId}/update")
+	@PutMapping("/{categoryId}")
 	public ResponseEntity<?> updateCategory(@PathVariable Long categoryId,
-											@Valid @RequestBody PortfolioCategoryRequest.UpdateDTO categoryRequest) {
-		PortfolioCategoryResponse.DetailDTO response = portfolioCategoryService.updateCategory(categoryId, categoryRequest);
+											@Valid @RequestBody PortfolioCategoryRequest.UpdateDTO categoryRequest,
+                                            @RequestAttribute(Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+		PortfolioCategoryResponse.DetailDTO response = portfolioCategoryService.updateCategory(categoryId, categoryRequest, loginAdmin);
 		return ResponseEntity.ok(new ApiUtil<>(response));
 	}
 
 	// 카테고리 삭제 (비활성화)
-	@DeleteMapping("/{categoryId}/delete")
-	public ResponseEntity<?> deleteCategory(@PathVariable Long categoryId) {
-		portfolioCategoryService.deleteCategory(categoryId);
+	@DeleteMapping("/{categoryId}")
+	public ResponseEntity<?> deleteCategory(@PathVariable Long categoryId,
+                                            @RequestAttribute(Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+		portfolioCategoryService.deleteCategory(categoryId, loginAdmin);
 		return ResponseEntity.noContent().build();
 	}
 }

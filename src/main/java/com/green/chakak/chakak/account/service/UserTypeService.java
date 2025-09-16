@@ -36,6 +36,13 @@ public class UserTypeService {
             photographer.setCreatedAt(now);
             photographer.setUpdatedAt(now);
             userTypeRepository.save(photographer);
+
+            UserType admin = new UserType();
+            admin.setTypeName("관리자");
+            admin.setTypeCode("admin");
+            admin.setCreatedAt(now);
+            admin.setUpdatedAt(now);
+            userTypeRepository.save(admin);
         }
     }
 

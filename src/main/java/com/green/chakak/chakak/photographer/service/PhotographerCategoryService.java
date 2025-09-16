@@ -1,7 +1,10 @@
 package com.green.chakak.chakak.photographer.service;
 
 import com.green.chakak.chakak._global.errors.exception.Exception400;
+import com.green.chakak.chakak._global.errors.exception.Exception403;
 import com.green.chakak.chakak._global.errors.exception.Exception404;
+import com.green.chakak.chakak._global.utils.Define;
+import com.green.chakak.chakak.admin.domain.LoginAdmin;
 import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
 import com.green.chakak.chakak.photographer.domain.PhotographerMap;
 import com.green.chakak.chakak.photographer.service.repository.PhotographerCategoryRepository;
@@ -11,6 +14,7 @@ import com.green.chakak.chakak.photographer.service.response.PhotographerRespons
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestAttribute;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,12 +30,12 @@ public class PhotographerCategoryService {
     /**
      * 카테고리 생성
      */
-    public PhotographerResponse.CategoryDTO createCategory(PhotographerCategoryRequest.SaveCategory saveCategory) {
+    public PhotographerResponse.CategoryDTO createCategory(PhotographerCategoryRequest.SaveCategory saveCategory,
+                                                           LoginAdmin loginAdmin) {
         // 중복 카테고리명 확인
         if (photographerCategoryRepository.existsByCategoryName(saveCategory.getCategoryName())) {
             throw new Exception400("이미 존재하는 카테고리명입니다.");
         }
-
         PhotographerCategory category = saveCategory.toEntity();
         PhotographerCategory savedCategory = photographerCategoryRepository.save(category);
         return new PhotographerResponse.CategoryDTO(savedCategory);
@@ -70,7 +74,9 @@ public class PhotographerCategoryService {
     /**
      * 카테고리 수정
      */
-    public PhotographerResponse.CategoryDTO updateCategory(Long categoryId, PhotographerCategoryRequest.UpdateCategory updateCategory) {
+    public PhotographerResponse.CategoryDTO updateCategory(Long categoryId, PhotographerCategoryRequest.UpdateCategory updateCategory,
+                                                            LoginAdmin loginAdmin) {
+
         PhotographerCategory category = photographerCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new Exception404("카테고리를 찾을 수 없습니다."));
 
@@ -88,7 +94,9 @@ public class PhotographerCategoryService {
     /**
      * 카테고리 삭제
      */
-    public void deleteCategory(Long categoryId) {
+    public void deleteCategory(Long categoryId,
+                                LoginAdmin loginAdmin) {
+
         PhotographerCategory category = photographerCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new Exception404("카테고리를 찾을 수 없습니다."));
 

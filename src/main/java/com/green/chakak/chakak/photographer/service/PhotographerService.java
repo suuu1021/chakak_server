@@ -41,6 +41,7 @@ public class PhotographerService {
     /**
      * 포토그래퍼 프로필 저장
      */
+    @Transactional
     public PhotographerResponse.SaveDTO createProfile(PhotographerRequest.SaveProfile saveDTO) {
 
         // 1. dto의 UserId로 회원 존재여부 조회
@@ -99,6 +100,7 @@ public class PhotographerService {
     /**
      * 포토그래퍼 프로필 수정
      */
+    @Transactional
     public PhotographerResponse.UpdateDTO updateProfile(Long photographerId, PhotographerRequest.UpdateProfile updateDTO, LoginUser loginUser) {
         PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
 
@@ -184,6 +186,7 @@ public class PhotographerService {
     /**
      * 포토그래퍼 활성화
      */
+    @Transactional
     public PhotographerResponse.UpdateDTO activatePhotographer(Long photographerId, LoginUser loginUser) {
         PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
         photographer.changeStatus("ACTIVE");
@@ -195,6 +198,7 @@ public class PhotographerService {
     /**
      * 포토그래퍼 비활성화
      */
+    @Transactional
     public PhotographerResponse.UpdateDTO deactivatePhotographer(Long photographerId, LoginUser loginUser) {
         PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
         photographer.changeStatus("INACTIVE");
@@ -206,6 +210,7 @@ public class PhotographerService {
     /**
      * 포토그래퍼에 카테고리 추가
      */
+    @Transactional
     public PhotographerResponse.mapDTO addCategoryToPhotographer(Long photographerId, PhotographerCategoryRequest.AddCategoryToPhotographer request, LoginUser loginUser) {
         PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
         PhotographerCategory category = photographerCategoryRepository.findById(request.getCategoryId())
@@ -238,6 +243,7 @@ public class PhotographerService {
     /**
      * 포토그래퍼에서 카테고리 제거
      */
+    @Transactional
     public void removeCategoryFromPhotographer(Long photographerId, Long categoryId, LoginUser loginUser) {
         PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
         PhotographerCategory category = photographerCategoryRepository.findById(categoryId)
@@ -253,6 +259,7 @@ public class PhotographerService {
     /**
      * 포토그래퍼 완전 삭제 (물리적 삭제)
      */
+    @Transactional
     public void removePhotographer(Long photographerId, LoginUser loginUser) {
         PhotographerProfile photographer = checkIsPhotographerAndOwner(photographerId, loginUser);
 
