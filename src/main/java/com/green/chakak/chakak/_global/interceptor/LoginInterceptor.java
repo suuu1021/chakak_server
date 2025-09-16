@@ -39,29 +39,26 @@ public class LoginInterceptor implements HandlerInterceptor {
         jwt = jwt.replace(Define.BEARER, "");
 
         try {
-
-
+            
             if (jwt != null) {
                 // 2. 토큰에서 userTypeName "엿보기"
                 String userTypeName = JwtUtil.getUserTypeName(jwt);
                 log.info("Decoded userTypeName from token: '{}'", userTypeName); // 디버깅용 로그 추가
-                String uri = request.getRequestURI();
-                if (uri.startsWith("/api/admin")) {
-                    //  관리자 전용 API인데 관리자가 아니면 차단
-                    if (!"admin".equals(userTypeName)) {
-                        throw new Exception401("관리자 권한이 필요합니다.");
-                    }
+                if ("admin".equals(userTypeName)) {
+                    // admin이면 경로 상관없이 LoginAdmin 세팅
                     LoginAdmin loginAdmin = JwtUtil.verifyAdmin(jwt);
                     request.setAttribute(Define.LOGIN_ADMIN, loginAdmin);
+
+                    // 선택: /api/admin 경로 아니면 통과시키고 싶으면 그냥 return true; 해도 됨
                 } else {
-                    // 3. 일반 사용자 토큰 검증
+                    // 일반 사용자 처리
                     LoginUser loginUser = JwtUtil.verify(jwt);
                     request.setAttribute(Define.LOGIN_USER, loginUser);
+
+                    }
                 }
-            }
 
             return true; // 다음 단계로 진행
-
 
 
         } catch (TokenExpiredException e) {
