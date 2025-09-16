@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.account.domain.User;
+import com.green.chakak.chakak.admin.domain.LoginAdmin;
 
 import java.util.Date;
 
@@ -25,6 +26,18 @@ public class JwtUtil {
                 .withClaim("email", loginUser.getEmail())
                 .withClaim("userTypeName", loginUser.getUserTypeName())
                 .withClaim("status", loginUser.getStatus().name())
+                .sign(Algorithm.HMAC512(SECRET_KEY));
+    }
+
+    public static String createForAdmin(LoginAdmin loginAdmin) {
+        Date expiresAt = new Date(System.currentTimeMillis() + EXPIRATION_TIME);
+        return JWT.create()
+                .withSubject(SUBJECT)
+                .withExpiresAt(expiresAt)
+                .withIssuedAt(new Date())
+                .withClaim("adminId", loginAdmin.getAdminId())
+                .withClaim("adminName", loginAdmin.getAdminName())
+                .withClaim("userTypeName", loginAdmin.getUserTypeName())
                 .sign(Algorithm.HMAC512(SECRET_KEY));
     }
 
@@ -49,6 +62,34 @@ public class JwtUtil {
                 .status(status)
                 .build();
     }
+
+    // 토큰 → LoginAdmin
+    public static LoginAdmin verifyAdmin(String jwt) {
+        DecodedJWT decoded = JWT.require(Algorithm.HMAC512(SECRET_KEY))
+                .withSubject(SUBJECT)
+                .build()
+                .verify(jwt);
+
+        Long adminId = decoded.getClaim("adminId").asLong();
+        String adminName = decoded.getClaim("adminName").asString();
+        String userTypeName = decoded.getClaim("userTypeName").asString();
+
+        return LoginAdmin.builder()
+                .adminId(adminId)
+                .adminName(adminName)
+                .userTypeName(userTypeName)
+                .build();
+    }
+
+    // 토큰에서 userTypeName만 추출 (서명 검증 X)
+    public static String getUserTypeName(String jwt) {
+        try {
+            return JWT.decode(jwt).getClaim("userTypeName").asString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 
     // Authorization 헤더추출
     public static String resolveToken(String authHeader) {

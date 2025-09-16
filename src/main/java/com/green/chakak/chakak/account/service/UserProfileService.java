@@ -47,7 +47,7 @@ public class UserProfileService {
                 .orElseThrow(() -> new Exception404("수정할 프로필이 존재하지 않습니다."));
 
         userProfileJpaRepository.findByNickName(updateDTO.getNickName()).ifPresent(userProfile1 -> {
-            if(!userProfile1.getUserProfileId().equals(userProfile.getUserProfileId()))
+            if(!userProfile1.getNickName().equals(userProfile.getNickName()))
                 throw new Exception400("이미 사용중인 닉네임입니다.");
         });
 

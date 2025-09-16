@@ -1,8 +1,10 @@
 package com.green.chakak.chakak.photo.controller;
 
+import com.green.chakak.chakak._global.errors.exception.Exception403;
 import com.green.chakak.chakak._global.utils.ApiUtil;
 import com.green.chakak.chakak._global.utils.Define;
 import com.green.chakak.chakak.account.domain.LoginUser;
+import com.green.chakak.chakak.admin.domain.LoginAdmin;
 import com.green.chakak.chakak.photo.service.PhotoService;
 import com.green.chakak.chakak.photo.service.request.PhotoCategoryRequest;
 import com.green.chakak.chakak.photo.service.response.PhotoCategoryResponse;
@@ -30,8 +32,11 @@ public class PhotoCategoryRestController {
     @PostMapping("")
     public ResponseEntity<?> create(
             @Valid @RequestBody PhotoCategoryRequest.SaveDTO saveDTO,
-            @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
-
+            @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser,
+            @RequestAttribute(Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
         photoCategoryService.saveCategory(saveDTO, loginUser);
         return ResponseEntity.ok(new ApiUtil<>("카테고리 생성이 완료 되었습니다"));
     }
@@ -41,8 +46,12 @@ public class PhotoCategoryRestController {
     public ResponseEntity<?> update(
             @PathVariable Long id,
             @Valid @RequestBody PhotoCategoryRequest.UpdateDTO updateDTO,
-            @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
+            @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser,
+            @RequestAttribute(Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
 
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
         photoCategoryService.updateCategory(id, updateDTO, loginUser);
         return ResponseEntity.ok(new ApiUtil<>("카테고리 수정이 완료 되었습니다"));
     }
@@ -51,8 +60,12 @@ public class PhotoCategoryRestController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(
             @PathVariable Long id,
-             @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
+             @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser,
+            @RequestAttribute(Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
 
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
         photoCategoryService.deleteCategory(id, loginUser);
         return ResponseEntity.ok(new ApiUtil<>("카테고리 삭제가 완료 되었습니다"));
     }
