@@ -390,8 +390,7 @@ public class AdminService {
         PhotographerProfile photographer = getPhotographerById(photographerId);
 
         // 1. 프로필 기본 정보 업데이트
-        photographer.update(updateDTO.getBusinessName(), updateDTO.getIntroduction(),
-                updateDTO.getLocation(), updateDTO.getExperienceYears(), updateDTO.getStatus());
+        photographer.update(updateDTO);
 
         // 2. 카테고리 정보 업데이트
         // categoryIds 필드가 요청에 포함된 경우에만 카테고리 업데이트 수행
