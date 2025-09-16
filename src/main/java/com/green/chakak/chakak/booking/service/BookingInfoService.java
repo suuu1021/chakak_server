@@ -120,11 +120,10 @@ public class BookingInfoService {
         if(bookingInfo.getStatus() != BookingStatus.PENDING){
             throw new Exception400("예약대기 상태일시만 취소처리 가능합니다.");
         }
-
-
-
-        bookingInfo.setStatus(bookingInfo.getStatus());
+        bookingInfo.setStatus(status);
     }
+
+
 
 //     (포토그래퍼입장)예약 승낙
     @Transactional
@@ -137,7 +136,7 @@ public class BookingInfoService {
         if(bookingInfo.getStatus() != BookingStatus.PENDING){
             throw new Exception400("예약대기 상태일시만 예약 승낙 가능합니다.");
         }
-        bookingInfo.setStatus(bookingInfo.getStatus());
+        bookingInfo.setStatus(status);
     }
 
     //     (포토그래퍼입장)예약 거절 REJECTED
@@ -151,7 +150,7 @@ public class BookingInfoService {
         if(bookingInfo.getStatus() != BookingStatus.PENDING && bookingInfo.getStatus() != BookingStatus.CONFIRMED){
             throw new Exception400("예약대기 상태일시와 예약 승락 상태일시만 예약 거절이 가능합니다.");
         }
-        bookingInfo.setStatus(bookingInfo.getStatus());
+        bookingInfo.setStatus(status);
     }
 
     // (포토그래퍼입장) 촬영 완료 COMPLETED
@@ -165,7 +164,7 @@ public class BookingInfoService {
     if(bookingInfo.getStatus() != BookingStatus.CONFIRMED){
         throw new Exception400("예약 승낙된 상태일시만 촬용 완료처리 가능합니다.");
     }
-    bookingInfo.setStatus(bookingInfo.getStatus());
+    bookingInfo.setStatus(status);
     }
 
     // TODO - 리뷰 남길 시 사용할 서비스
@@ -180,7 +179,7 @@ public class BookingInfoService {
         if(bookingInfo.getStatus() != BookingStatus.COMPLETED){
             throw new Exception400("촬용을 완료한 서비스에만 리뷰 작성처리가 가능합니다.");
         }
-        bookingInfo.setStatus(bookingInfo.getStatus());
+        bookingInfo.setStatus(status);
     }
 
 
