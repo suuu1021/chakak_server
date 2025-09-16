@@ -9,28 +9,28 @@ import com.green.chakak.chakak.booking.service.repository.BookingInfoJpaReposito
 import com.green.chakak.chakak.payment.domain.Payment;
 import com.green.chakak.chakak.payment.domain.PaymentStatus;
 import com.green.chakak.chakak.payment.repository.PaymentJpaRepository;
-import com.green.chakak.chakak.payment.repository.response.KakaoPaymentApproveResponse;
-import com.green.chakak.chakak.payment.repository.response.KakaoPaymentReadyResponse;
-import com.green.chakak.chakak.payment.repository.response.PaymentApproveCompleteResponse;
-import com.green.chakak.chakak.payment.repository.response.PaymentReadyResponse;
+import com.green.chakak.chakak.payment.repository.request.PaymentListRequest;
+import com.green.chakak.chakak.payment.repository.response.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -476,5 +476,281 @@ public class PaymentService {
 
         // 2. 기존 결제 승인 로직 호출
         return paymentApprove(pgToken, payment.getTid());
+    }
+
+    /**
+     * 사용자 결제 목록 조회
+     */
+    public PageResponse<PaymentListResponse> getUserPaymentList(Long userId, String userType, PaymentListRequest request, Pageable pageable) {
+
+        log.info("사용자 결제 목록 조회 - userId: {}, userType: {}", userId, userType);
+
+        if (!request.isValidDateRange()) {
+            throw new RuntimeException("시작일이 종료일보다 늦을 수 없습니다.");
+        }
+
+        Page<Payment> paymentPage;
+
+        if ("photographer".equals(userType)) {
+            // 포토그래퍼: 새로운 메서드 사용
+            paymentPage = paymentJpaRepository.findRelatedPaymentHistoryByUserId(
+                    userId, userId.toString(), request.getStatus(),
+                    request.getStartDate(), request.getEndDate(), pageable
+            );
+        } else {
+            // 일반 사용자: 기존 메서드 사용
+            paymentPage = paymentJpaRepository.findUserPaymentHistory(
+                    userId.toString(),
+                    request.getStatus(),
+                    request.getStartDate(),
+                    request.getEndDate(),
+                    pageable
+            );
+        }
+
+        // DTO 변환
+        List<PaymentListResponse> responseList = paymentPage.getContent().stream()
+                .map(payment -> {
+                    // BookingInfo 정보 포함하여 응답 생성
+                    BookingInfo bookingInfo = bookingInfoJpaRepository.findByPayment(payment).orElse(null);
+
+                    if (bookingInfo != null) {
+                        return PaymentListResponse.of(
+                                payment,
+                                bookingInfo.getBookingInfoId(),
+                                bookingInfo.getPhotographerProfile().getBusinessName(), // businessName 사용
+                                bookingInfo.getPhotoServiceInfo().getTitle()
+                        );
+                    } else {
+                        return PaymentListResponse.of(payment);
+                    }
+                })
+                .collect(Collectors.toList());
+
+        return PageResponse.of(paymentPage, responseList);
+    }
+
+    /**
+     * 포토그래퍼 수익 목록 조회
+     */
+    public PageResponse<PaymentIncomeResponse> getPaymentIncomeList(Long photographerId, PaymentListRequest request, Pageable pageable) {
+
+        log.info("포토그래퍼 수익 목록 조회 - photographerId: {}", photographerId);
+
+        // 날짜 범위 유효성 검증
+        if (!request.isValidDateRange()) {
+            throw new RuntimeException("시작일이 종료일보다 늦을 수 없습니다.");
+        }
+
+        // Payment 엔티티 조회 (승인된 결제만)
+        Page<Payment> paymentPage = paymentJpaRepository.findPhotographerIncomeHistory(
+                photographerId,
+                request.getStartDate(),
+                request.getEndDate(),
+                pageable
+        );
+
+        // DTO 변환
+        List<PaymentIncomeResponse> responseList = paymentPage.getContent().stream()
+                .map(payment -> {
+                    // BookingInfo 및 관련 정보 조회
+                    BookingInfo bookingInfo = bookingInfoJpaRepository.findByPayment(payment).orElse(null);
+
+                    if (bookingInfo != null) {
+                        return PaymentIncomeResponse.ofFull(
+                                payment,
+                                bookingInfo.getBookingInfoId(),
+                                bookingInfo.getStatus().name(),
+                                Timestamp.valueOf(bookingInfo.getBookingDate().atTime(bookingInfo.getBookingTime())), // LocalDate + LocalTime을 Timestamp로 변환
+                                bookingInfo.getUserProfile().getNickName(), // nickName 사용
+                                bookingInfo.getUserProfile().getUser().getEmail(), // User 엔티티를 통해 email 접근
+                                bookingInfo.getPhotoServiceInfo().getTitle(),
+                                "촬영 장소 정보 없음", // PhotoServiceInfo에 location 필드가 없음
+                                bookingInfo.getPriceInfo().getShootingDuration(), // PriceInfo의 shootingDuration 사용
+                                10 // 기본 플랫폼 수수료율 10% (설정값으로 변경 가능)
+                        );
+                    } else {
+                        return PaymentIncomeResponse.of(payment);
+                    }
+                })
+                .collect(Collectors.toList());
+
+        return PageResponse.of(paymentPage, responseList);
+    }
+
+    /**
+     * 결제 상세 조회
+     */
+    public PaymentDetailResponse getPaymentDetail(Long paymentId, Long userId, String userType) {
+
+        log.info("결제 상세 조회 - paymentId: {}, userId: {}, userType: {}", paymentId, userId, userType);
+
+        // Payment 조회
+        Payment payment = paymentJpaRepository.findById(paymentId)
+                .orElseThrow(() -> new Exception404("결제 정보를 찾을 수 없습니다."));
+
+        // 권한 검증
+        validatePaymentAccess(payment, userId, userType);
+
+        // BookingInfo 및 관련 정보 조회
+        BookingInfo bookingInfo = bookingInfoJpaRepository.findByPayment(payment).orElse(null);
+
+        if (bookingInfo != null) {
+            return PaymentDetailResponse.ofFull(
+                    payment,
+                    bookingInfo.getBookingInfoId(),
+                    bookingInfo.getStatus().name(),
+                    Timestamp.valueOf(bookingInfo.getBookingDate().atTime(bookingInfo.getBookingTime())), // bookingDate + bookingTime 조합
+                    bookingInfo.getPhotographerProfile().getPhotographerProfileId(),
+                    bookingInfo.getPhotographerProfile().getBusinessName(), // businessName 사용
+                    bookingInfo.getPhotographerProfile().getUser().getEmail(), // User를 통해 email 접근
+                    bookingInfo.getPhotoServiceInfo().getTitle(),
+                    bookingInfo.getPhotoServiceInfo().getDescription(),
+                    "촬영 장소 정보 없음", // PhotoServiceInfo에 location 필드가 없음
+                    bookingInfo.getUserProfile().getUserProfileId(),
+                    bookingInfo.getUserProfile().getNickName(), // nickName 사용
+                    bookingInfo.getUserProfile().getUser().getEmail() // User를 통해 email 접근
+            );
+        } else {
+            return PaymentDetailResponse.of(payment);
+        }
+    }
+
+    /**
+     * 사용자 결제 통계 조회
+     */
+    public UserPaymentStatsResponse getUserPaymentStats(Long userId) {
+
+        log.info("사용자 결제 통계 조회 - userId: {}", userId);
+
+        String userIdStr = userId.toString();
+        LocalDate now = LocalDate.now();
+        YearMonth thisMonth = YearMonth.now();
+        YearMonth lastMonth = thisMonth.minusMonths(1);
+
+        // 기본 통계 조회
+        int totalCount = paymentJpaRepository.countByUserIdAndStatus(userIdStr, null);
+        int successCount = paymentJpaRepository.countByUserIdAndStatus(userIdStr, PaymentStatus.APPROVED);
+        int failedCount = paymentJpaRepository.countByUserIdAndStatus(userIdStr, PaymentStatus.FAILED);
+        int canceledCount = paymentJpaRepository.countByUserIdAndStatus(userIdStr, PaymentStatus.CANCELED);
+
+        long totalAmount = paymentJpaRepository.sumTotalAmountByUserId(userIdStr);
+        long thisMonthAmount = paymentJpaRepository.sumTotalAmountByUserIdAndMonth(userIdStr, thisMonth.getYear(), thisMonth.getMonthValue());
+        long lastMonthAmount = paymentJpaRepository.sumTotalAmountByUserIdAndMonth(userIdStr, lastMonth.getYear(), lastMonth.getMonthValue());
+
+        // 이번 달, 지난 달 결제 건수 (별도 쿼리 필요 시 구현)
+        int thisMonthCount = 0; // TODO: 월별 건수 조회 쿼리 추가
+        int lastMonthCount = 0; // TODO: 월별 건수 조회 쿼리 추가
+
+        // 평균 결제 금액
+        long averageAmount = successCount > 0 ? totalAmount / successCount : 0;
+
+        // 첫 결제/최근 결제 일자 (별도 쿼리 필요 시 구현)
+        LocalDate firstPaymentDate = null; // TODO: 첫 결제 일자 조회
+        LocalDate lastPaymentDate = null;  // TODO: 최근 결제 일자 조회
+
+        return UserPaymentStatsResponse.builder()
+                .totalPaymentCount(totalCount)
+                .totalPaymentAmount(totalAmount)
+                .successPaymentCount(successCount)
+                .successPaymentAmount(totalAmount)
+                .failedPaymentCount(failedCount)
+                .canceledPaymentCount(canceledCount)
+                .thisMonthPaymentCount(thisMonthCount)
+                .thisMonthPaymentAmount(thisMonthAmount)
+                .lastMonthPaymentCount(lastMonthCount)
+                .lastMonthPaymentAmount(lastMonthAmount)
+                .averagePaymentAmount(averageAmount)
+                .firstPaymentDate(firstPaymentDate)
+                .lastPaymentDate(lastPaymentDate)
+                .build();
+    }
+
+    /**
+     * 포토그래퍼 수익 통계 조회
+     */
+    public PaymentIncomeStatsResponse getPhotographerIncomeStats(Long photographerId) {
+
+        log.info("포토그래퍼 수익 통계 조회 - photographerId: {}", photographerId);
+
+        LocalDate now = LocalDate.now();
+        YearMonth thisMonth = YearMonth.now();
+        YearMonth lastMonth = thisMonth.minusMonths(1);
+
+        // 기본 수익 통계
+        long totalIncome = paymentJpaRepository.sumTotalIncomeByPhotographerId(photographerId);
+        long thisMonthIncome = paymentJpaRepository.sumTotalIncomeByPhotographerIdAndMonth(photographerId, thisMonth.getYear(), thisMonth.getMonthValue());
+        long lastMonthIncome = paymentJpaRepository.sumTotalIncomeByPhotographerIdAndMonth(photographerId, lastMonth.getYear(), lastMonth.getMonthValue());
+
+        // 기본 플랫폼 수수료율 (설정에서 가져오거나 기본값 사용)
+        int platformFeeRate = 10; // 10%
+        long totalPlatformFee = (long) (totalIncome * platformFeeRate / 100.0);
+        long totalNetIncome = totalIncome - totalPlatformFee;
+        long thisMonthNetIncome = (long) (thisMonthIncome * (100 - platformFeeRate) / 100.0);
+        long lastMonthNetIncome = (long) (lastMonthIncome * (100 - platformFeeRate) / 100.0);
+
+        // 예약 건수 및 기타 통계 (별도 쿼리 구현 필요)
+        int totalBookings = 0;          // TODO: 총 예약 건수 조회
+        int thisMonthBookings = 0;      // TODO: 이번 달 예약 건수
+        int lastMonthBookings = 0;      // TODO: 지난 달 예약 건수
+        int uniqueCustomers = 0;        // TODO: 고유 고객 수
+        int repeatCustomers = 0;        // TODO: 재방문 고객 수
+
+        long averageIncome = totalBookings > 0 ? totalIncome / totalBookings : 0;
+        long averageNetIncome = totalBookings > 0 ? totalNetIncome / totalBookings : 0;
+
+        // 최고/최저 수익 정보 (별도 쿼리 구현 필요)
+        long highestIncome = 0;         // TODO: 최고 수익 조회
+        long lowestIncome = 0;          // TODO: 최저 수익 조회
+        LocalDate highestIncomeDate = null; // TODO: 최고 수익 일자
+        LocalDate firstBookingDate = null;  // TODO: 첫 예약 일자
+        LocalDate lastBookingDate = null;   // TODO: 최근 예약 일자
+
+        int activeDays = firstBookingDate != null && lastBookingDate != null ?
+                (int) java.time.temporal.ChronoUnit.DAYS.between(firstBookingDate, lastBookingDate) + 1 : 0;
+
+        return PaymentIncomeStatsResponse.builder()
+                .totalBookingCount(totalBookings)
+                .totalIncomeAmount(totalIncome)
+                .totalNetIncomeAmount(totalNetIncome)
+                .totalPlatformFeeAmount(totalPlatformFee)
+                .averagePlatformFeeRate(platformFeeRate)
+                .thisMonthBookingCount(thisMonthBookings)
+                .thisMonthIncomeAmount(thisMonthIncome)
+                .thisMonthNetIncomeAmount(thisMonthNetIncome)
+                .lastMonthBookingCount(lastMonthBookings)
+                .lastMonthIncomeAmount(lastMonthIncome)
+                .lastMonthNetIncomeAmount(lastMonthNetIncome)
+                .averageIncomePerBooking(averageIncome)
+                .averageNetIncomePerBooking(averageNetIncome)
+                .highestIncomeAmount(highestIncome)
+                .lowestIncomeAmount(lowestIncome)
+                .highestIncomeDate(highestIncomeDate)
+                .firstBookingDate(firstBookingDate)
+                .lastBookingDate(lastBookingDate)
+                .activeDays(activeDays)
+                .uniqueCustomerCount(uniqueCustomers)
+                .repeatCustomerCount(repeatCustomers)
+                .build();
+    }
+
+    /**
+     * 결제 접근 권한 검증
+     */
+    private void validatePaymentAccess(Payment payment, Long userId, String userType) {
+        if ("USER".equals(userType)) {
+            // 사용자는 자신의 결제만 조회 가능
+            if (!payment.getPartnerUserId().equals(userId.toString())) {
+                throw new RuntimeException("해당 결제에 대한 접근 권한이 없습니다.");
+            }
+        } else if ("PHOTOGRAPHER".equals(userType)) {
+            // 포토그래퍼는 자신의 서비스 관련 결제만 조회 가능
+            BookingInfo bookingInfo = bookingInfoJpaRepository.findByPayment(payment).orElse(null);
+            if (bookingInfo == null || !bookingInfo.getPhotographerProfile().getPhotographerProfileId().equals(userId)) {
+                throw new RuntimeException("해당 결제에 대한 접근 권한이 없습니다.");
+            }
+        } else {
+            throw new RuntimeException("올바르지 않은 사용자 타입입니다.");
+        }
     }
 }

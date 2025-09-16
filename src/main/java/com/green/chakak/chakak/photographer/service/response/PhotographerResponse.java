@@ -96,6 +96,7 @@ public class PhotographerResponse {
         private String location;
         private Integer experienceYears;
         private String status;
+        private String imageUrl;
 
         public ListDTO(PhotographerProfile profile) {
             this.photographerId = profile.getPhotographerProfileId();
@@ -103,6 +104,7 @@ public class PhotographerResponse {
             this.location = profile.getLocation();
             this.experienceYears = profile.getExperienceYears();
             this.status = profile.getStatus();
+            this.imageUrl = profile.getProfileImageUrl();
         }
     }
 
