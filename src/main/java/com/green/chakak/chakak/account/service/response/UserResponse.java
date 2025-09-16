@@ -1,6 +1,7 @@
 package com.green.chakak.chakak.account.service.response;
 
 import com.green.chakak.chakak.account.domain.User;
+import com.green.chakak.chakak.account.domain.UserType;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -38,13 +39,15 @@ public class UserResponse {
         private Long userId;
         private String email;
         private String nickname;
+        private String userTypeCode;
         // 필요하면 refreshToken, roles 등 추가
 
-        public static LoginResponse of(User user, String token, String nickname) {
+        public static LoginResponse of(User user, String token, String nickname, UserType userTypeCode) {
             return LoginResponse.builder()
                     .userId(user.getUserId())
                     .email(user.getEmail())
                     .nickname(nickname)
+                    .userTypeCode(userTypeCode.getTypeCode())
                     .tokenType("Bearer")
                     .accessToken(token)
                     .build();

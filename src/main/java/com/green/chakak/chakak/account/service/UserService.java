@@ -64,6 +64,9 @@ public class UserService {
         User user = userJpaRepository.findByEmailAndUserPassword(req.getEmail(), req.getPassword())
                 .orElseThrow(() -> new Exception401("이메일 또는 비밀번호가 올바르지 않습니다."));
 
+        UserType userType = userTypeRepository.findByTypeCode(user.getUserType().getTypeCode())
+                .orElseThrow(() -> new Exception401("존재하지 않는 사용자 유형 코드입니다."));
+
         if (user.getStatus() == User.UserStatus.SUSPENDED || user.getStatus() == User.UserStatus.INACTIVE) {
             throw new IllegalStateException("현재 상태로는 로그인할 수 없습니다. (정지/비활성)");
         }
@@ -75,7 +78,7 @@ public class UserService {
                 .map(profile -> profile.getNickName())
                 .orElse("");
 
-        return UserResponse.LoginResponse.of(user, token, nickname);
+        return UserResponse.LoginResponse.of(user, token, nickname, userType);
     }
     // 회원 정보 수정
 
