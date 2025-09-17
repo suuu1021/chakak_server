@@ -6,6 +6,8 @@ import com.green.chakak.chakak.account.domain.UserType;
 import com.green.chakak.chakak.account.service.repository.UserJpaRepository;
 import com.green.chakak.chakak.account.service.repository.UserProfileJpaRepository;
 import com.green.chakak.chakak.account.service.repository.UserTypeRepository;
+import com.green.chakak.chakak.admin.domain.Admin;
+import com.green.chakak.chakak.admin.service.repository.AdminJpaRepository;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photographer.service.repository.PhotographerRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ public class DataInitializer implements CommandLineRunner {
     private final UserJpaRepository userJpaRepository;
     private final UserProfileJpaRepository userProfileJpaRepository;
     private final PhotographerRepository photographerRepository;
+    private final AdminJpaRepository adminJpaRepository;
 
     @Override
     @Transactional
@@ -49,7 +52,17 @@ public class DataInitializer implements CommandLineRunner {
             return userTypeRepository.save(newPhotographerType);
         });
 
-        // 1. 일반 유저 및 프로필 10개 생성
+        UserType adminRole = userTypeRepository.findByTypeCode("admin").orElseGet(() -> {
+            UserType newAdminType = new UserType();
+            newAdminType.setTypeCode("admin");
+            newAdminType.setTypeName("관리자");
+            newAdminType.setCreatedAt(LocalDateTime.now());
+            newAdminType.setUpdatedAt(LocalDateTime.now());
+            return userTypeRepository.save(newAdminType);
+        });
+//
+
+            // 1. 일반 유저 및 프로필 10개 생성
         for (int i = 1; i <= 10; i++) {
             // User 생성 (평문 비밀번호 저장으로 원상복귀)
             User newUser = User.builder()
@@ -95,5 +108,12 @@ public class DataInitializer implements CommandLineRunner {
                     .build();
             photographerRepository.save(photographerProfile);
         }
+
+        Admin newAdmin = Admin.builder()
+                .adminName("superadmin")
+                .password("super1234")
+                .userType(adminRole)
+                .build();
+        adminJpaRepository.save(newAdmin);
     }
 }
