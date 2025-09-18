@@ -19,21 +19,20 @@ public class UserRestController {
 
     private final UserService userService;
 
-    //회원 가입
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody UserRequest.SignupRequest req) {
         UserResponse.SignupResponse response = userService.signup(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-    // 로그인
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody UserRequest.LoginRequest req) {
-        UserResponse.LoginResponse response = userService.login(req); // 토큰 + 유저정보
+        UserResponse.LoginResponse response = userService.login(req);
         return ResponseEntity.ok()
                 .header("Authorization", "Bearer " + response.getAccessToken())
                 .body(new ApiUtil<>(response));
     }
-    // 회원 정보 수정
+
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody UserRequest.UpdateRequest req,
                                         @RequestHeader("Authorization") String authHeader) {
@@ -46,7 +45,6 @@ public class UserRestController {
         return ResponseEntity.ok(response);
     }
 
-    // 회원 탈퇴
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id, @RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
@@ -57,7 +55,4 @@ public class UserRestController {
         userService.deleteUser(id, loginUser);
         return ResponseEntity.ok(new ApiUtil<>("회원 탈퇴가 완료되었습니다."));
     }
-
-
-
 }
