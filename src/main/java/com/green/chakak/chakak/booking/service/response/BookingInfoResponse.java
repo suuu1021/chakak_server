@@ -1,6 +1,7 @@
 package com.green.chakak.chakak.booking.service.response;
 
 import com.green.chakak.chakak.booking.domain.BookingInfo;
+import com.green.chakak.chakak.booking.domain.BookingStatus;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -48,16 +49,23 @@ public class BookingInfoResponse {
     // 예약 리스트(유저 입장)
     @Data
     public static class BookingUserListDTO{
-        private Long photographerProfileId;
-        private LocalDate bookingDate;
-        private LocalTime bookingTime;
-        private String location;
-        private int budget;
+        private Long bookingInfoId;
+        private String photoServiceImageData;
+        private String title;
+        private String photographerNickname;
+        private double review;
+        private BookingStatus status;
+        private int price;
 
         public BookingUserListDTO(BookingInfo bookingInfo){
-         this.photographerProfileId = bookingInfo.getPhotographerProfile().getPhotographerProfileId();
-         this.bookingDate = bookingInfo.getBookingDate();
-         this.bookingTime = bookingInfo.getBookingTime();
+            this.bookingInfoId = bookingInfo.getBookingInfoId();
+            this.photoServiceImageData = bookingInfo.getPhotographerProfile().getProfileImageUrl();
+            this.title = bookingInfo.getPhotoServiceInfo().getTitle();
+            this.photographerNickname = bookingInfo.getPhotographerProfile().getBusinessName();
+            // TODO - review 작업 필요
+            this.review = 0.0;
+            this.status = bookingInfo.getStatus();
+            this.price = bookingInfo.getPriceInfo().getPrice();
         }
     }
 

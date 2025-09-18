@@ -1,1 +1,0 @@
-package com.green.chakak.chakak.catalog.repository;
