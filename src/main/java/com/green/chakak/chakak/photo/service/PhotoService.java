@@ -402,11 +402,25 @@ public class PhotoService {
             PhotoServiceResponse.PhotoServiceListDTO serviceDTO =
                     new PhotoServiceResponse.PhotoServiceListDTO(service);
 
+            // PriceInfo 설정
             List<PriceInfoResponse.PriceInfoListDTO> priceInfoDTOs = service.getPriceInfos()
                     .stream()
                     .map(PriceInfoResponse.PriceInfoListDTO::new)
                     .collect(Collectors.toList());
             serviceDTO.setPriceInfoList(priceInfoDTOs);
+
+            // 최소 가격 설정 (추가 필요)
+            int minPrice = service.getPriceInfos()
+                    .stream()
+                    .mapToInt(PriceInfo::getPrice)
+                    .min()
+                    .orElse(0);
+            serviceDTO.setPrice(minPrice);
+
+            // 카테고리 정보 설정 (이 부분이 빠짐)
+            List<PhotoCategoryResponse.PhotoCategoryListDTO> categoryList = getServiceCategories(service.getServiceId());
+            serviceDTO.setCategoryList(categoryList);
+
             serviceDTOs.add(serviceDTO);
         }
         return serviceDTOs;
