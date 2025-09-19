@@ -21,14 +21,17 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor)
-                .addPathPatterns("/api/**", "/api/v1/**") // /api/v1/** 경로 추가
-                .excludePathPatterns(       // 2. 그 중에서 아래 경로들은 제외
+                .addPathPatterns("/api/**", "/api/v1/**")
+                .excludePathPatterns(
+                        // 인증 제외(공개) 엔드포인트만 명시
                         "/api/users/login",
                         "/api/users/signup",
-                        "/api/photographers",
-                        "/api/photographers/*",
-                        "/api/photographers/location/**",
-                        "/api/photographers/search",
+
+                        // 포토그래퍼 목록/검색/지역조회는 공개 처리하되, 개별 상세·me 엔드포인트는 인터셉터 적용
+                        "/api/photographers",                  // GET 전체 목록 (공개)
+                        "/api/photographers/location/**",     // 지역별 목록 (공개)
+                        "/api/photographers/search",          // 검색 (공개)
+
                         "/api/photographer-categories/**",
                         "/api/portfolios",
                         "/api/portfolios/search",
@@ -44,14 +47,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/photo/mappings/list",
                         "/api/photo/mappings/detail/{id}",
                         "/api/auth/kakao/**",
-                        "/api/photo/mappings/detail/{id}",
                         "/api/payment/success",
                         "/api/payment/fail",
                         "/api/payment/cancel",
-                        "/api/photo/mappings/detail/{id}",
                         "/api/admin/login",
                         "/api/photo/mappings/category/*/services"
-                        );
+                );
     }
 
     @Override
