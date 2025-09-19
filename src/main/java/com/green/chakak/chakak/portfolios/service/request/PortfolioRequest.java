@@ -1,7 +1,9 @@
 package com.green.chakak.chakak.portfolios.service.request;
 
+import com.green.chakak.chakak.photo.service.response.PriceInfoResponse;
 import com.green.chakak.chakak.portfolios.domain.Portfolio;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
+import com.green.chakak.chakak.portfolios.service.response.PortfolioResponse;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,6 +37,8 @@ public class PortfolioRequest {
 		@Size(max = 10, message = "카테고리는 최대 10개까지 선택 가능합니다")
 		private List<@NotNull @Positive Long> categoryIds;
 
+		private List<AddImageDTO> imageInfoList;
+
 		public Portfolio toEntity(PhotographerProfile photographerProfile) {
 			Portfolio portfolio = new Portfolio();
 			portfolio.setPhotographerProfile(photographerProfile);
@@ -64,6 +68,8 @@ public class PortfolioRequest {
 		// 카테고리 ID 목록 (수정 시 기존 매핑 삭제 후 새로 등록)
 		@Size(max = 10, message = "카테고리는 최대 10개까지 선택 가능합니다")
 		private List<@NotNull @Positive Long> categoryIds;
+
+		private List<AddImageDTO> imageInfoList;
 	}
 
 	// 이미지 추가

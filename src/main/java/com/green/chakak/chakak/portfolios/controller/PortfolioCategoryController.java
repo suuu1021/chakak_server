@@ -104,6 +104,6 @@ public class PortfolioCategoryController {
                     .build();
         }
 		portfolioCategoryService.deleteCategory(categoryId, loginAdmin);
-		return ResponseEntity.noContent().build();
+		return ResponseEntity.ok(new ApiUtil<>("카테고리 비활성화가 완료 되었습니다."));
 	}
 }

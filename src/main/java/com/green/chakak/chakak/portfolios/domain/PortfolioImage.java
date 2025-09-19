@@ -24,7 +24,8 @@ public class PortfolioImage {
 	@JoinColumn(name = "PORTFOLIO_ID", nullable = false)
 	private Portfolio portfolio;
 
-	@Column(name = "IMAGE_URL", nullable = false, length = 512)
+	@Column(name = "IMAGE_URL", nullable = false)
+	@Lob
 	private String imageUrl;
 
 	@Column(name = "IS_MAIN", nullable = true)

@@ -3,6 +3,7 @@ package com.green.chakak.chakak.portfolios.service.repository;
 import com.green.chakak.chakak.portfolios.domain.Portfolio;
 import com.green.chakak.chakak.portfolios.domain.PortfolioImage;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -53,5 +54,7 @@ public interface PortfolioImageJpaRepository extends JpaRepository<PortfolioImag
 	@Query("SELECT pi FROM PortfolioImage pi WHERE pi.portfolio.photographerProfile = :photographerProfile AND pi.isMain = true ORDER BY pi.createdAt DESC")
 	List<PortfolioImage> findMainImagesByPhotographer(@Param("photographerProfile") com.green.chakak.chakak.photographer.domain.PhotographerProfile photographerProfile);
 
-	void deleteByPortfolio_PortfolioId(Long portfolioId);
+	@Modifying
+	@Query("DELETE FROM PortfolioImage pi WHERE pi.portfolio.portfolioId = :portfolioId")
+	void deleteByPortfolio_PortfolioId(@Param("portfolioId") Long portfolioId);
 }

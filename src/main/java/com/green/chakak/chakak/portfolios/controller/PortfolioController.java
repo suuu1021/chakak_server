@@ -97,7 +97,7 @@ public class PortfolioController {
 											 HttpServletRequest httpRequest) {
 		LoginUser loginUser = (LoginUser) httpRequest.getAttribute(Define.LOGIN_USER);
 		portfolioService.deletePortfolio(portfolioId, loginUser);
-		return ResponseEntity.noContent().build();
+		return ResponseEntity.ok(new ApiUtil<>("포트폴리오 삭제가 완료 되었습니다."));
 	}
 
 	// 포트폴리오 검색 - 인증 불필요

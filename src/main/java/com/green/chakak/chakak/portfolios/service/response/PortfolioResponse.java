@@ -28,12 +28,6 @@ public class PortfolioResponse {
 		private LocalDateTime updatedAt;
 		private Long photographerUserId;
 
-
-		// 통계 정보 추가 (향후 확장용)
-		private Long viewCount = 0L;
-		private Long likeCount = 0L;
-		private Boolean isPublic = true;
-
 		// 포트폴리오 이미지 목록
 		private List<ImageDTO> images;
 
@@ -91,23 +85,20 @@ public class PortfolioResponse {
 	public static class ListDTO {
 
 		private Long portfolioId;
+		private Long photographerUserId;
 		private Long photographerId; // 추가
 		private String photographerName; // 추가
 		private String title;
 		private String description;
 		private String thumbnailUrl;
 		private LocalDateTime createdAt;
-		private Long photographerUserId;
-
-		// 간단한 통계 정보
-		private Long viewCount = 0L;
-		private Long likeCount = 0L;
-
-		// 메인 이미지 URL (썸네일 대신)
-		private String mainImageUrl;
 
 		public ListDTO(Portfolio portfolio) {
 			this.portfolioId = portfolio.getPortfolioId();
+			this.title = portfolio.getTitle();
+			this.description = portfolio.getDescription();
+			this.thumbnailUrl = portfolio.getThumbnailUrl();
+			this.createdAt = portfolio.getCreatedAt();
 
 			// 사진작가 정보 NPE 방지
 			if (portfolio.getPhotographerProfile() != null) {
@@ -116,23 +107,6 @@ public class PortfolioResponse {
 				if (portfolio.getPhotographerProfile().getUser() != null) {
 					this.photographerUserId = portfolio.getPhotographerProfile().getUser().getUserId();
 				}
-
-			}
-
-			this.title = portfolio.getTitle();
-			this.description = portfolio.getDescription();
-			this.thumbnailUrl = portfolio.getThumbnailUrl();
-			this.createdAt = portfolio.getCreatedAt();
-
-			// 메인 이미지 찾기
-			if (portfolio.getPortfolioImages() != null) {
-				this.mainImageUrl = portfolio.getPortfolioImages().stream()
-						.filter(img -> img.getIsMain() != null && img.getIsMain())
-						.findFirst()
-						.map(PortfolioImage::getImageUrl)
-						.orElse(this.thumbnailUrl); // 메인 이미지가 없으면 썸네일 사용
-			} else {
-				this.mainImageUrl = this.thumbnailUrl;
 			}
 		}
 
