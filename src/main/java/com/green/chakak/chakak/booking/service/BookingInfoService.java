@@ -38,20 +38,19 @@ public class BookingInfoService {
     // [사용자] 나의 예약 목록 조회
     public List<BookingInfoResponse.BookingUserListDTO> getUserBookings(LoginUser loginUser){
         // 로그인한 사용자의 ID로 직접 조회하여 다른 사용자의 정보를 볼 수 없도록 함
-        return bookingInfoJpaRepository.findPaidBookingsByUserId(loginUser.getId())
+        return bookingInfoJpaRepository.findByUserId(loginUser.getId())  // 이 부분만 변경
                 .stream()
                 .map(BookingInfoResponse.BookingUserListDTO::new)
                 .toList();
-    }
+        }
 
-    // [포토그래퍼] 나의 예약 목록 조회
-    public List<BookingInfoResponse.BookingUserListDTO> getPhotographerBookings(LoginUser loginUser){
-        // 로그인한 사용자의 ID로 직접 조회하여 다른 사용자의 정보를 볼 수 없도록 함
-        return bookingInfoJpaRepository.findPaidBookingsByPhotographerId(loginUser.getId())
-                .stream()
-                .map(BookingInfoResponse.BookingUserListDTO::new)
-                .toList();
-    }
+        // [포토그래퍼] 나의 예약 목록 조회
+        public List<BookingInfoResponse.BookingUserListDTO> getPhotographerBookings(LoginUser loginUser){
+            return bookingInfoJpaRepository.findByPhotographerId(loginUser.getId())  // 이것도 변경 가능
+                    .stream()
+                    .map(BookingInfoResponse.BookingUserListDTO::new)
+                    .toList();
+        }
 
 
     // 예약 상세 조회

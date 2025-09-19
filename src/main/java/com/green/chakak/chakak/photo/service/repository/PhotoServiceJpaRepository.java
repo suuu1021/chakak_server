@@ -1,6 +1,7 @@
 package com.green.chakak.chakak.photo.service.repository;
 
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
+import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PhotoServiceJpaRepository extends JpaRepository<PhotoServiceInfo, Long> {
+
+    List<PhotoServiceInfo> findByPhotographerProfile(PhotographerProfile photographerProfile);
 
     @Query("SELECT ps FROM PhotoServiceInfo ps ORDER BY ps.serviceId DESC")
     Page<PhotoServiceInfo> findAllServiceInfo(Pageable pageable);

@@ -33,6 +33,7 @@ import com.green.chakak.chakak.portfolios.service.repository.PortfolioJpaReposit
 import com.green.chakak.chakak.portfolios.service.repository.PortfolioMapJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -68,152 +70,184 @@ public class DataInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) throws Exception {
 
-        // UserType은 Builder가 없으므로 new와 setter를 사용합니다.
-        UserType userRole = userTypeRepository.findByTypeCode("user").orElseGet(() -> {
+        System.out.println("=== DataInitializer 실행 시작 ===");
+
+        // 데이터가 이미 존재하는지 확인
+        long existingUsers = userJpaRepository.count();
+        long existingBookings = bookingInfoJpaRepository.count();
+
+        System.out.println("=== 데이터 초기화 상태 확인 ===");
+        System.out.println("기존 유저 수: " + existingUsers);
+        System.out.println("기존 예약 수: " + existingBookings);
+
+        // UserType 생성 (항상 먼저 실행)
+        UserType userRole = createUserTypeIfNotExists("user", "일반회원");
+        UserType photographerRole = createUserTypeIfNotExists("photographer", "사진작가");
+        UserType adminRole = createUserTypeIfNotExists("admin", "관리자");
+
+        // 포토그래퍼 카테고리 생성 (항상 실행)
+        createPhotographerCategories();
+
+        // 포토서비스 카테고리 생성 (항상 실행)
+        createPhotoServiceCategories();
+
+        // 포트폴리오 카테고리 생성 (항상 실행)
+        createPortfolioCategories();
+
+        // 기본 유저 데이터가 없으면 생성
+        if (existingUsers == 0) {
+            System.out.println("=== 기본 유저 데이터 생성 시작 ===");
+
+            // 1. 일반 유저 및 프로필 생성
+            createGeneralUsers(userRole);
+
+            // 2. 사진작가 유저 및 프로필 생성
+            createPhotographerUsers(photographerRole);
+
+            // 3. 관리자 생성
+            createAdmin(adminRole);
+
+            System.out.println("=== 기본 유저 데이터 생성 완료 ===");
+        }
+
+        // 포토 서비스 데이터 확인 및 생성
+        long existingPhotoServices = photoServiceJpaRepository.count();
+        if (existingPhotoServices == 0) {
+            System.out.println("=== 포토 서비스 데이터 생성 시작 ===");
+
+            // 4. 포토 서비스 정보 생성 (PriceInfo 포함)
+            createPhotoServices();
+
+            // 5. 포트폴리오 생성
+            createPortfolios();
+
+            System.out.println("=== 포토 서비스 데이터 생성 완료 ===");
+        }
+
+        // 예약 데이터 생성 (의존성 체크 후)
+        if (existingBookings == 0) {
+            System.out.println("=== 예약 데이터 생성 전 의존성 체크 ===");
+
+            long userCount = userProfileJpaRepository.count();
+            long photographerCount = photographerRepository.count();
+            long serviceCount = photoServiceJpaRepository.count();
+            long priceCount = priceInfoJpaRepository.count();
+
+            System.out.println("UserProfile 수: " + userCount);
+            System.out.println("PhotographerProfile 수: " + photographerCount);
+            System.out.println("PhotoServiceInfo 수: " + serviceCount);
+            System.out.println("PriceInfo 수: " + priceCount);
+
+            if (userCount > 0 && photographerCount > 0 && serviceCount > 0 && priceCount > 0) {
+                System.out.println("=== 의존성 확인 완료. 예약 데이터 생성 시작 ===");
+                createBookingData();
+            } else {
+                System.err.println("예약 데이터 생성에 필요한 의존성이 부족합니다!");
+                System.err.println("필요한 데이터: UserProfile, PhotographerProfile, PhotoServiceInfo, PriceInfo");
+            }
+        } else {
+            System.out.println("예약 데이터가 이미 존재합니다 (총 " + existingBookings + "개).");
+
+            // 사용자 ID 1의 예약 데이터 확인
+            List<BookingInfo> userBookings = bookingInfoJpaRepository.findByUserId(1L);
+            System.out.println("User ID 1의 예약 수: " + userBookings.size());
+            if (!userBookings.isEmpty()) {
+                System.out.println("첫 번째 예약: " + userBookings.get(0).getBookingInfoId() +
+                        ", 상태: " + userBookings.get(0).getStatus());
+            }
+        }
+
+        System.out.println("데이터 초기화 완료!");
+    }
+
+    private UserType createUserTypeIfNotExists(String typeCode, String typeName) {
+        return userTypeRepository.findByTypeCode(typeCode).orElseGet(() -> {
             UserType newUserType = new UserType();
-            newUserType.setTypeCode("user");
-            newUserType.setTypeName("일반회원");
+            newUserType.setTypeCode(typeCode);
+            newUserType.setTypeName(typeName);
             newUserType.setCreatedAt(LocalDateTime.now());
             newUserType.setUpdatedAt(LocalDateTime.now());
             return userTypeRepository.save(newUserType);
         });
+    }
 
-        UserType photographerRole = userTypeRepository.findByTypeCode("photographer").orElseGet(() -> {
-            UserType newPhotographerType = new UserType();
-            newPhotographerType.setTypeCode("photographer");
-            newPhotographerType.setTypeName("사진작가");
-            newPhotographerType.setCreatedAt(LocalDateTime.now());
-            newPhotographerType.setUpdatedAt(LocalDateTime.now());
-            return userTypeRepository.save(newPhotographerType);
-        });
+    private void createPhotographerCategories() {
+        String[] categoryNames = {"웨딩", "프로필", "가족사진", "커플", "졸업사진", "돌잔치"};
 
-        UserType adminRole = userTypeRepository.findByTypeCode("admin").orElseGet(() -> {
-            UserType newAdminType = new UserType();
-            newAdminType.setTypeCode("admin");
-            newAdminType.setTypeName("관리자");
-            newAdminType.setCreatedAt(LocalDateTime.now());
-            newAdminType.setUpdatedAt(LocalDateTime.now());
-            return userTypeRepository.save(newAdminType);
-        });
+        for (String categoryName : categoryNames) {
+            photographerCategoryRepository.findByCategoryName(categoryName).orElseGet(() -> {
+                PhotographerCategory category = new PhotographerCategory();
+                category.setCategoryName(categoryName);
+                return photographerCategoryRepository.save(category);
+            });
+        }
+    }
 
-        // 0. 포토그래퍼 카테고리 생성
-        PhotographerCategory weddingPhotographerCategory = photographerCategoryRepository.findByCategoryName("웨딩").orElseGet(() -> {
-            PhotographerCategory category = new PhotographerCategory();
-            category.setCategoryName("웨딩");
-            return photographerCategoryRepository.save(category);
-        });
+    private void createPhotoServiceCategories() {
+        String[][] categories = {
+                {"웨딩", "https://images.unsplash.com/photo-1519741497674-611481863552?w=300&h=300&fit=crop"},
+                {"가족사진", "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=300&h=300&fit=crop"},
+                {"프로필", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face"},
+                {"커플", "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=300&h=300&fit=crop"},
+                {"졸업사진", "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=300&h=300&fit=crop"},
+                {"돌잔치", "https://images.unsplash.com/photo-1515488764276-beab7607c1e6?w=300&h=300&fit=crop"}
+        };
 
-        PhotographerCategory portraitPhotographerCategory = photographerCategoryRepository.findByCategoryName("프로필").orElseGet(() -> {
-            PhotographerCategory category = new PhotographerCategory();
-            category.setCategoryName("프로필");
-            return photographerCategoryRepository.save(category);
-        });
+        for (String[] category : categories) {
+            photoServiceCategoryRepository.findByCategoryName(category[0]).orElseGet(() -> {
+                PhotoServiceCategory serviceCategory = new PhotoServiceCategory();
+                serviceCategory.setCategoryName(category[0]);
+                serviceCategory.setCategoryImageData(category[1]);
+                return photoServiceCategoryRepository.save(serviceCategory);
+            });
+        }
+    }
 
-        PhotographerCategory familyPhotographerCategory = photographerCategoryRepository.findByCategoryName("가족사진").orElseGet(() -> {
-            PhotographerCategory category = new PhotographerCategory();
-            category.setCategoryName("가족사진");
-            return photographerCategoryRepository.save(category);
-        });
-
-        PhotographerCategory couplePhotographerCategory = photographerCategoryRepository.findByCategoryName("커플").orElseGet(() -> {
-            PhotographerCategory category = new PhotographerCategory();
-            category.setCategoryName("커플");
-            return photographerCategoryRepository.save(category);
-        });
-
-        PhotographerCategory graduationPhotographerCategory = photographerCategoryRepository.findByCategoryName("졸업사진").orElseGet(() -> {
-            PhotographerCategory category = new PhotographerCategory();
-            category.setCategoryName("졸업사진");
-            return photographerCategoryRepository.save(category);
-        });
-
-        PhotographerCategory doljanchiPhotographerCategory = photographerCategoryRepository.findByCategoryName("돌잔치").orElseGet(() -> {
-            PhotographerCategory category = new PhotographerCategory();
-            category.setCategoryName("돌잔치");
-            return photographerCategoryRepository.save(category);
-        });
-
-        // 0-1. 포토서비스 카테고리 생성
-        PhotoServiceCategory weddingServiceCategory = photoServiceCategoryRepository.findByCategoryName("웨딩").orElseGet(() -> {
-            PhotoServiceCategory category = new PhotoServiceCategory();
-            category.setCategoryName("웨딩");
-            category.setCategoryImageData("https://images.unsplash.com/photo-1519741497674-611481863552?w=300&h=300&fit=crop");
-            return photoServiceCategoryRepository.save(category);
-        });
-
-        PhotoServiceCategory familyServiceCategory = photoServiceCategoryRepository.findByCategoryName("가족사진").orElseGet(() -> {
-            PhotoServiceCategory category = new PhotoServiceCategory();
-            category.setCategoryName("가족사진");
-            category.setCategoryImageData("https://images.unsplash.com/photo-1511895426328-dc8714191300?w=300&h=300&fit=crop");
-            return photoServiceCategoryRepository.save(category);
-        });
-
-        PhotoServiceCategory profileServiceCategory = photoServiceCategoryRepository.findByCategoryName("프로필").orElseGet(() -> {
-            PhotoServiceCategory category = new PhotoServiceCategory();
-            category.setCategoryName("프로필");
-            category.setCategoryImageData("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face");
-            return photoServiceCategoryRepository.save(category);
-        });
-
-        PhotoServiceCategory coupleServiceCategory = photoServiceCategoryRepository.findByCategoryName("커플").orElseGet(() -> {
-            PhotoServiceCategory category = new PhotoServiceCategory();
-            category.setCategoryName("커플");
-            category.setCategoryImageData("https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=300&h=300&fit=crop");
-            return photoServiceCategoryRepository.save(category);
-        });
-
-        PhotoServiceCategory graduationServiceCategory = photoServiceCategoryRepository.findByCategoryName("졸업사진").orElseGet(() -> {
-            PhotoServiceCategory category = new PhotoServiceCategory();
-            category.setCategoryName("졸업사진");
-            category.setCategoryImageData("https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=300&h=300&fit=crop");
-            return photoServiceCategoryRepository.save(category);
-        });
-
-        PhotoServiceCategory doljanchiServiceCategory = photoServiceCategoryRepository.findByCategoryName("돌잔치").orElseGet(() -> {
-            PhotoServiceCategory category = new PhotoServiceCategory();
-            category.setCategoryName("돌잔치");
-            category.setCategoryImageData("https://images.unsplash.com/photo-1515488764276-beab7607c1e6?w=300&h=300&fit=crop");
-            return photoServiceCategoryRepository.save(category);
-        });
-
-        // 1. 일반 유저 및 프로필 10개 생성
+    private void createGeneralUsers(UserType userRole) {
+        System.out.println("=== 일반 유저 생성 시작 ===");
         for (int i = 1; i <= 10; i++) {
-            // User 생성 (평문 비밀번호 저장으로 원상복귀)
+            // User 생성 (평문 비밀번호)
             User newUser = User.builder()
                     .email(String.format("user%d@example.com", i))
-                    .password("123456") // 평문 비밀번호 저장
+                    .password("123456")
                     .userType(userRole)
                     .status(User.UserStatus.ACTIVE)
                     .emailVerified(true)
                     .build();
-            userJpaRepository.save(newUser);
+            User savedUser = userJpaRepository.save(newUser);
+            System.out.println("User 저장 완료 - ID: " + savedUser.getUserId() + ", Email: " + savedUser.getEmail());
 
             // UserProfile 생성
             UserProfile userProfile = UserProfile.builder()
-                    .user(newUser)
+                    .user(savedUser)
                     .nickName(String.format("일반유저%d", i))
                     .introduce(String.format("안녕하세요, 유저 %d입니다.", i))
                     .createdAt(Timestamp.from(Instant.now()))
                     .updatedAt(Timestamp.from(Instant.now()))
                     .build();
-            userProfileJpaRepository.save(userProfile);
+            UserProfile savedProfile = userProfileJpaRepository.save(userProfile);
+            System.out.println("UserProfile 저장 완료 - ID: " + savedProfile.getUserProfileId() +
+                    ", User ID: " + savedProfile.getUser().getUserId() +
+                    ", NickName: " + savedProfile.getNickName());
         }
+        System.out.println("=== 일반 유저 생성 완료 ===");
+    }
 
-        // 2. 사진작가 유저 및 프로필 10개 생성
+    private void createPhotographerUsers(UserType photographerRole) {
         for (int i = 1; i <= 10; i++) {
-            // User 생성 (평문 비밀번호 저장으로 원상복귀)
+            // User 생성 (평문 비밀번호)
             User newPhotographerUser = User.builder()
                     .email(String.format("photo%d@example.com", i))
-                    .password("123456") // 평문 비밀번호 저장
+                    .password("123456")
                     .userType(photographerRole)
                     .status(User.UserStatus.ACTIVE)
                     .emailVerified(true)
                     .build();
-            userJpaRepository.save(newPhotographerUser);
+            User savedUser = userJpaRepository.save(newPhotographerUser);
 
             // PhotographerProfile 생성
             PhotographerProfile photographerProfile = PhotographerProfile.builder()
-                    .user(newPhotographerUser)
+                    .user(savedUser)
                     .businessName(String.format("감성스튜디오%d호점", i))
                     .introduction(String.format("최고의 순간을 담아드립니다. 감성스튜디오 %d입니다.", i))
                     .status("ACTIVE")
@@ -222,23 +256,20 @@ public class DataInitializer implements CommandLineRunner {
                     .build();
             photographerRepository.save(photographerProfile);
         }
+    }
 
+    private void createAdmin(UserType adminRole) {
         Admin newAdmin = Admin.builder()
                 .adminName("superadmin")
                 .password("super1234")
                 .userType(adminRole)
                 .build();
         adminJpaRepository.save(newAdmin);
+    }
 
-//------------------------------------------------------ 포토서비스 더미데이터(필요시 수정가능) @suuu1021
-// 3. 포토 서비스 정보 생성 (각 사진작가당 2-3개씩)
+    private void createPhotoServices() {
         List<PhotographerProfile> photographers = photographerRepository.findAll();
-
-// 포토서비스 카테고리 배열 생성
-        PhotoServiceCategory[] serviceCategories = {
-                weddingServiceCategory, familyServiceCategory, profileServiceCategory,
-                coupleServiceCategory, graduationServiceCategory, doljanchiServiceCategory
-        };
+        List<PhotoServiceCategory> serviceCategories = photoServiceCategoryRepository.findAll();
 
         String[] serviceTypes = {
                 "웨딩촬영", "프로필촬영", "가족사진", "돌잔치", "커플촬영",
@@ -258,22 +289,19 @@ public class DataInitializer implements CommandLineRunner {
                 "https://picsum.photos/400/300?random=2",
                 "https://picsum.photos/400/300?random=3",
                 "https://picsum.photos/400/300?random=4",
-                "https://picsum.photos/400/300?random=5",
-                "https://picsum.photos/400/300?random=6",
-                "https://picsum.photos/400/300?random=7",
-                "https://picsum.photos/400/300?random=8",
-                "https://picsum.photos/400/300?random=9",
-                "https://picsum.photos/400/300?random=10"
+                "https://picsum.photos/400/300?random=5"
         };
+
+        Random random = new Random();
+
         for (PhotographerProfile photographer : photographers) {
-            // 각 사진작가당 2-3개의 서비스 생성
-            int serviceCount = 2 + (int) (Math.random() * 2); // 2 또는 3개
+            int serviceCount = 2 + random.nextInt(2); // 2 또는 3개
 
             for (int j = 0; j < serviceCount; j++) {
-                int typeIndex = (int) (Math.random() * serviceTypes.length);
-                int descIndex = (int) (Math.random() * sampleDescriptions.length);
-                int imageIndex = (int) (Math.random() * sampleImageData.length);
-                int categoryIndex = (int) (Math.random() * serviceCategories.length);
+                int typeIndex = random.nextInt(serviceTypes.length);
+                int descIndex = random.nextInt(sampleDescriptions.length);
+                int imageIndex = random.nextInt(sampleImageData.length);
+                int categoryIndex = random.nextInt(serviceCategories.size());
 
                 // PhotoServiceInfo 생성
                 PhotoServiceInfo photoService = PhotoServiceInfo.builder()
@@ -290,89 +318,75 @@ public class DataInitializer implements CommandLineRunner {
                 // PhotoServiceMapping 생성
                 PhotoServiceMapping mapping = PhotoServiceMapping.builder()
                         .photoServiceInfo(savedPhotoService)
-                        .photoServiceCategory(serviceCategories[categoryIndex])
+                        .photoServiceCategory(serviceCategories.get(categoryIndex))
                         .createdAt(Timestamp.from(Instant.now()))
                         .build();
 
                 photoMappingRepository.save(mapping);
 
                 // PriceInfo 더미데이터 생성
-                String[] priceTitles = {"에센셜", "프리미엄", "시그니처"};
-                String[] equipmentOptions = {
-                        "기본 촬영장비, 자연광 활용",
-                        "전문 조명장비, 다양한 렌즈",
-                        "스튜디오 조명, 고급 장비"
-                };
-
-                for (int k = 0; k < 3; k++) {
-                    int basePrice = 200000 + (k * 150000);
-                    int participants = 2 + k;
-                    int duration = 90 + (k * 30);
-                    int outfits = 1 + k;
-                    boolean makeup = k > 0;
-
-                    PriceInfo priceInfo = PriceInfo.builder()
-                            .photoServiceInfo(savedPhotoService)
-                            .title(priceTitles[k])
-                            .price(basePrice)
-                            .participantCount(participants)
-                            .shootingDuration(duration)
-                            .outfitChanges(outfits)
-                            .specialEquipment(equipmentOptions[k])
-                            .isMakeupService(makeup)
-                            .createdAt(Timestamp.from(Instant.now()))
-                            .updatedAt(Timestamp.from(Instant.now()))
-                            .build();
-
-                    priceInfoJpaRepository.save(priceInfo);
-                }
+                createPriceInfoForService(savedPhotoService);
             }
         }
-        //------------------------------------------------------ 포토서비스 더미데이터 끝
-        // 4. 포트폴리오 카테고리 생성
-        PortfolioCategory weddingCategory = portfolioCategoryRepository.findByCategoryName("웨딩촬영").orElseGet(() -> {
-            PortfolioCategory category = new PortfolioCategory();
-            category.setCategoryName("웨딩촬영");
-            category.setSortOrder(1);
-            category.setIsActive(true);
-            category.setCreatedAt(LocalDateTime.now());
-            category.setUpdatedAt(LocalDateTime.now());
-            return portfolioCategoryRepository.save(category);
-        });
+    }
 
-        PortfolioCategory portraitCategory = portfolioCategoryRepository.findByCategoryName("인물촬영").orElseGet(() -> {
-            PortfolioCategory category = new PortfolioCategory();
-            category.setCategoryName("인물촬영");
-            category.setSortOrder(2);
-            category.setIsActive(true);
-            category.setCreatedAt(LocalDateTime.now());
-            category.setUpdatedAt(LocalDateTime.now());
-            return portfolioCategoryRepository.save(category);
-        });
+    private void createPriceInfoForService(PhotoServiceInfo photoService) {
+        String[] priceTitles = {"에센셜", "프리미엄", "시그니처"};
+        String[] equipmentOptions = {
+                "기본 촬영장비, 자연광 활용",
+                "전문 조명장비, 다양한 렌즈",
+                "스튜디오 조명, 고급 장비"
+        };
 
-        PortfolioCategory familyCategory = portfolioCategoryRepository.findByCategoryName("가족사진").orElseGet(() -> {
-            PortfolioCategory category = new PortfolioCategory();
-            category.setCategoryName("가족사진");
-            category.setSortOrder(3);
-            category.setIsActive(true);
-            category.setCreatedAt(LocalDateTime.now());
-            category.setUpdatedAt(LocalDateTime.now());
-            return portfolioCategoryRepository.save(category);
-        });
+        for (int k = 0; k < 3; k++) {
+            int basePrice = 200000 + (k * 150000);
+            int participants = 2 + k;
+            int duration = 90 + (k * 30);
+            int outfits = 1 + k;
+            boolean makeup = k > 0;
 
-        PortfolioCategory coupleCategory = portfolioCategoryRepository.findByCategoryName("커플촬영").orElseGet(() -> {
-            PortfolioCategory category = new PortfolioCategory();
-            category.setCategoryName("커플촬영");
-            category.setSortOrder(4);
-            category.setIsActive(true);
-            category.setCreatedAt(LocalDateTime.now());
-            category.setUpdatedAt(LocalDateTime.now());
-            return portfolioCategoryRepository.save(category);
-        });
+            PriceInfo priceInfo = PriceInfo.builder()
+                    .photoServiceInfo(photoService)
+                    .title(priceTitles[k])
+                    .price(basePrice)
+                    .participantCount(participants)
+                    .shootingDuration(duration)
+                    .outfitChanges(outfits)
+                    .specialEquipment(equipmentOptions[k])
+                    .isMakeupService(makeup)
+                    .createdAt(Timestamp.from(Instant.now()))
+                    .updatedAt(Timestamp.from(Instant.now()))
+                    .build();
 
-        List<PortfolioCategory> categories = List.of(weddingCategory, portraitCategory, familyCategory, coupleCategory);
+            priceInfoJpaRepository.save(priceInfo);
+        }
+    }
 
-        // 5. 각 사진작가별로 포트폴리오 생성
+    private void createPortfolioCategories() {
+        String[][] categories = {
+                {"웨딩촬영", "1"},
+                {"인물촬영", "2"},
+                {"가족사진", "3"},
+                {"커플촬영", "4"}
+        };
+
+        for (String[] category : categories) {
+            portfolioCategoryRepository.findByCategoryName(category[0]).orElseGet(() -> {
+                PortfolioCategory portfolioCategory = new PortfolioCategory();
+                portfolioCategory.setCategoryName(category[0]);
+                portfolioCategory.setSortOrder(Integer.parseInt(category[1]));
+                portfolioCategory.setIsActive(true);
+                portfolioCategory.setCreatedAt(LocalDateTime.now());
+                portfolioCategory.setUpdatedAt(LocalDateTime.now());
+                return portfolioCategoryRepository.save(portfolioCategory);
+            });
+        }
+    }
+
+    private void createPortfolios() {
+        List<PhotographerProfile> photographers = photographerRepository.findAll();
+        List<PortfolioCategory> categories = portfolioCategoryRepository.findAll();
+
         String[] portfolioTitles = {
                 "로맨틱 웨딩 컬렉션", "자연스러운 일상 순간들", "따뜻한 가족 이야기",
                 "감성적인 커플 스냅", "클래식 포트레이트", "야외 웨딩 촬영",
@@ -388,14 +402,15 @@ public class DataInitializer implements CommandLineRunner {
                 "개성과 매력을 살린 프로페셔널한 인물 사진을 제공합니다."
         };
 
+        Random random = new Random();
+
         for (PhotographerProfile photographer : photographers) {
-            // 각 사진작가당 2-4개의 포트폴리오 생성
-            int portfolioCount = 2 + (int) (Math.random() * 3); // 2~4개
+            int portfolioCount = 2 + random.nextInt(3); // 2~4개
 
             for (int i = 0; i < portfolioCount; i++) {
-                int titleIndex = (int) (Math.random() * portfolioTitles.length);
-                int descIndex = (int) (Math.random() * portfolioDescriptions.length);
-                int categoryIndex = (int) (Math.random() * categories.size());
+                int titleIndex = random.nextInt(portfolioTitles.length);
+                int descIndex = random.nextInt(portfolioDescriptions.length);
+                int categoryIndex = random.nextInt(categories.size());
 
                 // 포트폴리오 생성
                 Portfolio portfolio = new Portfolio();
@@ -410,7 +425,7 @@ public class DataInitializer implements CommandLineRunner {
                 Portfolio savedPortfolio = portfolioRepository.save(portfolio);
 
                 // 포트폴리오 이미지들 생성 (3-6개)
-                int imageCount = 3 + (int) (Math.random() * 4); // 3~6개
+                int imageCount = 3 + random.nextInt(4); // 3~6개
                 for (int j = 0; j < imageCount; j++) {
                     PortfolioImage portfolioImage = new PortfolioImage();
                     portfolioImage.setPortfolio(savedPortfolio);
@@ -428,49 +443,158 @@ public class DataInitializer implements CommandLineRunner {
                 portfolioMap.setCreatedAt(LocalDateTime.now());
                 portfolioMapRepository.save(portfolioMap);
             }
+        }
+    }
 
-            // 6. 예약 더미 데이터 생성
-            List<UserProfile> users = userProfileJpaRepository.findAll();
-            List<PhotoServiceInfo> photoServices = photoServiceJpaRepository.findAll();
+    private void createBookingData() {
+        System.out.println("=== 예약 데이터 생성 시작 ===");
 
-            if (users.isEmpty() || photographers.isEmpty() || photoServices.isEmpty()) {
-                System.err.println("더미 데이터 생성을 위한 사용자, 사진작가, 서비스가 부족합니다.");
-                return;
-            }
+        // 필요한 데이터들을 미리 조회
+        List<UserProfile> allUserProfiles = userProfileJpaRepository.findAll();
+        List<PhotographerProfile> allPhotographers = photographerRepository.findAll();
+        List<PhotoServiceInfo> allPhotoServices = photoServiceJpaRepository.findAll();
+        List<PriceInfo> allPriceInfos = priceInfoJpaRepository.findAll();
 
-            Random random = new Random();
-            BookingStatus[] statuses = BookingStatus.values();
+        System.out.println("=== 기본 데이터 확인 ===");
+        System.out.println("전체 UserProfile 수: " + allUserProfiles.size());
+        System.out.println("전체 PhotographerProfile 수: " + allPhotographers.size());
+        System.out.println("전체 PhotoServiceInfo 수: " + allPhotoServices.size());
+        System.out.println("전체 PriceInfo 수: " + allPriceInfos.size());
 
-            for (int i = 0; i < 20; i++) {
-                UserProfile randomUser = users.get(random.nextInt(users.size()));
-                PhotoServiceInfo randomService = photoServices.get(random.nextInt(photoServices.size()));
-                PhotographerProfile randomPhotographer = randomService.getPhotographerProfile();
+        // 일반 유저만 필터링
+        List<UserProfile> generalUsers = allUserProfiles.stream()
+                .filter(profile -> {
+                    try {
+                        return profile.getUser() != null &&
+                                profile.getUser().getUserType() != null &&
+                                "user".equals(profile.getUser().getUserType().getTypeCode());
+                    } catch (Exception e) {
+                        System.err.println("UserProfile 필터링 중 오류: " + e.getMessage());
+                        return false;
+                    }
+                })
+                .collect(Collectors.toList());
 
-                // 서비스에 연결된 PriceInfo 목록 가져오기
-                List<PriceInfo> prices = priceInfoJpaRepository.findByPhotoServiceInfo(randomService);
-                if (prices.isEmpty()) {
-                    continue;
+        System.out.println("=== 필터링 결과 ===");
+        System.out.println("일반 유저 수: " + generalUsers.size());
+
+        // 각 유저의 상세 정보 출력
+        for (int i = 0; i < Math.min(5, generalUsers.size()); i++) {
+            UserProfile user = generalUsers.get(i);
+            System.out.println("User " + (i+1) + ": ID=" + user.getUserProfileId() +
+                    ", UserID=" + user.getUser().getUserId() +
+                    ", Email=" + user.getUser().getEmail() +
+                    ", NickName=" + user.getNickName());
+        }
+
+        // 필요한 데이터가 모두 있는지 확인
+        if (generalUsers.isEmpty()) {
+            System.err.println("일반 유저가 없습니다!");
+            return;
+        }
+
+        if (allPhotographers.isEmpty()) {
+            System.err.println("포토그래퍼가 없습니다!");
+            return;
+        }
+
+        if (allPhotoServices.isEmpty()) {
+            System.err.println("포토서비스가 없습니다!");
+            return;
+        }
+
+        if (allPriceInfos.isEmpty()) {
+            System.err.println("가격정보가 없습니다!");
+            return;
+        }
+
+        Random random = new Random();
+        BookingStatus[] statuses = BookingStatus.values();
+        int totalBookingsCreated = 0;
+
+        // 각 일반 유저에 대해 예약 생성
+        for (UserProfile user : generalUsers) {
+            int bookingsForUser = 2 + random.nextInt(3); // 2-4개
+            System.out.println("\n유저 '" + user.getNickName() + "' (Profile ID: " + user.getUserProfileId() +
+                    ", User ID: " + user.getUser().getUserId() + ")에게 " +
+                    bookingsForUser + "개의 예약 생성 중...");
+
+            for (int i = 0; i < bookingsForUser; i++) {
+                try {
+                    // 랜덤 포토그래퍼 선택
+                    PhotographerProfile randomPhotographer = allPhotographers.get(random.nextInt(allPhotographers.size()));
+                    System.out.println("  선택된 포토그래퍼: " + randomPhotographer.getBusinessName());
+
+                    // 해당 포토그래퍼의 서비스 찾기
+                    List<PhotoServiceInfo> photographerServices = allPhotoServices.stream()
+                            .filter(service -> service.getPhotographerProfile().getPhotographerProfileId()
+                                    .equals(randomPhotographer.getPhotographerProfileId()))
+                            .collect(Collectors.toList());
+
+                    if (photographerServices.isEmpty()) {
+                        System.out.println("  포토그래퍼의 서비스가 없습니다. 다음 예약으로 넘어갑니다.");
+                        continue;
+                    }
+
+                    PhotoServiceInfo randomService = photographerServices.get(random.nextInt(photographerServices.size()));
+                    System.out.println("  선택된 서비스: " + randomService.getTitle());
+
+                    // 해당 서비스의 가격 정보 찾기
+                    List<PriceInfo> servicePrices = allPriceInfos.stream()
+                            .filter(price -> price.getPhotoServiceInfo().getServiceId()
+                                    .equals(randomService.getServiceId()))
+                            .collect(Collectors.toList());
+
+                    if (servicePrices.isEmpty()) {
+                        System.out.println("  서비스의 가격 정보가 없습니다. 다음 예약으로 넘어갑니다.");
+                        continue;
+                    }
+
+                    PriceInfo randomPrice = servicePrices.get(random.nextInt(servicePrices.size()));
+                    System.out.println("  선택된 가격: " + randomPrice.getTitle() + " (" + randomPrice.getPrice() + "원)");
+
+                    // 예약 날짜 및 시간 생성
+                    LocalDate bookingDate = LocalDate.now().minusDays(random.nextInt(180));
+                    LocalTime startTime = LocalTime.of(9 + random.nextInt(10), random.nextInt(2) * 30);
+                    BookingStatus randomStatus = statuses[random.nextInt(statuses.length)];
+
+                    // 예약 생성
+                    BookingInfo bookingInfo = BookingInfo.builder()
+                            .userProfile(user)
+                            .photographerProfile(randomPhotographer)
+                            .photoServiceInfo(randomService)
+                            .priceInfo(randomPrice)
+                            .bookingDate(bookingDate)
+                            .bookingTime(startTime)
+                            .status(randomStatus)
+                            .build();
+
+                    BookingInfo savedBooking = bookingInfoJpaRepository.save(bookingInfo);
+                    totalBookingsCreated++;
+
+                    System.out.println("  ✓ 예약 생성 성공 - Booking ID: " + savedBooking.getBookingInfoId() +
+                            ", 상태: " + randomStatus + ", 날짜: " + bookingDate);
+
+                } catch (Exception e) {
+                    System.err.println("  ✗ 예약 생성 중 오류 발생: " + e.getMessage());
+                    e.printStackTrace();
                 }
-                PriceInfo randomPrice = prices.get(random.nextInt(prices.size()));
+            }
+        }
 
-                // 예약 상태 랜덤 선택
-                BookingStatus randomStatus = statuses[random.nextInt(statuses.length)];
+        System.out.println("\n=== 예약 데이터 생성 완료 ===");
+        System.out.println("총 생성된 예약 수: " + totalBookingsCreated);
+        System.out.println("DB에 저장된 총 예약 수: " + bookingInfoJpaRepository.count());
 
-                // 예약 날짜 및 시간 랜덤 생성 (최근 한 달 이내)
-                LocalDate bookingDate = LocalDate.now().minusDays(random.nextInt(30));
-                LocalTime startTime = LocalTime.of(9 + random.nextInt(10), random.nextInt(2) * 30);
+        // User ID 1~3의 예약 확인
+        for (int userId = 1; userId <= Math.min(3, generalUsers.size()); userId++) {
+            List<BookingInfo> userBookings = bookingInfoJpaRepository.findByUserId((long) userId);
+            System.out.println("User ID " + userId + "의 예약 수: " + userBookings.size());
 
-                BookingInfo bookingInfo = BookingInfo.builder()
-                        .userProfile(randomUser) // User가 아닌 UserProfile 객체를 전달
-                        .photographerProfile(randomPhotographer) // 필드명 수정
-                        .photoServiceInfo(randomService) // 필드명 수정
-                        .priceInfo(randomPrice)
-                        .bookingDate(bookingDate)
-                        .bookingTime(startTime) // 필드명 수정
-                        .status(randomStatus)
-                        .build();
-
-                bookingInfoJpaRepository.save(bookingInfo);
+            for (BookingInfo booking : userBookings) {
+                System.out.println("  - Booking ID: " + booking.getBookingInfoId() +
+                        ", 상태: " + booking.getStatus() +
+                        ", 날짜: " + booking.getBookingDate());
             }
         }
     }
