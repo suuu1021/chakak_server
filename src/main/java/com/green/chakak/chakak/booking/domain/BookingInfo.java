@@ -39,11 +39,11 @@ public class BookingInfo {
     @JoinColumn(name = "photo_service_info_id", nullable = false)
     private PhotoServiceInfo photoServiceInfo; // 포토 서비스 ID(FK)
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "price_info_id", nullable = false)
     private PriceInfo priceInfo; // 서비스 가격정보 ID (FK)
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "payment_id") // nullable = true (기본값)
     private Payment payment; // 결제 정보 ID (FK)
 

@@ -1,5 +1,6 @@
 package com.green.chakak.chakak.payment.controller;
 
+import com.green.chakak.chakak._global.errors.exception.Exception404;
 import com.green.chakak.chakak._global.utils.ApiUtil;
 import com.green.chakak.chakak._global.utils.Define;
 import com.green.chakak.chakak.account.domain.LoginUser;
@@ -31,7 +32,7 @@ public class PaymentRestController {
      * 프론트에서 결제하기 버튼 클릭 시 호출
      */
     @PostMapping("/ready")
-    public ResponseEntity<PaymentReadyResponse> paymentReady(@RequestBody PaymentReadyRequest request) {
+    public ResponseEntity<?> paymentReady(@RequestBody PaymentReadyRequest request) {
 
         log.info("결제 준비 요청 - bookingInfoId: {}", request.getBookingInfoId());
 
@@ -41,11 +42,11 @@ public class PaymentRestController {
             log.info("결제 준비 성공 - tid: {}, partnerOrderId: {}",
                     response.getTid(), response.getPartnerOrderId());
 
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(new ApiUtil<>(response));
 
         } catch (Exception e) {
             log.error("결제 준비 실패 - bookingInfoId: {}", request.getBookingInfoId(), e);
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(new ApiUtil<>(e.getMessage(), "실패"));
         }
     }
 
@@ -77,7 +78,7 @@ public class PaymentRestController {
             } else {
                 // 둘 다 없는 경우 - 가장 최근 READY 상태 Payment 찾기 (임시)
                 log.warn("partner_order_id와 tid 모두 없음. 임시 처리 시도");
-                throw new RuntimeException("결제 정보를 식별할 수 없습니다.");
+                throw new Exception404("결제 정보를 식별할 수 없습니다.");
             }
 
             log.info("결제 승인 완료 - aid: {}, bookingInfoId: {}",
