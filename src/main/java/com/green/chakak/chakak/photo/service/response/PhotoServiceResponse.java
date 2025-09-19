@@ -26,6 +26,9 @@ public class PhotoServiceResponse {
         private List<PriceInfoResponse.PriceInfoListDTO> priceInfoList;
         private List<PhotoCategoryResponse.PhotoCategoryListDTO> categoryList;
 
+        private Long photographerId;        // 필수: 포토그래퍼 ID
+        private String businessName;        // 권장: 포토그래퍼 상호명
+
         @Builder
         public PhotoServiceListDTO(PhotoServiceInfo photoServiceInfo) {
             this.serviceId = photoServiceInfo.getServiceId();
@@ -35,6 +38,12 @@ public class PhotoServiceResponse {
             this.imageData = photoServiceInfo.getImageData();
             this.createdAt = photoServiceInfo.getCreatedAt();
             this.updatedAt = photoServiceInfo.getUpdatedAt();
+
+            PhotographerProfile profile = photoServiceInfo.getPhotographerProfile();
+            if (profile != null) {
+                this.photographerId = profile.getPhotographerProfileId(); // 또는 적절한 ID 필드
+                this.businessName = profile.getBusinessName();
+            }
 
             this.priceInfoList = new ArrayList<>();
             this.categoryList = new ArrayList<>();
