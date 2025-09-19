@@ -1,10 +1,11 @@
 package com.green.chakak.chakak.portfolios.service.response;
 
 import com.green.chakak.chakak.portfolios.domain.Portfolio;
-import com.green.chakak.chakak.portfolios.domain.PortfolioImage;
 import com.green.chakak.chakak.portfolios.domain.PortfolioCategory;
+import com.green.chakak.chakak.portfolios.domain.PortfolioImage;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +26,8 @@ public class PortfolioResponse {
 		private String thumbnailUrl;
 		private LocalDateTime createdAt;
 		private LocalDateTime updatedAt;
+		private Long photographerUserId;
+
 
 		// 통계 정보 추가 (향후 확장용)
 		private Long viewCount = 0L;
@@ -44,6 +47,10 @@ public class PortfolioResponse {
 			if (portfolio.getPhotographerProfile() != null) {
 				this.photographerId = portfolio.getPhotographerProfile().getPhotographerProfileId();
 				this.photographerName = portfolio.getPhotographerProfile().getBusinessName();
+				if (portfolio.getPhotographerProfile().getUser() != null) {
+					this.photographerUserId = portfolio.getPhotographerProfile().getUser().getUserId();
+				}
+
 			}
 
 			this.title = portfolio.getTitle();
@@ -90,6 +97,7 @@ public class PortfolioResponse {
 		private String description;
 		private String thumbnailUrl;
 		private LocalDateTime createdAt;
+		private Long photographerUserId;
 
 		// 간단한 통계 정보
 		private Long viewCount = 0L;
@@ -105,6 +113,10 @@ public class PortfolioResponse {
 			if (portfolio.getPhotographerProfile() != null) {
 				this.photographerId = portfolio.getPhotographerProfile().getPhotographerProfileId();
 				this.photographerName = portfolio.getPhotographerProfile().getBusinessName();
+				if (portfolio.getPhotographerProfile().getUser() != null) {
+					this.photographerUserId = portfolio.getPhotographerProfile().getUser().getUserId();
+				}
+
 			}
 
 			this.title = portfolio.getTitle();

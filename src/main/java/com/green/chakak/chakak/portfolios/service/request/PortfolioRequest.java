@@ -77,7 +77,7 @@ public class PortfolioRequest {
 
 		@NotBlank(message = "이미지 URL은 필수입니다")
 		@Size(max = 512, message = "이미지 URL은 512자 이내여야 합니다")
-		@Pattern(regexp = "^https?://.*\\.(jpg|jpeg|png|gif|webp)$",
+		@Pattern(regexp = "^https?://.*\\.(jpg|jpeg|png|gif|webp|crop)$",
 				message = "올바른 이미지 URL 형식이어야 합니다")
 		private String imageUrl;
 

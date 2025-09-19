@@ -17,6 +17,7 @@ public class PriceInfoResponse {
     public static class PriceInfoListDTO {
         private Long priceInfoId;
         private Long photoServiceInfoId;
+        private String title;
         private int price;
         private int participantCount;
         private int shootingDuration;
@@ -30,6 +31,7 @@ public class PriceInfoResponse {
         public PriceInfoListDTO(PriceInfo priceInfo) {
             this.priceInfoId = priceInfo.getPriceInfoId();
             this.photoServiceInfoId = priceInfo.getPhotoServiceInfo().getServiceId();
+            this.title = priceInfo.getTitle();
             this.price = priceInfo.getPrice();
             this.participantCount = priceInfo.getParticipantCount();
             this.shootingDuration = priceInfo.getShootingDuration();

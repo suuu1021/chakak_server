@@ -49,14 +49,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/payment/fail",
                         "/api/payment/cancel",
                         "/api/photo/mappings/detail/{id}",
-                      "/api/admin/login"
-                );
+                        "/api/admin/login",
+                        "/api/photo/mappings/category/*/services"
+                        );
     }
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(loginUserArgumentResolver);
     }
+
     @Configuration
     public class WebConfig implements WebMvcConfigurer {
 

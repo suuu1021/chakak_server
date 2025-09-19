@@ -395,17 +395,35 @@ public class PhotoService {
 
     // 특정 카테고리의 서비스들 조회
     public List<PhotoServiceResponse.PhotoServiceListDTO> getCategoryServices(Long categoryId) {
-        List<PhotoServiceMapping> mappings = photoMappingRepository.findByPhotoServiceCategory_CategoryId(categoryId);
+        List<PhotoServiceInfo> services = photoServiceJpaRepository.findByCategoryIdWithPriceInfo(categoryId);
+        List<PhotoServiceResponse.PhotoServiceListDTO> serviceDTOs = new ArrayList<>();
 
-        List<PhotoServiceResponse.PhotoServiceListDTO> services = new ArrayList<>();
-
-        for (PhotoServiceMapping mapping : mappings) {
+        for (PhotoServiceInfo service : services) {
             PhotoServiceResponse.PhotoServiceListDTO serviceDTO =
-                    new PhotoServiceResponse.PhotoServiceListDTO(mapping.getPhotoServiceInfo());
-            services.add(serviceDTO);
-        }
+                    new PhotoServiceResponse.PhotoServiceListDTO(service);
 
-        return services;
+            // PriceInfo 설정
+            List<PriceInfoResponse.PriceInfoListDTO> priceInfoDTOs = service.getPriceInfos()
+                    .stream()
+                    .map(PriceInfoResponse.PriceInfoListDTO::new)
+                    .collect(Collectors.toList());
+            serviceDTO.setPriceInfoList(priceInfoDTOs);
+
+            // 최소 가격 설정 (추가 필요)
+            int minPrice = service.getPriceInfos()
+                    .stream()
+                    .mapToInt(PriceInfo::getPrice)
+                    .min()
+                    .orElse(0);
+            serviceDTO.setPrice(minPrice);
+
+            // 카테고리 정보 설정 (이 부분이 빠짐)
+            List<PhotoCategoryResponse.PhotoCategoryListDTO> categoryList = getServiceCategories(service.getServiceId());
+            serviceDTO.setCategoryList(categoryList);
+
+            serviceDTOs.add(serviceDTO);
+        }
+        return serviceDTOs;
     }
 
     // priceInfo 관련 메서드
