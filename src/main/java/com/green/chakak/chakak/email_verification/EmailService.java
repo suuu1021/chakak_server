@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +27,9 @@ public class EmailService {
     public void sendVerificationEmail(String email) {
         String code = generateCode();
         LocalDateTime expiredAt = LocalDateTime.now().plusMinutes(EMAIL_VERIFICATION_EXPIRATION_MINUTES);
+
+        // 이메일로 기존 인증 정보가 있다면 삭제하여, 항상 새로운 코드가 유효하도록 보장합니다.
+        verificationRepository.findByEmail(email).ifPresent(verificationRepository::delete);
 
         EmailVerification verification = EmailVerification.builder()
                 .email(email)
@@ -45,16 +49,40 @@ public class EmailService {
 
     @Transactional
     public boolean verifyCode(String email, String code) {
-        return verificationRepository.findByEmailAndVerificationCode(email, code)
-                .filter(v -> !v.isExpired() && !v.isVerified())
-                .map(verification -> {
-                    verification.use(); // Dirty Checking으로 상태 변경이 자동 감지됩니다.
-                    return true;
-                }).orElse(false);
+        // 1. 이메일과 코드가 정확히 일치하는 데이터를 찾습니다.
+        Optional<EmailVerification> verificationOpt = verificationRepository.findByEmailAndVerificationCode(email, code);
+
+        // 데이터가 없으면 false 반환
+        if (verificationOpt.isEmpty()) {
+            return false;
+        }
+
+        EmailVerification verification = verificationOpt.get();
+
+        // 이미 인증된 코드이면 false 반환
+        if (verification.isVerified()) {
+            return false;
+        }
+
+        // 만료 시간이 지났으면 false 반환
+        if (verification.isExpired()) {
+            return false;
+        }
+
+        // 모든 검증을 통과하면 인증 성공 처리
+        verification.use(); // isVerified를 true로 변경
+        return true;
+    }
+
+    // 이메일이 최종적으로 인증되었는지 확인하는 메서드 추가
+    public boolean isEmailFullyVerified(String email) {
+        return verificationRepository.findTopByEmailOrderByCreatedAtDesc(email)
+                .filter(EmailVerification::isVerified) // isVerified가 true인지 확인
+                .filter(v -> !v.isExpired()) // 만료되지 않았는지 확인
+                .isPresent(); // 해당 조건을 만족하는 레코드가 존재하는지 반환
     }
 
     private String generateCode() {
-        // 예측 불가능한 난수를 위해 SecureRandom 사용을 권장합니다.
         SecureRandom random = new SecureRandom();
         int code = 100000 + random.nextInt(900000); // 100000 ~ 999999
         return String.valueOf(code);

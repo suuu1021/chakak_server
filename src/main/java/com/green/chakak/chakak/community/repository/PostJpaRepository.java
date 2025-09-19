@@ -12,6 +12,14 @@ import java.util.Optional;
 
 public interface PostJpaRepository extends JpaRepository<Post, Long> {
 
+    // 게시글과 사용자 정보가 포함된 엔티티 조회 (게시글 리스트용)
+    @Query("SELECT p FROM Post p JOIN FETCH p.user u LEFT JOIN FETCH u.userProfile WHERE p.status = 'ACTIVE' ORDER BY p.postId DESC")
+    Page<Post> findAllActiveJoinUser(Pageable pageable);
+
+    // 게시글 ID로 한방에 유저 정보도 가져오기 - JOIN FETCH 사용
+    @Query("SELECT p FROM Post p JOIN FETCH p.user u LEFT JOIN FETCH u.userProfile LEFT JOIN FETCH u.userType WHERE p.postId = :id AND p.status = 'ACTIVE'")
+    Optional<Post> findActiveByIdJoinUser(@Param("id") Long id);
+
     // 활성 상태인 게시글만 조회 (삭제되지 않은 글)
     @Query("SELECT p FROM Post p JOIN FETCH p.user u LEFT JOIN FETCH u.userProfile WHERE p.status = 'ACTIVE'")
     List<Post> findAllActiveWithUser();

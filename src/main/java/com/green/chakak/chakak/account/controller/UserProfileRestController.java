@@ -18,14 +18,17 @@ import org.springframework.web.bind.annotation.*;
 public class UserProfileRestController {
 
     private final UserProfileService userProfileService;
+    //private final UserService userService;
 
+    // 프로필 생성
     @PostMapping("/profile")
     public ResponseEntity<?> createProfile(@Valid @RequestBody UserProfileRequest.CreateDTO createDTO,
-                                         Errors errors){ 
-        UserProfileResponse.DetailDTO userProfileDetail = userProfileService.createdProfile(createDTO);
+                                         Errors errors){ // loginUser 파라미터 추가
+        UserProfileResponse.DetailDTO userProfileDetail = userProfileService.createdProfile(createDTO); // loginUser를 서비스에 전달
         return ResponseEntity.ok(new ApiUtil<>("처리가 완료 되었습니다."));
     }
 
+    // 프로필 수정
     @PutMapping("/profile/update")
     public ResponseEntity<?> updateProfile(@Valid @RequestBody UserProfileRequest.UpdateDTO updateDTO,
                                            Errors errors,

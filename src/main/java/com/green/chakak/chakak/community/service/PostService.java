@@ -6,6 +6,7 @@ import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.account.domain.User;
 import com.green.chakak.chakak.account.service.repository.UserJpaRepository;
 import com.green.chakak.chakak.community.domain.Post;
+import com.green.chakak.chakak.community.repository.LikeJpaRepository;
 import com.green.chakak.chakak.community.repository.PostJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,7 @@ public class PostService {
 
     private final PostJpaRepository postRepository;
     private final UserJpaRepository userJpaRepository;
+    private final LikeJpaRepository likeJpaRepository;
 
     /**
      * 커뮤니티 글 작성
@@ -53,7 +55,7 @@ public class PostService {
      * - 페이징, 검색, 정렬 기능 포함
      */
     @Transactional(readOnly = true)
-    public PostResponse.PageDTO getPostList(PostRequest.ListDTO request) {
+    public PostResponse.PageDTO getPostList(PostRequest.ListDTO request, LoginUser loginUser) {
         // 1. 페이징 및 정렬 설정
         Sort sort = createSort(request.getSortBy());
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sort);
@@ -61,10 +63,13 @@ public class PostService {
         // 2. 조건에 따른 데이터 조회
         Page<Post> postPage = getPostsByCondition(request, pageable);
 
+        Long currentUserId = loginUser != null ? loginUser.getId() : null;
+
         // 3. DTO 변환
         List<PostResponse.ListDTO> content = postPage.getContent().stream()
-                .map(PostResponse.ListDTO::new)
+                .map(post -> new PostResponse.ListDTO(post, currentUserId, likeJpaRepository))
                 .collect(Collectors.toList());
+
 
         return new PostResponse.PageDTO(
                 content,
@@ -98,7 +103,9 @@ public class PostService {
             post.increaseViewCount();
         }
 
-        return new PostResponse.DetailDTO(post, loginUser.getId());
+        Long currentUserId = loginUser != null ? loginUser.getId() : null;
+
+        return new PostResponse.DetailDTO(post, currentUserId, likeJpaRepository);
     }
 
     /**
@@ -117,7 +124,7 @@ public class PostService {
     }
 
     /**
-     * 커뮤니티 글 삭제 (소프트 삭제)
+     * 커뮤니티 글 삭제 (하드 삭제)
      * - 작성자만 삭제 가능
      */
     @Transactional
@@ -125,20 +132,21 @@ public class PostService {
         // 1. 로그인 및 권한 확인
         Post post = checkOwnership(postId, loginUser);
 
-        // 2. 소프트 삭제 처리
-        post.deletePost();
+        postRepository.delete(post);
     }
 
     /**
      * 인기 게시글 조회 (조회수 기준)
      */
     @Transactional(readOnly = true)
-    public List<PostResponse.ListDTO> getPopularPosts(int limit) {
+    public List<PostResponse.ListDTO> getPopularPosts(int limit, LoginUser loginUser) {
+
+        Long currentUserId = loginUser != null ? loginUser.getId() : null;
         Pageable pageable = PageRequest.of(0, limit);
         List<Post> popularPosts = postRepository.findTopActiveByViewCount(pageable);
 
         return popularPosts.stream()
-                .map(PostResponse.ListDTO::new)
+                .map(post -> new PostResponse.ListDTO(post, currentUserId, likeJpaRepository))
                 .collect(Collectors.toList());
     }
 
@@ -146,16 +154,18 @@ public class PostService {
      * 사용자별 게시글 조회
      */
     @Transactional(readOnly = true)
-    public List<PostResponse.ListDTO> getUserPosts(Long userId) {
+    public List<PostResponse.ListDTO> getUserPosts(Long userId, LoginUser loginUser) {
 
 
         User user = userJpaRepository.findById(userId)
                 .orElseThrow(() -> new Exception404("해당 사용자를 찾을 수 없습니다."));
 
+        Long currentUserId = loginUser != null ? loginUser.getId() : null;
+
         List<Post> userPosts = postRepository.findActiveByUserIdWithUser(userId);
 
         return userPosts.stream()
-                .map(PostResponse.ListDTO::new)
+                .map(post -> new PostResponse.ListDTO(post, currentUserId, likeJpaRepository))
                 .collect(Collectors.toList());
     }
 

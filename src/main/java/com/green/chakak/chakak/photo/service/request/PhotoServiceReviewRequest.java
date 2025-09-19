@@ -20,7 +20,6 @@ public class PhotoServiceReviewRequest {
 		@NotNull(message = "포토서비스 ID는 필수입니다.")
 		private Long serviceId;
 
-		@NotNull(message = "사용자 ID는 필수입니다.")
 		private Long userId;
 
 		@NotNull(message = "예약 ID는 필수입니다.")
@@ -35,9 +34,6 @@ public class PhotoServiceReviewRequest {
 		@Size(max = 1000, message = "리뷰 내용은 1000자를 초과할 수 없습니다.")
 		private String reviewContent;
 
-		@NotNull(message = "익명 여부는 필수입니다.")
-		private Boolean isAnonymous;
-
 		public PhotoServiceReview toEntity(PhotoServiceInfo photoServiceInfo, User user, BookingInfo bookingInfo) {
 			return PhotoServiceReview.builder()
 					.photoServiceInfo(photoServiceInfo)
@@ -45,7 +41,6 @@ public class PhotoServiceReviewRequest {
 					.bookingInfo(bookingInfo)
 					.rating(this.rating)
 					.reviewContent(this.reviewContent)
-					.isAnonymous(this.isAnonymous)
 					.build();
 		}
 	}
@@ -63,9 +58,6 @@ public class PhotoServiceReviewRequest {
 
 		@Size(max = 1000, message = "리뷰 내용은 1000자를 초과할 수 없습니다.")
 		private String reviewContent;
-
-		@NotNull(message = "익명 여부는 필수입니다.")
-		private Boolean isAnonymous;
 	}
 
 	// 리뷰 검색
@@ -79,9 +71,9 @@ public class PhotoServiceReviewRequest {
 		@DecimalMax(value = "5.0", message = "최소 평점은 5.0 이하여야 합니다.")
 		private BigDecimal minRating;
 
-		private Boolean isAnonymous;
-
 		@Size(max = 100, message = "검색 키워드는 100자를 초과할 수 없습니다.")
 		private String keyword;
 	}
+
+
 }

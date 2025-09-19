@@ -33,7 +33,7 @@ public class EmailController {
     public ResponseEntity<?> verifyCode(@RequestBody @Valid EmailRequest.VerifyDTO requestDTO) {
         boolean isVerified = emailService.verifyCode(requestDTO.getEmail(), requestDTO.getCode());
         if (isVerified) {
-            userService.completeEmailVerification(requestDTO.getEmail());
+            // userService.completeEmailVerification(requestDTO.getEmail()); // 이 라인은 제거된 상태 유지
             return ResponseEntity.ok(new ApiUtil<>(true, "이메일 인증에 성공했습니다."));
         } else {
             // 실패 시 HTTP 상태코드를 400으로 내려줌

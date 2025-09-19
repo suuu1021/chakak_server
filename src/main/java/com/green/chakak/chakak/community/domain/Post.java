@@ -10,6 +10,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "post")
@@ -38,6 +40,15 @@ public class Post {
     @Column(name = "view_count", nullable = false)
     private Integer viewCount = 0;
 
+    // 좋아요 수 (성능을 위한 비정규화)
+    @Column(name = "like_count", nullable = false)
+    private Integer likeCount = 0;
+
+    // 댓글 수 (성능을 위한 비정규화)
+    @Column(name = "reply_count", nullable = false)
+    private Integer replyCount = 0;
+
+
     // 게시글 상태 (ACTIVE: 활성, INACTIVE: 비활성, DELETED: 삭제)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -57,6 +68,14 @@ public class Post {
         DELETED     // 삭제
     }
 
+    // 댓글 목록 (일대다 관계)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Reply> replies = new ArrayList<>();
+
+    // 좋아요 목록 (일대다 관계)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Like> likes = new ArrayList<>();
+
     @Builder
     public Post(User user, String title, String content, PostStatus status) {
         this.user = user;
@@ -64,6 +83,9 @@ public class Post {
         this.content = content;
         this.status = status != null ? status : PostStatus.ACTIVE;
         this.viewCount = 0;
+        this.likeCount = 0;
+        this.replies = new ArrayList<>();
+        this.likes = new ArrayList<>();
     }
 
     // 비즈니스 메서드들
@@ -80,6 +102,30 @@ public class Post {
         }
         if (content != null && !content.trim().isEmpty()) {
             this.content = content;
+        }
+    }
+
+    // 좋아요 수 증가
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    // 좋아요 수 감소
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
+
+    // 댓글 수 증가
+    public void increaseReplyCount() {
+        this.replyCount++;
+    }
+
+    // 댓글 수 감소
+    public void decreaseReplyCount() {
+        if (this.replyCount > 0) {
+            this.replyCount--;
         }
     }
 

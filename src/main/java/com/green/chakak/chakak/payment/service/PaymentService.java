@@ -1,6 +1,7 @@
 package com.green.chakak.chakak.payment.service;
 
 
+import com.green.chakak.chakak._global.errors.exception.Exception400;
 import com.green.chakak.chakak._global.errors.exception.Exception404;
 import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.booking.domain.BookingInfo;
@@ -30,6 +31,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,25 +60,36 @@ public class PaymentService {
 
         // 1. 예약 정보 조회
         BookingInfo bookingInfo = bookingInfoJpaRepository.findById(bookingInfoId)
-                .orElseThrow(() -> new RuntimeException("예약 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new Exception404("예약 정보를 찾을 수 없습니다."));
 
-        // 2. 주문번호 생성
+        // 2. 중복 결제 방지 - 직접 검증
+        if (bookingInfo.getPayment() != null &&
+                PaymentStatus.APPROVED.equals(bookingInfo.getPayment().getStatus())) {
+            throw new Exception400("이미 결제가 완료된 예약입니다.");
+        }
+
+        // 3. 취소된 예약 검증
+        if (BookingStatus.CANCELED.equals(bookingInfo.getStatus())) {
+            throw new Exception400("취소된 예약은 결제할 수 없습니다.");
+        }
+
+        // 4. 주문번호 생성
         String partnerOrderId = generatePartnerOrderId(bookingInfoId);
         String partnerUserId = bookingInfo.getUserProfile().getUserProfileId().toString();
 
-        // 3. 상품명 생성
+        // 5. 상품명 생성
         String itemName = "사진촬영 서비스 - " +
                 bookingInfo.getPhotoServiceInfo().getTitle();
 
-        // 3.1 가격 정보 설정
+        // 6 가격 정보 설정
         int price = bookingInfo.getPriceInfo().getPrice();
 
-        // 4. 카카오페이 결제준비 API 호출
+        // 7. 카카오페이 결제준비 API 호출
         KakaoPaymentReadyResponse kakaoResponse = callKakaoPaymentReady(
                 partnerOrderId, partnerUserId, itemName, price
         );
 
-        // 5. Payment 엔티티 생성 및 저장
+        // 8. Payment 엔티티 생성 및 저장
         Payment payment = Payment.builder()
                 .tid(kakaoResponse.getTid())
                 .partnerOrderId(partnerOrderId)
@@ -90,12 +103,10 @@ public class PaymentService {
 
         Payment savedPayment = paymentJpaRepository.save(payment);
 
-        // 6. BookingInfo에 Payment 연결
+        // 9. BookingInfo에 Payment 연결
         bookingInfo.setPayment(savedPayment);
-        //bookingInfo.setStatus(BookingStatus.PENDING); // enum 추가 필요
-        //bookingInfoJpaRepository.save(bookingInfo);
 
-        // 8. 응답 DTO 생성
+        // 10. 응답 DTO 생성
         return PaymentReadyResponse.builder()
                 .tid(kakaoResponse.getTid())
                 .nextRedirectMobileUrl(kakaoResponse.getNext_redirect_mobile_url())
@@ -179,6 +190,8 @@ public class PaymentService {
     private int calculateVat(int totalAmount) {
         return (int) Math.round(totalAmount / 11.0); // 부가세 10%
     }
+
+
 
     /**
      * 결제 승인 처리 (주문번호로 TID 조회)
@@ -395,6 +408,8 @@ public class PaymentService {
 
         return true;
     }
+
+
 
     /**
      * 결제 실패 처리 (사용자 검증 포함)
