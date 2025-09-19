@@ -1,7 +1,6 @@
 package com.green.chakak.chakak.booking.controller;
 
 import com.green.chakak.chakak.account.domain.LoginUser;
-import com.green.chakak.chakak.booking.domain.BookingStatus;
 import com.green.chakak.chakak.booking.service.request.BookingInfoRequest;
 import com.green.chakak.chakak.booking.service.BookingInfoService;
 import com.green.chakak.chakak._global.utils.ApiUtil;
@@ -9,77 +8,104 @@ import com.green.chakak.chakak._global.utils.Define;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api/v1/bookings")
 public class BookingInfoRestController {
 
     private final BookingInfoService bookingInfoService;
 
-    // [사용자] 나의 예약 목록
-    @GetMapping("/booking/{userId}/list")
-    public ResponseEntity<?> userBookingList(@PathVariable(name = "userId")Long userId,
-                                             @RequestAttribute(value = Define.LOGIN_USER) LoginUser loginUser){
-        return ResponseEntity.ok(bookingInfoService.bookingUserListDTO(loginUser,userId));
+    // [사용자] 나의 예약 목록 조회
+    @GetMapping("/user/my-list")
+    public ResponseEntity<?> getUserBookings(@RequestAttribute(value = Define.LOGIN_USER) LoginUser loginUser){
+        System.out.println("=== getUserBookings API 호출됨 ===");
+        System.out.println("Login User ID: " + loginUser.getId());
+        System.out.println("User Type Code: " + loginUser.getUserTypeName());
+        System.out.println("User Email: " + loginUser.getEmail());
+
+        var result = bookingInfoService.getUserBookings(loginUser);
+        System.out.println("서비스에서 반환된 결과 개수: " + (result != null ? result.size() : "null"));
+
+        if (result != null && !result.isEmpty()) {
+            System.out.println("첫 번째 예약 정보: " + result.get(0));
+        } else {
+            System.out.println("예약 데이터가 비어있거나 null입니다.");
+        }
+
+        return ResponseEntity.ok(new ApiUtil<>(result));
     }
 
-    // [포토그래퍼] 나의 예약 목록
-    @GetMapping("/booking/photographer/{userId}/list")
-    public ResponseEntity<?> photographerBookingList(@PathVariable(name = "userId")Long userId,
-                                             @RequestAttribute(value = Define.LOGIN_USER) LoginUser loginUser){
-        return ResponseEntity.ok(bookingInfoService.bookingPhotographerListDTO(loginUser,userId));
+    // [포토그래퍼] 나의 예약 목록 조회
+    @GetMapping("/photographer/my-list")
+    public ResponseEntity<?> getPhotographerBookings(@RequestAttribute(value = Define.LOGIN_USER) LoginUser loginUser){
+        System.out.println("=== getPhotographerBookings API 호출됨 ===");
+        System.out.println("Login User ID: " + loginUser.getId());
+        System.out.println("User Type Code: " + loginUser.getUserTypeName());
+
+        var result = bookingInfoService.getPhotographerBookings(loginUser);
+        System.out.println("서비스에서 반환된 결과 개수: " + (result != null ? result.size() : "null"));
+
+        return ResponseEntity.ok(new ApiUtil<>(result));
     }
 
-    // [세부사항] 예약 사항 세부목록
-    @GetMapping("/booking/{bookingInfoId}/detail")
-    public ResponseEntity<?> bookingDetail(@PathVariable(name = "bookingInfoId")Long bookingInfoId,
-                                           @RequestAttribute(value = Define.LOGIN_USER)LoginUser loginUser){
-        return ResponseEntity.ok(bookingInfoService.findByDetailList(loginUser,bookingInfoId));
+    // 예약 상세 조회
+    @GetMapping("/{bookingInfoId}")
+    public ResponseEntity<?> getBookingDetail(@PathVariable(name = "bookingInfoId")Long bookingInfoId,
+                                              @RequestAttribute(value = Define.LOGIN_USER)LoginUser loginUser){
+        System.out.println("=== getBookingDetail API 호출됨 ===");
+        System.out.println("Booking ID: " + bookingInfoId);
+        System.out.println("Login User ID: " + loginUser.getId());
+
+        return ResponseEntity.ok(new ApiUtil<>(bookingInfoService.getBookingDetail(loginUser,bookingInfoId)));
     }
 
-    // 예약하기
-    @PostMapping("/booking/save")
-    public ResponseEntity<?> saveBooking(@Valid @RequestBody BookingInfoRequest.CreateDTO createDTO, Errors errors,
-                                         @RequestAttribute(value = Define.LOGIN_USER) LoginUser loginUser){
-        bookingInfoService.save(createDTO,loginUser);
-        return ResponseEntity.ok(new ApiUtil<>("서비스 생성이 완료 되었습니다"));
+    // 예약 생성 (포토그래퍼가 사용자에게 제안)
+    @PostMapping
+    public ResponseEntity<?> createBooking(@Valid @RequestBody BookingInfoRequest.CreateDTO createDTO,
+                                           @RequestAttribute(value = Define.LOGIN_USER) LoginUser loginUser){
+        System.out.println("=== createBooking API 호출됨 ===");
+        System.out.println("Login User ID: " + loginUser.getId());
+        System.out.println("Create DTO: " + createDTO);
+
+        bookingInfoService.createBooking(createDTO,loginUser);
+        return ResponseEntity.ok(new ApiUtil<>("예약 생성이 완료되었습니다."));
     }
 
-    // 예약 확정 하기(포토그래퍼)
-    @PutMapping("booking/{bookingInfoId}/photographer-confirm")
-    public ResponseEntity<?> photographerConfirm(@PathVariable(name = "bookingInfoId") Long bookingInfoId,
-                                        @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser){
-        bookingInfoService.photographerConfirmedStatus(bookingInfoId, BookingStatus.CONFIRMED, loginUser);
-        return ResponseEntity.ok(new ApiUtil<>("예약 승낙 처리가 완료 되었습니다"));
-    }
-    // 예약 거절 하기(포토그래퍼)
-    @PutMapping("booking/{bookingInfoId}/photographer-cancel")
-    public ResponseEntity<?> photographerCancel(@PathVariable(name = "bookingInfoId") Long bookingInfoId,
-                                        @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser){
-        bookingInfoService.photographerRejectedStatus(bookingInfoId, BookingStatus.REJECTED, loginUser);
-        return ResponseEntity.ok(new ApiUtil<>("예약 거절 처리가 완료 되었습니다"));
+    // [포토그래퍼] 예약 확정
+    @PatchMapping("/{bookingInfoId}/confirm")
+    public ResponseEntity<?> confirmBooking(@PathVariable(name = "bookingInfoId") Long bookingInfoId,
+                                            @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser){
+        System.out.println("=== confirmBooking API 호출됨 ===");
+        System.out.println("Booking ID: " + bookingInfoId);
+        System.out.println("Login User ID: " + loginUser.getId());
+
+        bookingInfoService.confirmBooking(bookingInfoId, loginUser);
+        return ResponseEntity.ok(new ApiUtil<>("예약이 확정되었습니다."));
     }
 
-    // 촬영 완료 하기
-    @PutMapping("booking/{bookingInfoId}/photographer-service-end")
-    public ResponseEntity<?> photographerServiceEnd(@PathVariable(name = "bookingInfoId") Long bookingInfoId,
-                                                @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser){
-        bookingInfoService.photographerCompletedStatus(bookingInfoId, BookingStatus.COMPLETED, loginUser);
-        return ResponseEntity.ok(new ApiUtil<>("촬영 완료 처리가 완료 되었습니다"));
+    // [포토그래퍼] 촬영 완료 처리
+    @PatchMapping("/{bookingInfoId}/complete")
+    public ResponseEntity<?> completeBooking(@PathVariable(name = "bookingInfoId") Long bookingInfoId,
+                                             @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser){
+        System.out.println("=== completeBooking API 호출됨 ===");
+        System.out.println("Booking ID: " + bookingInfoId);
+        System.out.println("Login User ID: " + loginUser.getId());
+
+        bookingInfoService.completeBooking(bookingInfoId, loginUser);
+        return ResponseEntity.ok(new ApiUtil<>("촬영 완료로 처리되었습니다."));
     }
 
+    // [사용자] 예약 취소
+    @PatchMapping("/{bookingInfoId}/cancel")
+    public ResponseEntity<?> cancelBooking(@PathVariable(name = "bookingInfoId") Long bookingInfoId,
+                                           @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser){
+        System.out.println("=== cancelBooking API 호출됨 ===");
+        System.out.println("Booking ID: " + bookingInfoId);
+        System.out.println("Login User ID: " + loginUser.getId());
 
-    // 예약 취소하기(유저)
-    @PutMapping("booking/{bookingInfoId}/user-cancel")
-    public ResponseEntity<?> userCancel(@PathVariable(name = "bookingInfoId") Long bookingInfoId,
-                                        @RequestAttribute(Define.LOGIN_USER) LoginUser loginUser){
-        bookingInfoService.userCanceledStatus(bookingInfoId, BookingStatus.CANCELED, loginUser);
-        return ResponseEntity.ok(new ApiUtil<>("예약 취소 처리가 완료 되었습니다"));
+        bookingInfoService.cancelBooking(bookingInfoId, loginUser);
+        return ResponseEntity.ok(new ApiUtil<>("예약이 취소되었습니다."));
     }
-
-
-
 }

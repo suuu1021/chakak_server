@@ -86,22 +86,26 @@ public class BookingInfoResponse {
     }
 
     // 예약 상세보기
+    @Data
     public static class BookingDetailDTO{
         private Long photographerProfileId;
         private Long userProfileId;
+        private String photoServiceTitle;
+        private String priceInfoTitle;
+        private int price;
         private LocalDate bookingDate;
         private LocalTime bookingTime;
-        private String location;
-        private int budget;
-        private int participantCount;
-        private int shootingDuration;
-        private String specialRequest;
+        private BookingStatus status;
 
         public BookingDetailDTO(BookingInfo bookingInfo) {
             this.photographerProfileId = bookingInfo.getPhotographerProfile().getPhotographerProfileId();
             this.userProfileId = bookingInfo.getUserProfile().getUserProfileId();
+            this.photoServiceTitle = bookingInfo.getPhotoServiceInfo().getTitle();
+            this.priceInfoTitle = bookingInfo.getPriceInfo().getTitle();
+            this.price = bookingInfo.getPriceInfo().getPrice();
             this.bookingDate = bookingInfo.getBookingDate();
             this.bookingTime = bookingInfo.getBookingTime();
+            this.status = bookingInfo.getStatus();
         }
     }
 
