@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -22,7 +21,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor)
-                .addPathPatterns("/api/**") // 1. /api/ 로 시작하는 모든 경로에 인터셉터 적용
+                .addPathPatterns("/api/**", "/api/v1/**") // /api/v1/** 경로 추가
                 .excludePathPatterns(       // 2. 그 중에서 아래 경로들은 제외
                         "/api/users/login",
                         "/api/users/signup",
@@ -50,14 +49,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/payment/fail",
                         "/api/payment/cancel",
                         "/api/photo/mappings/detail/{id}",
-                      "/api/admin/login"
-                );
+                        "/api/admin/login",
+                        "/api/photo/mappings/category/*/services"
+                        );
     }
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(loginUserArgumentResolver);
     }
+
     @Configuration
     public class WebConfig implements WebMvcConfigurer {
 

@@ -38,13 +38,6 @@ public class ChatService {
     private final PhotographerRepository photographerRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-    /**
-     * 채팅방을 생성하거나 기존 채팅방을 조회합니다.
-     * 로그인한 사용자의 역할(USER, PHOTOGRAPHER)에 따라 분기하여 처리합니다.
-     * @param requestDto 상대방의 프로필 ID를 담은 DTO
-     * @param loginUser 현재 로그인한 사용자 정보
-     * @return 조회되거나 생성된 ChatRoom 엔티티
-     */
     public ChatRoom findOrCreateRoom(ChatRoomRequestDto requestDto, LoginUser loginUser) {
         UserProfile userProfile;
         PhotographerProfile photographerProfile;
@@ -52,7 +45,6 @@ public class ChatService {
         String role = loginUser.getUserTypeName();
 
         if ("user".equalsIgnoreCase(role)) {
-            // 요청자가 일반 유저인 경우
             userProfile = userProfileJpaRepository.findByUserId(loginUser.getId())
                     .orElseThrow(() -> new Exception404("로그인한 유저의 프로필을 찾을 수 없습니다. ID: " + loginUser.getId()));
 
@@ -63,7 +55,6 @@ public class ChatService {
                     .orElseThrow(() -> new Exception404("해당 사진작가 프로필을 찾을 수 없습니다: " + requestDto.getPhotographerProfileId()));
 
         } else if ("photographer".equalsIgnoreCase(role)) {
-            // 요청자가 사진작가인 경우
             photographerProfile = photographerRepository.findByUser_UserId(loginUser.getId())
                     .orElseThrow(() -> new Exception404("로그인한 작가의 프로필을 찾을 수 없습니다. ID: " + loginUser.getId()));
 
@@ -76,7 +67,6 @@ public class ChatService {
             throw new Exception403("채팅방을 생성할 수 없는 사용자 유형입니다: " + role);
         }
 
-        // 두 프로필을 모두 찾은 후, 채팅방을 조회하거나 생성
         return chatRoomRepository.findByUserProfileAndPhotographerProfile(userProfile, photographerProfile)
                 .orElseGet(() -> {
                     log.info("Creating new chat room between user {} and photographer {}", userProfile.getUserProfileId(), photographerProfile.getPhotographerProfileId());
@@ -124,12 +114,10 @@ public class ChatService {
         return chatRooms.stream().map(chatRoom -> {
             String opponentNickname;
             String opponentProfileImageUrl = "";
-            // UserProfile의 User를 기준으로 상대방 식별
             if (chatRoom.getUserProfile().getUser().equals(user)) {
                 PhotographerProfile opponent = chatRoom.getPhotographerProfile();
                 opponentNickname = opponent.getBusinessName();
             } else {
-                //User가 아닌 UserProfile에서 닉네임 조회
                 UserProfile opponent = chatRoom.getUserProfile();
                 opponentNickname = opponent.getNickName();
             }
@@ -162,7 +150,6 @@ public class ChatService {
 
     private void verifyChatRoomAccess(ChatRoom chatRoom, LoginUser loginUser) {
         Long loginUserId = loginUser.getId();
-        // UserProfile을 통해 User ID에 접근
         boolean isParticipant = chatRoom.getUserProfile().getUser().getUserId().equals(loginUserId) ||
                 chatRoom.getPhotographerProfile().getUser().getUserId().equals(loginUserId);
 

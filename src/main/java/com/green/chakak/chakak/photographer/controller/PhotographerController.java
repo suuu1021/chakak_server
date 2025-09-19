@@ -109,4 +109,10 @@ public class PhotographerController {
         photographerService.removeCategoryFromPhotographer(photographerId, categoryId, loginUser);
         return ResponseEntity.ok(new ApiUtil<>("카테고리가 성공적으로 제거되었습니다."));
     }
+    // 현재 로그인한 포토그래퍼 프로필 조회
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyProfile(@RequestAttribute(Define.LOGIN_USER) LoginUser loginUser) {
+        PhotographerResponse.DetailDTO response = photographerService.getMyProfile(loginUser);
+        return ResponseEntity.ok(new ApiUtil<>(response));
+    }
 }
