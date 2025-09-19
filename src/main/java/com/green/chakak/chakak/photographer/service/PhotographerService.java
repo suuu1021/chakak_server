@@ -287,4 +287,23 @@ public class PhotographerService {
         }
         return photographer;
     }
+
+    /**
+     * 현재 로그인한 사용자의 포토그래퍼 프로필 조회
+     */
+    @Transactional(readOnly = true)
+    public PhotographerResponse.DetailDTO getMyProfile(LoginUser loginUser) {
+        // 1. 요청을 보낸 사용자가 'photographer' 유형인지 확인
+        if (loginUser.getUserTypeName() == null || !"photographer".equalsIgnoreCase(loginUser.getUserTypeName())) {
+            throw new Exception403("포토그래퍼 회원만 사용할 수 있는 기능입니다.");
+        }
+
+        // 2. 현재 로그인한 사용자의 포토그래퍼 프로필 조회
+        PhotographerProfile photographer = photographerRepository.findByUser_UserId(loginUser.getId())
+                .orElseThrow(() -> new Exception404("등록된 포토그래퍼 프로필이 없습니다."));
+
+        // 3. 카테고리 정보와 함께 반환
+        List<PhotographerMap> maps = photographerMapRepository.findByPhotographerProfileWithCategory(photographer);
+        return new PhotographerResponse.DetailDTO(photographer, maps);
+    }
 }

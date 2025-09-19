@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PhotoServiceJpaRepository extends JpaRepository<PhotoServiceInfo, Long> {
@@ -24,4 +25,13 @@ public interface PhotoServiceJpaRepository extends JpaRepository<PhotoServiceInf
     @Query("SELECT ps FROM PhotoServiceInfo ps WHERE ps.title like %:keyword% ORDER BY ps.serviceId DESC")
     Page<PhotoServiceInfo> findAllServiceInfoByKeyword(Pageable pageable, String keyword);
 
+    // 카테고리별 포토서비스 조회 (PriceInfo 포함)
+    @Query("SELECT DISTINCT psi FROM PhotoServiceInfo psi " +
+            "LEFT JOIN FETCH psi.priceInfos " +
+            "LEFT JOIN FETCH psi.photographerProfile pp " +
+            "LEFT JOIN FETCH pp.user u " +
+            "JOIN PhotoServiceMapping psm ON psi.serviceId = psm.photoServiceInfo.serviceId " +
+            "WHERE psm.photoServiceCategory.categoryId = :categoryId " +
+            "ORDER BY psi.serviceId DESC")
+    List<PhotoServiceInfo> findByCategoryIdWithPriceInfo(@Param("categoryId") Long categoryId);
 }

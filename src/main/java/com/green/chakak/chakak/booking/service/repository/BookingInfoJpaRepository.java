@@ -21,8 +21,8 @@ public interface BookingInfoJpaRepository extends JpaRepository<BookingInfo, Lon
     @Query("SELECT b FROM BookingInfo b " +
             "JOIN FETCH b.photographerProfile pp " +
             "JOIN FETCH b.userProfile up " +
-            "WHERE pp.photographerProfileId = :photographerProfileId")
-    List<BookingInfo> findByPhotographerId(@Param("photographerProfileId") Long photographerProfileId);
+            "WHERE pp.user.userId = :photographerUserId")
+    List<BookingInfo> findByPhotographerId(@Param("photographerUserId") Long photographerUserId);
 
     Optional<BookingInfo> findByPayment(Payment payment);
 

@@ -14,7 +14,7 @@ public interface PortfolioCategoryJpaRepository extends JpaRepository<PortfolioC
 	List<PortfolioCategory> findByIsActiveTrueOrderBySortOrderAsc();
 
 	// 특정 카테고리명으로 활성화된 카테고리를 조회합니다.
-	Optional<PortfolioCategory> findByCategoryNameAndIsActiveTrue(String categoryName);
+	Optional<PortfolioCategory> findByCategoryName(String categoryName);
 
 	// 카테고리명 중복 여부를 확인합니다.
 	boolean existsByCategoryName(String categoryName);
