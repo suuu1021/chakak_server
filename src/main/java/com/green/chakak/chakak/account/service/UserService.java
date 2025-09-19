@@ -14,9 +14,13 @@ import com.green.chakak.chakak.account.service.repository.UserTypeRepository;
 import com.green.chakak.chakak.account.service.request.UserRequest;
 import com.green.chakak.chakak.account.service.response.UserResponse;
 import com.green.chakak.chakak.email_verification.EmailService;
+import com.green.chakak.chakak.email_verification.EmailVerificationRepository; // Import EmailVerificationRepository
+import com.green.chakak.chakak.email_verification.EmailVerification; // Import EmailVerification
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +31,7 @@ public class UserService {
     private final UserTypeRepository userTypeRepository;
     private final UserProfileJpaRepository userProfileJpaRepository;
     private final EmailService emailService;
+    private final EmailVerificationRepository emailVerificationRepository; // Inject EmailVerificationRepository
 
     // 회원가입
     public UserResponse.SignupResponse signup(UserRequest.SignupRequest req) {
@@ -38,16 +43,21 @@ public class UserService {
         UserType userType = userTypeRepository.findByTypeCode(req.getUserTypeCode())
                 .orElseThrow(() -> new Exception400("존재하지 않는 사용자 유형 코드입니다."));
 
-        User savedUser = userJpaRepository.save(req.toEntity(userType));
+        // 이메일 인증 상태 확인
+        Optional<EmailVerification> verificationOpt = emailVerificationRepository.findByEmail(req.getEmail());
+        boolean isEmailVerified = verificationOpt.isPresent() && verificationOpt.get().isVerified();
 
-        // 인증 이메일 발송
+        User savedUser = userJpaRepository.save(req.toEntity(userType, isEmailVerified)); // Pass isEmailVerified
+        // TODO(테스트) User savedUser = userJpaRepository.save(req.toEntity(userType)); // Pass isEmailVerified
+
+        // 인증 이메일 발송 (회원가입 시점에 발송하도록 유지)
         emailService.sendVerificationEmail(req.getEmail());
 
         return UserResponse.SignupResponse.from(savedUser);
     }
 
 
-    // 이메일 인증 완료 처리
+    // 이메일 인증 완료 처리 (이 메서드는 EmailController에서 더 이상 호출되지 않습니다)
     @Transactional
     public void completeEmailVerification(String email) {
 
