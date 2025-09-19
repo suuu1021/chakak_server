@@ -42,9 +42,6 @@ public class PhotoServiceReview {
 	@Column(name = "review_content", columnDefinition = "TEXT")
 	private String reviewContent;
 
-	@Column(name = "is_anonymous", nullable = false)
-	private Boolean isAnonymous;
-
 	@CreationTimestamp
 	@Column(name = "created_at", nullable = false)
 	private Timestamp createdAt;
@@ -56,12 +53,20 @@ public class PhotoServiceReview {
 	@Builder
 	public PhotoServiceReview(PhotoServiceInfo photoServiceInfo, User user,
 							  BookingInfo bookingInfo, BigDecimal rating,
-							  String reviewContent, Boolean isAnonymous) {
+							  String reviewContent) {
 		this.photoServiceInfo = photoServiceInfo;
 		this.user = user;
 		this.bookingInfo = bookingInfo;
 		this.rating = rating;
 		this.reviewContent = reviewContent;
-		this.isAnonymous = isAnonymous;
+	}
+
+	public void updateReview(BigDecimal rating, String reviewContent) {
+		if (rating != null) {
+			this.rating = rating;
+		}
+		if (reviewContent != null) {
+			this.reviewContent = reviewContent;
+		}
 	}
 }
