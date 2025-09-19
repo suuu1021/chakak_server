@@ -50,7 +50,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/payment/fail",
                         "/api/payment/cancel",
                         "/api/photo/mappings/detail/{id}",
-                      "/api/admin/login"
+                        "/api/admin/login",
+                        "/api/post/list"
                 );
     }
 

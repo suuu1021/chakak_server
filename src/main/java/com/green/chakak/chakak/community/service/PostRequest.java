@@ -1,5 +1,6 @@
 package com.green.chakak.chakak.community.service;
 
+import com.green.chakak.chakak._global.utils.NoSensitiveInfo;
 import com.green.chakak.chakak.account.domain.User;
 import com.green.chakak.chakak.community.domain.Post;
 import jakarta.validation.constraints.NotBlank;
@@ -14,12 +15,14 @@ public class PostRequest {
     @NoArgsConstructor
     public static class CreateDTO {
 
-        @NotBlank(message = "제목은 필수 입력사항입니다.")
-        @Size(max = 50, message = "제목은 50자를 초과할 수 없습니다.")
+        @NoSensitiveInfo
+        @NotBlank(message = "제목은 필수 입력사항입니다")
+        @Size(max = 50, message = "제목은 50자를 초과할 수 없습니다")
         private String title;
 
-        @NotBlank(message = "내용은 필수 입력사항입니다.")
-        @Size(max = 1500, message = "내용은 1500자를 초과할 수 없습니다.")
+        @NoSensitiveInfo
+        @NotBlank(message = "내용은 필수 입력사항입니다")
+        @Size(max = 1500, message = "내용은 1500자를 초과할 수 없습니다")
         private String content;
 
         // DTO를 Entity로 변환하는 메서드
@@ -38,10 +41,14 @@ public class PostRequest {
     @NoArgsConstructor
     public static class UpdateDTO {
 
-        @Size(max = 50, message = "제목은 50자를 초과할 수 없습니다.")
+        @NoSensitiveInfo
+        @NotBlank(message = "내용은 필수 입력사항입니다")
+        @Size(max = 50, message = "제목은 50자를 초과할 수 없습니다")
         private String title;
 
-        @Size(max = 1500, message = "내용은 1500자를 초과할 수 없습니다.")
+        @NoSensitiveInfo
+        @NotBlank
+        @Size(min = 10, max = 1500, message = "내용은 최소 10자, 최대 1500자 작성가능합니다")
         private String content;
     }
 

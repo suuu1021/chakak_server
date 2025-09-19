@@ -8,6 +8,7 @@ import com.green.chakak.chakak.community.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,7 +27,14 @@ public class PostController {
     @PostMapping
     public ResponseEntity<?> createPost(
             @Valid @RequestBody PostRequest.CreateDTO request,
+            BindingResult bindingResult,
             @RequestAttribute LoginUser loginUser) {
+
+
+        if (bindingResult.hasErrors()) {
+            // 검증 실패 → 에러 메시지 확인
+            return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+        }
 
         PostResponse.CreateDTO response = postService.createPost(request, loginUser);
         return ResponseEntity.ok(new ApiUtil<>(response));
@@ -36,13 +44,14 @@ public class PostController {
      * 커뮤니티 글 목록 조회 (비회원도 접근 가능)
      * GET /api/post
      */
-    @GetMapping
+    @GetMapping("/list")
     public ResponseEntity<?> getPostList(
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String userType,
-            @RequestParam(defaultValue = "LATEST") String sortBy) {
+            @RequestParam(defaultValue = "LATEST") String sortBy,
+            LoginUser loginUser) {
 
         PostRequest.ListDTO request = new PostRequest.ListDTO();
         request.setPage(page);
@@ -51,7 +60,7 @@ public class PostController {
         request.setUserType(userType);
         request.setSortBy(sortBy);
 
-        PostResponse.PageDTO response = postService.getPostList(request);
+        PostResponse.PageDTO response = postService.getPostList(request, loginUser);
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
@@ -76,8 +85,13 @@ public class PostController {
     public ResponseEntity<?> updatePost(
             @PathVariable Long postId,
             @Valid @RequestBody PostRequest.UpdateDTO request,
-            @RequestAttribute LoginUser loginUser) {
+            BindingResult bindingResult,
+            LoginUser loginUser) {
 
+        if (bindingResult.hasErrors()) {
+            // 검증 실패 → 에러 메시지 확인
+            return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+        }
         PostResponse.UpdateDTO response = postService.updatePost(postId, request, loginUser);
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
@@ -101,9 +115,10 @@ public class PostController {
      */
     @GetMapping("/popular")
     public ResponseEntity<?> getPopularPosts(
-            @RequestParam(defaultValue = "5") int limit) {
+            @RequestParam(defaultValue = "5") int limit,
+            LoginUser loginUser) {
 
-        List<PostResponse.ListDTO> response = postService.getPopularPosts(limit);
+        List<PostResponse.ListDTO> response = postService.getPopularPosts(5, loginUser);
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
@@ -112,9 +127,9 @@ public class PostController {
      * GET /api/post/user/{userId}
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUserPosts(@PathVariable Long userId) {
+    public ResponseEntity<?> getUserPosts(@PathVariable Long userId, LoginUser loginUser) {
 
-        List<PostResponse.ListDTO> response = postService.getUserPosts(userId);
+        List<PostResponse.ListDTO> response = postService.getUserPosts(userId, loginUser);
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
@@ -123,10 +138,10 @@ public class PostController {
      * GET /api/post/my-posts
      */
     @GetMapping("/my-posts")
-    public ResponseEntity<?> getMyPosts(@RequestAttribute LoginUser loginUser) {
+    public ResponseEntity<?> getMyPosts(Long userId, @RequestAttribute LoginUser loginUser) {
 
 
-        List<PostResponse.ListDTO> response = postService.getUserPosts(loginUser.getId());
+        List<PostResponse.ListDTO> response = postService.getUserPosts(userId, loginUser);
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 }

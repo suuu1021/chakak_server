@@ -3,6 +3,7 @@ package com.green.chakak.chakak.account.domain;
 import com.green.chakak.chakak.account.service.request.UserProfileRequest;
 import com.green.chakak.chakak.booking.domain.BookingCancelInfo;
 import com.green.chakak.chakak.booking.domain.BookingInfo;
+import com.green.chakak.chakak.chat.domain.ChatRoom;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +15,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.sql.Timestamp;
 import java.util.List;
 
-//
 @Entity
 @Table(name = "user_profile")
 @Data
@@ -29,7 +29,6 @@ public class UserProfile {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
-
 
     @Column(length = 50, nullable = false, unique = true)
     private String nickName;
@@ -53,6 +52,9 @@ public class UserProfile {
     @OneToMany(mappedBy = "userProfile", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<BookingCancelInfo> bookingCancelInfos = new java.util.ArrayList<>();
 
+    @OneToMany(mappedBy = "userProfile", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<ChatRoom> chatRooms = new java.util.ArrayList<>();
+
     @Builder
     public UserProfile(Long userProfileId, User user, String nickName, String introduce, String imageData, Timestamp createdAt, Timestamp updatedAt) {
         this.userProfileId = userProfileId;
@@ -64,9 +66,7 @@ public class UserProfile {
         this.updatedAt = updatedAt;
     }
 
-
     public void update(UserProfileRequest.UpdateDTO dto){
-
         if (dto.getNickName() != null) {
             this.nickName = dto.getNickName();
         }
@@ -77,7 +77,4 @@ public class UserProfile {
             this.imageData = dto.getImageData();
         }
     }
-
-
-
 }
