@@ -395,17 +395,21 @@ public class PhotoService {
 
     // 특정 카테고리의 서비스들 조회
     public List<PhotoServiceResponse.PhotoServiceListDTO> getCategoryServices(Long categoryId) {
-        List<PhotoServiceMapping> mappings = photoMappingRepository.findByPhotoServiceCategory_CategoryId(categoryId);
+        List<PhotoServiceInfo> services = photoServiceJpaRepository.findByCategoryIdWithPriceInfo(categoryId);
+        List<PhotoServiceResponse.PhotoServiceListDTO> serviceDTOs = new ArrayList<>();
 
-        List<PhotoServiceResponse.PhotoServiceListDTO> services = new ArrayList<>();
-
-        for (PhotoServiceMapping mapping : mappings) {
+        for (PhotoServiceInfo service : services) {
             PhotoServiceResponse.PhotoServiceListDTO serviceDTO =
-                    new PhotoServiceResponse.PhotoServiceListDTO(mapping.getPhotoServiceInfo());
-            services.add(serviceDTO);
-        }
+                    new PhotoServiceResponse.PhotoServiceListDTO(service);
 
-        return services;
+            List<PriceInfoResponse.PriceInfoListDTO> priceInfoDTOs = service.getPriceInfos()
+                    .stream()
+                    .map(PriceInfoResponse.PriceInfoListDTO::new)
+                    .collect(Collectors.toList());
+            serviceDTO.setPriceInfoList(priceInfoDTOs);
+            serviceDTOs.add(serviceDTO);
+        }
+        return serviceDTOs;
     }
 
     // priceInfo 관련 메서드
