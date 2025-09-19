@@ -26,4 +26,21 @@ public interface BookingInfoJpaRepository extends JpaRepository<BookingInfo, Lon
 
     Optional<BookingInfo> findByPayment(Payment payment);
 
+    // 결제 완료된 예약만 조회
+    @Query("SELECT b FROM BookingInfo b " +
+            "JOIN FETCH b.photographerProfile pp " +
+            "JOIN FETCH b.photoServiceInfo psi " +
+            "JOIN FETCH b.priceInfo pri " +
+            "WHERE b.userProfile.user.userId = :userId AND b.payment IS NOT NULL " +
+            "ORDER BY b.createdAt DESC")
+    List<BookingInfo> findPaidBookingsByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT b FROM BookingInfo b " +
+            "JOIN FETCH b.userProfile up " +
+            "JOIN FETCH b.photoServiceInfo psi " +
+            "JOIN FETCH b.priceInfo pri " +
+            "WHERE b.photographerProfile.user.userId = :userId AND b.payment IS NOT NULL " +
+            "ORDER BY b.createdAt DESC")
+    List<BookingInfo> findPaidBookingsByPhotographerId(@Param("userId") Long userId);
+
 }

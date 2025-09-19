@@ -8,6 +8,9 @@ import com.green.chakak.chakak.account.service.repository.UserProfileJpaReposito
 import com.green.chakak.chakak.account.service.repository.UserTypeRepository;
 import com.green.chakak.chakak.admin.domain.Admin;
 import com.green.chakak.chakak.admin.service.repository.AdminJpaRepository;
+import com.green.chakak.chakak.booking.domain.BookingInfo;
+import com.green.chakak.chakak.booking.domain.BookingStatus;
+import com.green.chakak.chakak.booking.service.repository.BookingInfoJpaRepository;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
 import com.green.chakak.chakak.photo.domain.PhotoServiceCategory;
 import com.green.chakak.chakak.photo.domain.PhotoServiceMapping;
@@ -35,8 +38,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Random;
 
 @Component
 @RequiredArgsConstructor
@@ -56,6 +62,7 @@ public class DataInitializer implements CommandLineRunner {
     private final PortfolioMapJpaRepository portfolioMapRepository;
     private final PhotoMappingRepository photoMappingRepository;
     private final PriceInfoJpaRepository priceInfoJpaRepository;
+    private final BookingInfoJpaRepository bookingInfoJpaRepository;
 
     @Override
     @Transactional
@@ -321,7 +328,7 @@ public class DataInitializer implements CommandLineRunner {
                 }
             }
         }
-    //------------------------------------------------------ 포토서비스 더미데이터 끝
+        //------------------------------------------------------ 포토서비스 더미데이터 끝
         // 4. 포트폴리오 카테고리 생성
         PortfolioCategory weddingCategory = portfolioCategoryRepository.findByCategoryName("웨딩촬영").orElseGet(() -> {
             PortfolioCategory category = new PortfolioCategory();
@@ -420,6 +427,50 @@ public class DataInitializer implements CommandLineRunner {
                 portfolioMap.setPortfolioCategory(categories.get(categoryIndex));
                 portfolioMap.setCreatedAt(LocalDateTime.now());
                 portfolioMapRepository.save(portfolioMap);
+            }
+
+            // 6. 예약 더미 데이터 생성
+            List<UserProfile> users = userProfileJpaRepository.findAll();
+            List<PhotoServiceInfo> photoServices = photoServiceJpaRepository.findAll();
+
+            if (users.isEmpty() || photographers.isEmpty() || photoServices.isEmpty()) {
+                System.err.println("더미 데이터 생성을 위한 사용자, 사진작가, 서비스가 부족합니다.");
+                return;
+            }
+
+            Random random = new Random();
+            BookingStatus[] statuses = BookingStatus.values();
+
+            for (int i = 0; i < 20; i++) {
+                UserProfile randomUser = users.get(random.nextInt(users.size()));
+                PhotoServiceInfo randomService = photoServices.get(random.nextInt(photoServices.size()));
+                PhotographerProfile randomPhotographer = randomService.getPhotographerProfile();
+
+                // 서비스에 연결된 PriceInfo 목록 가져오기
+                List<PriceInfo> prices = priceInfoJpaRepository.findByPhotoServiceInfo(randomService);
+                if (prices.isEmpty()) {
+                    continue;
+                }
+                PriceInfo randomPrice = prices.get(random.nextInt(prices.size()));
+
+                // 예약 상태 랜덤 선택
+                BookingStatus randomStatus = statuses[random.nextInt(statuses.length)];
+
+                // 예약 날짜 및 시간 랜덤 생성 (최근 한 달 이내)
+                LocalDate bookingDate = LocalDate.now().minusDays(random.nextInt(30));
+                LocalTime startTime = LocalTime.of(9 + random.nextInt(10), random.nextInt(2) * 30);
+
+                BookingInfo bookingInfo = BookingInfo.builder()
+                        .userProfile(randomUser) // User가 아닌 UserProfile 객체를 전달
+                        .photographerProfile(randomPhotographer) // 필드명 수정
+                        .photoServiceInfo(randomService) // 필드명 수정
+                        .priceInfo(randomPrice)
+                        .bookingDate(bookingDate)
+                        .bookingTime(startTime) // 필드명 수정
+                        .status(randomStatus)
+                        .build();
+
+                bookingInfoJpaRepository.save(bookingInfo);
             }
         }
     }
