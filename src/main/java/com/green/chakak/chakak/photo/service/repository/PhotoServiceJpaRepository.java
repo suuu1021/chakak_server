@@ -37,4 +37,7 @@ public interface PhotoServiceJpaRepository extends JpaRepository<PhotoServiceInf
 			"WHERE psm.photoServiceCategory.categoryId = :categoryId " +
 			"ORDER BY psi.serviceId DESC")
 	List<PhotoServiceInfo> findByCategoryIdWithPriceInfo(@Param("categoryId") Long categoryId);
+
+    // PhotoServiceJpaRepository에 추가
+    List<PhotoServiceInfo> findByPhotographerProfile_PhotographerProfileId(Long photographerId);
 }

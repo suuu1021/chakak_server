@@ -527,4 +527,34 @@ public class PhotoService {
 
         return priceInfoJpaRepository.saveAll(priceInfoList);
     }
+
+    // 포토그래퍼별 서비스 조회
+    public List<PhotoServiceResponse.PhotoServiceListDTO> getServicesByPhotographer(Long photographerId) {
+        // 포토그래퍼 존재 확인
+        PhotographerProfile photographer = photographerRepository.findById(photographerId)
+                .orElseThrow(() -> new Exception404("해당 포토그래퍼가 존재하지 않습니다."));
+
+        // 해당 포토그래퍼의 서비스 조회
+        List<PhotoServiceInfo> services = photoServiceJpaRepository.findByPhotographerProfile_PhotographerProfileId(photographerId);
+
+        List<PhotoServiceResponse.PhotoServiceListDTO> serviceInfoList = new ArrayList<>();
+
+        for (PhotoServiceInfo serviceInfo : services) {
+            PhotoServiceResponse.PhotoServiceListDTO mainDTO = new PhotoServiceResponse.PhotoServiceListDTO(serviceInfo);
+
+            // 가격 정보 조회 및 설정
+            List<PriceInfoResponse.PriceInfoListDTO> priceInfoList = getPriceInfoListByPhotoServiceId(serviceInfo.getServiceId());
+            if (!priceInfoList.isEmpty()) {
+                mainDTO.setPrice(priceInfoList.get(0).getPrice());
+                mainDTO.setPriceInfoList(priceInfoList);
+            }
+
+            // 카테고리 정보 조회 및 설정
+            List<PhotoCategoryResponse.PhotoCategoryListDTO> categoryList = getServiceCategories(serviceInfo.getServiceId());
+            mainDTO.setCategoryList(categoryList);
+
+            serviceInfoList.add(mainDTO);
+        }
+        return serviceInfoList;
+    }
 }

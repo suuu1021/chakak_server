@@ -222,6 +222,7 @@ public class DataInitializer implements CommandLineRunner {
                     .user(savedUser)
                     .nickName(String.format("일반유저%d", i))
                     .introduce(String.format("안녕하세요, 유저 %d입니다.", i))
+                    .imageData(String.format("https://picsum.photos/200/200?random=%d", i + 10))
                     .createdAt(Timestamp.from(Instant.now()))
                     .updatedAt(Timestamp.from(Instant.now()))
                     .build();
@@ -253,6 +254,7 @@ public class DataInitializer implements CommandLineRunner {
                     .status("ACTIVE")
                     .location("서울")
                     .experienceYears(i)
+                    .profileImageUrl(String.format("https://picsum.photos/300/300?random=%d", i))
                     .build();
             photographerRepository.save(photographerProfile);
         }

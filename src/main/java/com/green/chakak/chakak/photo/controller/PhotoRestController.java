@@ -74,4 +74,12 @@ public class PhotoRestController {
         photoService.deleteService(id, loginUser);
         return ResponseEntity.ok(new ApiUtil<>("서비스 삭제가 완료 되었습니다."));
     }
+
+    @GetMapping("/photographer/{photographerId}")
+    public ResponseEntity<?> getServicesByPhotographer(@PathVariable Long photographerId) {
+        List<PhotoServiceResponse.PhotoServiceListDTO> services =
+                photoService.getServicesByPhotographer(photographerId);
+        return ResponseEntity.ok(new ApiUtil<>(services));
+    }
+
 }
