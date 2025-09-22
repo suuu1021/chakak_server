@@ -24,7 +24,7 @@ public class FileUploadUtil {
     @Value("${file.upload.path:/uploads/portfolios}")
     private String uploadPath;
 
-    @Value("${file.upload.base-url:http://localhost:8080}")
+    @Value("${file.upload.base-url:http://10.0.2.2}")
     private String baseUrl;
 
     /**
