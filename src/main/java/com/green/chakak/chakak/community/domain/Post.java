@@ -1,6 +1,7 @@
 package com.green.chakak.chakak.community.domain;
 
 import com.green.chakak.chakak.account.domain.User;
+import com.green.chakak.chakak.account.domain.UserType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,7 +26,6 @@ public class Post {
     @Column(name = "post_id")
     private Long postId;
 
-    // 작성자 (User와 다대일 관계 - 한 명의 유저가 여러 글을 작성할 수 있음)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -36,20 +36,19 @@ public class Post {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    // 조회수
+    @Lob
+    @Column(name = "image_url", columnDefinition = "LONGTEXT")
+    private String imageUrl;
+
     @Column(name = "view_count", nullable = false)
     private Integer viewCount = 0;
 
-    // 좋아요 수 (성능을 위한 비정규화)
     @Column(name = "like_count", nullable = false)
     private Integer likeCount = 0;
 
-    // 댓글 수 (성능을 위한 비정규화)
     @Column(name = "reply_count", nullable = false)
     private Integer replyCount = 0;
 
-
-    // 게시글 상태 (ACTIVE: 활성, INACTIVE: 비활성, DELETED: 삭제)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private PostStatus status = PostStatus.ACTIVE;
@@ -63,66 +62,73 @@ public class Post {
     private Timestamp updatedAt;
 
     public enum PostStatus {
-        ACTIVE,     // 활성
-        INACTIVE,   // 비활성
-        DELETED     // 삭제
+        ACTIVE,
+        INACTIVE,
+        DELETED
     }
 
-    // 댓글 목록 (일대다 관계)
+    public enum PostCategory {
+        COMMUNITY,
+        NOTICE
+    }
+
     @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Reply> replies = new ArrayList<>();
 
-    // 좋아요 목록 (일대다 관계)
     @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Like> likes = new ArrayList<>();
 
     @Builder
-    public Post(User user, String title, String content, PostStatus status) {
+    public Post(User user, String title, String content, String imageUrl, PostStatus status) {
         this.user = user;
         this.title = title;
         this.content = content;
+        this.imageUrl = imageUrl;
         this.status = status != null ? status : PostStatus.ACTIVE;
         this.viewCount = 0;
         this.likeCount = 0;
+        this.replyCount = 0;
         this.replies = new ArrayList<>();
         this.likes = new ArrayList<>();
     }
 
-    // 비즈니스 메서드들
+    public PostCategory getCategory() {
+        return this.user.getUserType().getTypeCode().equals("admin")
+                ? PostCategory.NOTICE
+                : PostCategory.COMMUNITY;
+    }
 
-    // 조회수 증가
     public void increaseViewCount() {
         this.viewCount++;
     }
 
-    // 게시글 수정
-    public void updatePost(String title, String content) {
+    public void updatePost(String title, String content, String imageData) {
         if (title != null && !title.trim().isEmpty()) {
             this.title = title;
         }
         if (content != null && !content.trim().isEmpty()) {
             this.content = content;
         }
+        // 이미지 데이터도 업데이트 (null이면 기존 이미지 유지)
+        if (imageUrl != null) {
+            this.imageUrl = imageData;
+        }
     }
 
-    // 좋아요 수 증가
     public void increaseLikeCount() {
         this.likeCount++;
     }
 
-    // 좋아요 수 감소
     public void decreaseLikeCount() {
         if (this.likeCount > 0) {
             this.likeCount--;
         }
     }
 
-    // 댓글 수 증가
     public void increaseReplyCount() {
         this.replyCount++;
     }
 
-    // 댓글 수 감소
     public void decreaseReplyCount() {
         if (this.replyCount > 0) {
             this.replyCount--;
@@ -147,5 +153,15 @@ public class Post {
     // 활성 상태인지 확인
     public boolean isActive() {
         return this.status == PostStatus.ACTIVE;
+    }
+
+    // 관리자 표시 여부
+    public boolean isAdminPost() {
+        return "admin".equals(this.user.getUserType().getTypeCode());
+    }
+
+    // 이미지가 있는지 확인
+    public boolean hasImage() {
+        return this.imageUrl != null && !this.imageUrl.trim().isEmpty();
     }
 }

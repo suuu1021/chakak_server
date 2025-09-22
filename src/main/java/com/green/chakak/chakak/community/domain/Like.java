@@ -25,12 +25,10 @@ public class Like {
     @Column(name = "like_id")
     private Long likeId;
 
-    // 어떤 게시글에 좋아요를 눌렀는지 (Post와 다대일 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
-    // 좋아요를 누른 사용자 (User와 다대일 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -45,9 +43,6 @@ public class Like {
         this.user = user;
     }
 
-    // 비즈니스 메서드들
-
-    // 좋아요를 누른 사용자인지 확인
     public boolean isOwner(Long userId) {
         return this.user.getUserId().equals(userId);
     }

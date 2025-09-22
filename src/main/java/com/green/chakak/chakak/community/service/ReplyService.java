@@ -25,9 +25,7 @@ public class ReplyService {
     private final PostJpaRepository postRepository;
     private final UserJpaRepository userJpaRepository;
 
-    /**
-     * 댓글 작성
-     */
+
     @Transactional
     public ReplyResponse.CreateDTO createReply(Long postId, ReplyRequest.CreateDTO request, LoginUser loginUser) {
         if (loginUser == null) {
@@ -44,14 +42,11 @@ public class ReplyService {
         reply.setContent(reply.getContent().trim());
         Reply savedReply = replyRepository.save(reply);
 
-        // 게시글의 댓글 수 증가
 
         return new ReplyResponse.CreateDTO(savedReply);
     }
 
-    /**
-     * 특정 게시글의 댓글 목록 조회 (로그인 필요)
-     */
+
     @Transactional(readOnly = true)
     public List<PostResponse.ReplyDTO> getRepliesByPost(Long postId, LoginUser loginUser) {
         if (loginUser == null) {
@@ -68,9 +63,7 @@ public class ReplyService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 댓글 수정 (작성자만 가능)
-     */
+
     @Transactional
     public ReplyResponse.UpdateDTO updateReply(Long replyId, ReplyRequest.UpdateDTO request, LoginUser loginUser) {
         Reply reply = checkOwnership(replyId, loginUser);
@@ -78,9 +71,7 @@ public class ReplyService {
         return new ReplyResponse.UpdateDTO(reply);
     }
 
-    /**
-     * 댓글 삭제 (소프트 삭제, 작성자만 가능)
-     */
+
     @Transactional
     public void deleteReply(Long replyId, LoginUser loginUser) {
         Reply reply = checkOwnership(replyId, loginUser);
@@ -88,9 +79,7 @@ public class ReplyService {
         reply.deleteReply();
     }
 
-    /**
-     * 사용자별 댓글 조회
-     */
+
     @Transactional(readOnly = true)
     public List<PostResponse.ReplyDTO> getUserReplies(Long userId, LoginUser loginUser) {
         User user = userJpaRepository.findById(userId)
@@ -103,7 +92,7 @@ public class ReplyService {
                 .collect(Collectors.toList());
     }
 
-    //해당 사용자의 전체 댓글 조회
+
 
     @Transactional(readOnly = true)
     public List<PostResponse.ReplyDTO> getUserALLReplies(Long userId, LoginUser loginUser) {
@@ -119,9 +108,7 @@ public class ReplyService {
 
 
 
-    /**
-     * 내가 작성한 댓글 목록 조회
-     */
+
     @Transactional(readOnly = true)
     public List<PostResponse.ReplyDTO> getMyReplies(LoginUser loginUser) {
         if (loginUser == null) {
@@ -130,11 +117,7 @@ public class ReplyService {
         return getUserReplies(loginUser.getId(), loginUser);
     }
 
-    // === 내부 메서드 ===
 
-    /**
-     * 댓글 소유권 확인 (수정/삭제 시 사용)
-     */
     private Reply checkOwnership(Long replyId, LoginUser loginUser) {
         if (loginUser == null) {
             throw new Exception403("로그인이 필요합니다.");

@@ -20,19 +20,14 @@ public class PostController {
 
     private final PostService postService;
 
-    /**
-     * 커뮤니티 글 작성
-     * POST /api/post
-     */
+    // 게시글 작성 (Base64 이미지 포함)
     @PostMapping
     public ResponseEntity<?> createPost(
             @Valid @RequestBody PostRequest.CreateDTO request,
             BindingResult bindingResult,
             @RequestAttribute LoginUser loginUser) {
 
-
         if (bindingResult.hasErrors()) {
-            // 검증 실패 → 에러 메시지 확인
             return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
         }
 
@@ -40,10 +35,6 @@ public class PostController {
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
-    /**
-     * 커뮤니티 글 목록 조회 (비회원도 접근 가능)
-     * GET /api/post
-     */
     @GetMapping("/list")
     public ResponseEntity<?> getPostList(
             @RequestParam(defaultValue = "0") Integer page,
@@ -64,10 +55,6 @@ public class PostController {
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
-    /**
-     * 커뮤니티 글 상세 조회 (로그인 필요)
-     * GET /api/post/{postId}
-     */
     @GetMapping("/{postId}")
     public ResponseEntity<?> getPostDetail(
             @PathVariable Long postId,
@@ -77,10 +64,7 @@ public class PostController {
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
-    /**
-     * 커뮤니티 글 수정 (작성자만 가능)
-     * PUT /api/post/{postId}
-     */
+    // 게시글 수정 (Base64 이미지 포함)
     @PutMapping("/{postId}")
     public ResponseEntity<?> updatePost(
             @PathVariable Long postId,
@@ -89,17 +73,13 @@ public class PostController {
             LoginUser loginUser) {
 
         if (bindingResult.hasErrors()) {
-            // 검증 실패 → 에러 메시지 확인
             return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
         }
+
         PostResponse.UpdateDTO response = postService.updatePost(postId, request, loginUser);
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
-    /**
-     * 커뮤니티 글 삭제 (작성자만 가능)
-     * DELETE /api/post/{postId}
-     */
     @DeleteMapping("/{postId}")
     public ResponseEntity<?> deletePost(
             @PathVariable Long postId,
@@ -109,10 +89,6 @@ public class PostController {
         return ResponseEntity.ok(new ApiUtil<>("삭제 처리되었습니다."));
     }
 
-    /**
-     * 인기 게시글 조회 (조회수 기준 상위 N개)
-     * GET /api/post/popular
-     */
     @GetMapping("/popular")
     public ResponseEntity<?> getPopularPosts(
             @RequestParam(defaultValue = "5") int limit,
@@ -122,10 +98,6 @@ public class PostController {
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
-    /**
-     * 특정 사용자의 게시글 목록 조회
-     * GET /api/post/user/{userId}
-     */
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getUserPosts(@PathVariable Long userId, LoginUser loginUser) {
 
@@ -133,14 +105,10 @@ public class PostController {
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
-    /**
-     * 내가 작성한 게시글 목록 조회 (로그인 필요)
-     * GET /api/post/my-posts
-     */
     @GetMapping("/my-posts")
-    public ResponseEntity<?> getMyPosts(Long userId, @RequestAttribute LoginUser loginUser) {
+    public ResponseEntity<?> getMyPosts(@RequestAttribute LoginUser loginUser) {
 
-
+        Long userId = loginUser.getId();
         List<PostResponse.ListDTO> response = postService.getUserPosts(userId, loginUser);
         return ResponseEntity.ok(new ApiUtil<>(response));
     }

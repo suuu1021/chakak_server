@@ -9,7 +9,7 @@ import java.util.List;
 
 public class ReplyResponse {
 
-    // 댓글 작성 응답 DTO
+
     @Data
     public static class CreateDTO {
         private Long replyId;
@@ -38,7 +38,7 @@ public class ReplyResponse {
         }
     }
 
-    // 댓글 수정 응답 DTO
+
     @Data
     public static class UpdateDTO {
         private Long replyId;

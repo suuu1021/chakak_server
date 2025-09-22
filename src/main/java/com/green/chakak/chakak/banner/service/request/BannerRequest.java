@@ -23,9 +23,9 @@ public class BannerRequest {
         private String title;
         private String subtitle;
 
-        @NotBlank(message = "이미지 URL을 입력해주세요")
+        @NotBlank(message = "이미지를 입력해주세요")
         @JsonProperty("image_url")
-        private String imageUrl; // base64 또는 URL 형태로 받음
+        private String imageData;
 
         @NotBlank(message = "링크 URL을 입력해주세요")
         @JsonProperty("link_url")
@@ -46,7 +46,7 @@ public class BannerRequest {
             return Banner.builder()
                     .title(this.title)
                     .subtitle(this.subtitle)
-                    .imageUrl(this.imageUrl)
+                    .imageUrl(this.imageData)
                     .linkUrl(this.linkUrl)
                     .displayOrder(this.displayOrder)
                     .expiresAt(expiresAt)
@@ -58,7 +58,6 @@ public class BannerRequest {
 
 
 
-    // 배너 목록 조회용 간단한 DTO (관리자용)
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -83,8 +82,7 @@ public class BannerRequest {
         @JsonProperty("expires_at")
         private String expiresAt;
 
-        // 이미지는 용량 때문에 목록에서는 제외
-        private boolean hasImage; // 이미지 존재 여부만 표시
+        private boolean hasImage;
     }
 
 
@@ -98,9 +96,9 @@ public class BannerRequest {
         private String title;
         private String subtitle;
 
-        @NotBlank(message = "이미지 URL을 입력해주세요")
+        @NotBlank(message = "이미지를 입력해주세요")
         @JsonProperty("image_url")
-        private String imageUrl;
+        private String imageData;
 
         @JsonProperty("link_url")
         private String linkUrl;
@@ -121,7 +119,7 @@ public class BannerRequest {
             return Banner.builder()
                     .title(this.title)
                     .subtitle(this.subtitle)
-                    .imageUrl(this.imageUrl)
+                    .imageUrl(this.imageData)
                     .linkUrl(this.linkUrl)
                     .isActive(this.isActive)
                     .displayOrder(this.displayOrder)

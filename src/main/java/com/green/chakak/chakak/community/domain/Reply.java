@@ -23,12 +23,10 @@ public class Reply {
     @Column(name = "reply_id")
     private Long replyId;
 
-    // 어떤 게시글의 댓글인지 (Post와 다대일 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
-    // 댓글 작성자 (User와 다대일 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -36,7 +34,6 @@ public class Reply {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    // 댓글 상태 (ACTIVE: 활성, DELETED: 삭제)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ReplyStatus status = ReplyStatus.ACTIVE;
@@ -50,8 +47,8 @@ public class Reply {
     private Timestamp updatedAt;
 
     public enum ReplyStatus {
-        ACTIVE,   // 활성
-        DELETED   // 삭제
+        ACTIVE,
+        DELETED
     }
 
     @Builder
@@ -62,31 +59,28 @@ public class Reply {
         this.status = status != null ? status : ReplyStatus.ACTIVE;
     }
 
-    // 비즈니스 메서드들
 
-    // 댓글 수정
     public void updateContent(String content) {
         if (content != null && !content.trim().isEmpty()) {
             this.content = content;
         }
     }
 
-    // 댓글 삭제 (소프트 삭제)
+
     public void deleteReply() {
         this.status = ReplyStatus.DELETED;
     }
 
-    // 댓글 활성화
+
     public void activateReply() {
         this.status = ReplyStatus.ACTIVE;
     }
 
-    // 작성자인지 확인
+
     public boolean isOwner(Long userId) {
         return this.user.getUserId().equals(userId);
     }
 
-    // 활성 상태인지 확인
     public boolean isActive() {
         return this.status == ReplyStatus.ACTIVE;
     }

@@ -68,4 +68,9 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
             "WHERE p.status = 'ACTIVE' AND p.createdAt >= :startDate AND p.createdAt <= :endDate")
     List<Post> findActiveByCreatedAtBetweenWithUser(@Param("startDate") java.sql.Timestamp startDate,
                                                     @Param("endDate") java.sql.Timestamp endDate);
+
+
+
+
+
 }

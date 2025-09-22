@@ -23,10 +23,7 @@ public class BannerController {
 
     private final BannerService bannerService;
 
-    /**
-     * 활성화된 배너 목록 조회 (Flutter 앱용)
-     * GET /api/banners/active
-     */
+
     @GetMapping("/active")
     public ResponseEntity<?> getActiveBanners(@RequestAttribute(value = Define.LOGIN_ADMIN, required = false) LoginAdmin loginAdmin) {
 
@@ -41,10 +38,7 @@ public class BannerController {
         return ResponseEntity.ok(new ApiUtil<>(banners));
     }
 
-    /**
-     * 전체 배너 목록 조회 (관리자용)
-     * GET /api/banners/list
-     */
+
     @GetMapping("/list")
     public ResponseEntity<?> getBannerList(@RequestParam(required = false) String keyword,
                                            @RequestParam(defaultValue = "0") int page,
@@ -62,10 +56,7 @@ public class BannerController {
         return ResponseEntity.ok(new ApiUtil<>(banners));
     }
 
-    /**
-     * 배너 상세 조회
-     * GET /api/banners/detail/{id}
-     */
+
     @GetMapping("/detail/{id}")
     public ResponseEntity<?> getBannerDetail(@PathVariable Long id,
                                              @RequestAttribute(value = Define.LOGIN_ADMIN, required = false) LoginAdmin loginAdmin) {
@@ -81,9 +72,7 @@ public class BannerController {
         return ResponseEntity.ok(new ApiUtil<>(banner));
     }
 
-    /**
-     * 배너 생성
-     */
+
     @PostMapping("")
     public ResponseEntity<?> createBanner(@Valid @RequestBody BannerRequest.CreateDTO createDTO,
                                           Errors errors,
@@ -100,10 +89,7 @@ public class BannerController {
         return ResponseEntity.ok(new ApiUtil<>("배너 생성이 완료되었습니다."));
     }
 
-    /**
-     * 배너 수정
-     * PATCH /api/banners/{id}
-     */
+
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateBanner(@PathVariable Long id,
                                           @Valid @RequestBody BannerRequest.UpdateDTO updateDTO,
@@ -121,10 +107,7 @@ public class BannerController {
         return ResponseEntity.ok(new ApiUtil<>("배너 수정이 완료되었습니다."));
     }
 
-    /**
-     * 배너 삭제
-     * DELETE /api/banners/{id}
-     */
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiUtil<String>> deleteBanner(@PathVariable Long id,
                                                         @RequestAttribute(value = Define.LOGIN_ADMIN, required = false) LoginAdmin loginAdmin) {
@@ -142,10 +125,7 @@ public class BannerController {
         return ResponseEntity.ok(new ApiUtil<>("배너 삭제가 완료되었습니다."));
     }
 
-    /**
-     * 배너 활성화/비활성화 토글
-     * PATCH /api/banners/{id}/toggle
-     */
+
     @PatchMapping("/{id}/toggle")
     public ResponseEntity<?> toggleBannerStatus(@PathVariable Long id,
                                                 @RequestAttribute(value = Define.LOGIN_ADMIN, required = false) LoginAdmin loginAdmin) {
@@ -161,10 +141,7 @@ public class BannerController {
         return ResponseEntity.ok(new ApiUtil<>(updatedBanner));
     }
 
-    /**
-     * 배너 표시 순서 변경
-     * PATCH /api/banners/{id}/order
-     */
+
     @PatchMapping("/{id}/order")
     public ResponseEntity<?> updateDisplayOrder(@PathVariable Long id,
                                                 @RequestParam Integer order,

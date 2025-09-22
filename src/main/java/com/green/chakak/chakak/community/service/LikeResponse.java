@@ -9,13 +9,13 @@ import java.sql.Timestamp;
 
 public class LikeResponse {
 
-    // 좋아요 토글 응답 DTO
+
     @Data
     public static class ToggleDTO {
         private Long postId;
-        private boolean isLiked; // true: 좋아요 추가됨, false: 좋아요 취소됨
-        private Integer likeCount; // 해당 게시글의 총 좋아요 수
-        private String message; // 사용자에게 보여줄 메시지
+        private boolean isLiked;
+        private Integer likeCount;
+        private String message;
 
         public ToggleDTO(Long postId, boolean isLiked, Integer likeCount) {
             this.postId = postId;
@@ -25,12 +25,12 @@ public class LikeResponse {
         }
     }
 
-    // 좋아요 상태 확인 응답 DTO
+
     @Data
     public static class StatusDTO {
         private Long postId;
-        private boolean isLiked; // 현재 사용자가 좋아요를 눌렀는지
-        private Integer likeCount; // 해당 게시글의 총 좋아요 수
+        private boolean isLiked;
+        private Integer likeCount;
 
         public StatusDTO(Long postId, boolean isLiked, Integer likeCount) {
             this.postId = postId;
@@ -39,7 +39,7 @@ public class LikeResponse {
         }
     }
 
-    // 사용자가 좋아요 누른 게시글 목록 DTO
+
     @Data
     public static class UserLikeDTO {
         private Long likeId;

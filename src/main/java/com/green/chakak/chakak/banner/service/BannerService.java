@@ -1,7 +1,9 @@
 package com.green.chakak.chakak.banner.service;
 
+import com.green.chakak.chakak._global.errors.exception.Exception400;
 import com.green.chakak.chakak._global.errors.exception.Exception404;
 import com.green.chakak.chakak._global.errors.exception.Exception500;
+import com.green.chakak.chakak._global.utils.FileUploadUtil;
 import com.green.chakak.chakak.banner.domain.Banner;
 import com.green.chakak.chakak.banner.service.repository.BannerRepository;
 import com.green.chakak.chakak.banner.service.request.BannerRequest;
@@ -26,10 +28,9 @@ import java.util.List;
 public class BannerService {
 
     private final BannerRepository bannerRepository;
+    private final FileUploadUtil fileUploadUtil;
 
-    /**
-     * 활성화된 배너 목록 조회 (Flutter 앱용)
-     */
+
     public List<BannerResponse.BannerListDTO> getActiveBanners() {
         LocalDateTime now = LocalDateTime.now();
         List<Banner> banners = bannerRepository.findActiveAndNotExpiredBanners(now);
@@ -42,9 +43,7 @@ public class BannerService {
         return bannerList;
     }
 
-    /**
-     * 전체 배너 목록 조회 (관리자용 - 페이징)
-     */
+
     public List<BannerResponse.BannerListDTO> getBannerList(int page, int size, String keyword) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("displayOrder").ascending().and(Sort.by("createdAt").descending()));
         Page<Banner> bannerPage;
@@ -63,9 +62,7 @@ public class BannerService {
         return bannerList;
     }
 
-    /**
-     * 배너 상세 조회
-     */
+
     public BannerResponse.BannerDetailDTO getBannerDetail(Long id) {
         Banner banner = bannerRepository.findByBannerId(id)
                 .orElseThrow(() -> new Exception404("해당 배너가 존재하지 않습니다."));
@@ -77,40 +74,58 @@ public class BannerService {
         return dto;
     }
 
-    /**
-     * 배너 생성
-     */
+
     @Transactional
     public void saveBanner(BannerRequest.CreateDTO createDTO) {
-        log.info("배너 생성 요청: {}", createDTO);
+        try {
 
-        // displayOrder가 없으면 마지막 순서로 설정
-        if (createDTO.getDisplayOrder() == null) {
-            Integer maxOrder = bannerRepository.findMaxDisplayOrder();
-            createDTO.setDisplayOrder(maxOrder + 1);
+            log.info("배너 생성 요청: {}", createDTO);
+
+            validateCreate(createDTO);
+
+            String imageUrl = null;
+            imageUrl = fileUploadUtil.saveBase64ImageWithType(createDTO.getImageData(), "Image", "banner");
+
+            log.debug("이미지 등록 완료: {} ", imageUrl);
+
+            if (createDTO.getDisplayOrder() == null) {
+                Integer maxOrder = bannerRepository.findMaxDisplayOrder();
+                createDTO.setDisplayOrder(maxOrder + 1);
+            }
+
+            Banner banner = createDTO.CreateDtoToEntity();
+            banner.setImageUrl(imageUrl);
+            Banner savedBanner = bannerRepository.save(banner);
+
+            log.info("배너 생성 완료. ID: {}", savedBanner.getBannerId());
+
+        } catch (Exception400 | Exception404 e) {
+            throw e;
+        }  catch (Exception e) {
+            log.error("배너 생성 중 서버 오류 발생", e);
+            throw new Exception500("배너 생성 중 서버 오류가 발생했습니다");
         }
 
-        Banner banner = createDTO.CreateDtoToEntity();
-        Banner savedBanner = bannerRepository.save(banner);
-
-        if (savedBanner.getBannerId() == null) {
-            throw new Exception500("배너 생성이 처리되지 않았습니다.");
-        }
-
-        log.info("배너 생성 완료. ID: {}", savedBanner.getBannerId());
     }
 
-    /**
-     * 배너 수정
-     */
+
     @Transactional
     public void updateBanner(Long id, BannerRequest.UpdateDTO updateDTO) {
         log.info("배너 수정 요청. ID: {}, 데이터: {}", id, updateDTO);
 
+
         Banner banner = bannerRepository.findByBannerId(id)
                 .orElseThrow(() -> new Exception404("해당 배너가 존재하지 않습니다."));
 
-        // TODO: 권한 체크 로직 추가 (관리자만 수정 가능)
+        if (updateDTO.getImageData() != null && !updateDTO.getImageData().isBlank()) {
+
+            if (banner.getImageUrl() != null && !banner.getImageUrl().isBlank()) {
+                fileUploadUtil.deleteFile(banner.getImageUrl());
+            }
+
+            String imageUrl = fileUploadUtil.saveBase64ImageWithType(updateDTO.getImageData(), "Image", "banner");
+            banner.setImageUrl(imageUrl);
+        }
 
         banner.updateFromDto(updateDTO);
         Banner updatedBanner = bannerRepository.save(banner);
@@ -118,9 +133,7 @@ public class BannerService {
         log.info("배너 수정 완료. ID: {}", updatedBanner.getBannerId());
     }
 
-    /**
-     * 배너 삭제
-     */
+
     @Transactional
     public void deleteBanner(Long id) {
         log.info("배너 삭제 요청. ID: {}", id);
@@ -128,30 +141,12 @@ public class BannerService {
         Banner banner = bannerRepository.findByBannerId(id)
                 .orElseThrow(() -> new Exception404("해당 배너가 존재하지 않습니다."));
 
-        // TODO: 권한 체크 로직 추가 (관리자만 삭제 가능)
 
         bannerRepository.deleteById(id);
 
         log.info("배너 삭제 완료. ID: {}", id);
     }
 
-    /**
-     * 배너 활성화/비활성화 토글
-     */
-//    @Transactional
-//    public BannerResponse.BannerDetailDTO toggleBannerStatus(Long id) {
-//        log.info("배너 상태 변경 요청. ID: {}", id);
-//
-//        Banner banner = bannerRepository.findByBannerId(id)
-//                .orElseThrow(() -> new Exception404("해당 배너가 존재하지 않습니다."));
-//
-//        banner.toggleActive();
-//        Banner updatedBanner = bannerRepository.save(banner);
-//
-//        log.info("배너 상태 변경 완료. ID: {}, 새 상태: {}", id, updatedBanner.getIsActive());
-//
-//        return new BannerResponse.BannerDetailDTO(updatedBanner);
-//    }
 
     @Transactional
     public BannerResponse.BannerDetailDTO toggleBannerStatus(Long id) {
@@ -160,21 +155,16 @@ public class BannerService {
         Banner banner = bannerRepository.findByBannerId(id)
                 .orElseThrow(() -> new Exception404("해당 배너가 존재하지 않습니다."));
 
-        // 토글 전 상태 확인
         log.info("현재 상태 (토글 전): {}", banner.isActive());
 
         banner.toggleActive();
 
-        // 토글 후 상태 확인
         log.info("변경된 상태 (토글 후): {}", banner.isActive());
 
-        // save() 없이 바로 DTO 변환
+
         return new BannerResponse.BannerDetailDTO(banner);
     }
 
-    /**
-     * 만료된 배너들 자동 비활성화 (스케줄러용)
-     */
     @Transactional
     public int deactivateExpiredBanners() {
         LocalDateTime now = LocalDateTime.now();
@@ -197,9 +187,6 @@ public class BannerService {
         return deactivatedCount;
     }
 
-    /**
-     * 배너 표시 순서 변경
-     */
     @Transactional
     public void updateDisplayOrder(Long id, Integer newOrder) {
         Banner banner = bannerRepository.findByBannerId(id)
@@ -210,6 +197,12 @@ public class BannerService {
         bannerRepository.save(banner);
 
         log.info("배너 표시 순서 변경. ID: {}, {} -> {}", id, oldOrder, newOrder);
+    }
+
+    private void validateCreate(BannerRequest.CreateDTO createDTO) {
+        if (createDTO == null) {
+            throw new Exception400("배너 생성 요청 데이터가 없습니다");
+        }
     }
 
 

@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 
 public class PostRequest {
 
-    // 커뮤니티 글 작성 요청 DTO
     @Data
     @NoArgsConstructor
     public static class CreateDTO {
@@ -25,31 +24,37 @@ public class PostRequest {
         @Size(max = 1500, message = "내용은 1500자를 초과할 수 없습니다")
         private String content;
 
-        // DTO를 Entity로 변환하는 메서드
+        // Base64 인코딩된 이미지 데이터 (선택사항)
+        private String imageData;
+
         public Post toEntity(User user) {
             return Post.builder()
                     .user(user)
                     .title(this.title)
                     .content(this.content)
+                    .imageUrl(this.imageData)
                     .status(Post.PostStatus.ACTIVE)
                     .build();
         }
     }
 
-    // 커뮤니티 글 수정 요청 DTO
     @Data
     @NoArgsConstructor
     public static class UpdateDTO {
 
         @NoSensitiveInfo
-        @NotBlank(message = "내용은 필수 입력사항입니다")
+        @NotBlank(message = "제목은 필수 입력사항입니다")
         @Size(max = 50, message = "제목은 50자를 초과할 수 없습니다")
         private String title;
 
         @NoSensitiveInfo
-        @NotBlank
+        @NotBlank(message = "내용은 필수 입력사항입니다")
         @Size(min = 10, max = 1500, message = "내용은 최소 10자, 최대 1500자 작성가능합니다")
         private String content;
+
+        // Base64 인코딩된 이미지 데이터 (선택사항)
+        // null이면 기존 이미지 유지, 빈 문자열이면 이미지 삭제
+        private String imageData;
     }
 
     // 커뮤니티 글 목록 조회 요청 DTO (페이징, 검색 등)

@@ -85,7 +85,7 @@ public class Banner {
     public void updateFromDto(BannerRequest.UpdateDTO dto) {
         if (dto.getTitle() != null) this.title = dto.getTitle();
         if (dto.getSubtitle() != null) this.subtitle = dto.getSubtitle();
-        if (dto.getImageUrl() != null) this.imageUrl = dto.getImageUrl();
+        if (dto.getImageData() != null) this.imageUrl = dto.getImageData();
         if (dto.getLinkUrl() != null) this.linkUrl = dto.getLinkUrl();
         if (dto.getIsActive() != null) this.isActive = dto.getIsActive();
         if (dto.getDisplayOrder() != null) this.displayOrder = dto.getDisplayOrder();

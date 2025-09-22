@@ -28,48 +28,38 @@ public class PostService {
     private final UserJpaRepository userJpaRepository;
     private final LikeJpaRepository likeJpaRepository;
 
-    /**
-     * 커뮤니티 글 작성
-     * - 로그인된 사용자만 작성 가능
-     */
     @Transactional
     public PostResponse.CreateDTO createPost(PostRequest.CreateDTO request, LoginUser loginUser) {
-        // 1. 로그인 확인
+
         if (loginUser == null) {
             throw new Exception403("로그인 후 글을 작성할 수 있습니다.");
         }
 
-        // 2. 사용자 정보 조회
         User user = userJpaRepository.findById(loginUser.getId())
                 .orElseThrow(() -> new Exception404("사용자 정보를 찾을 수 없습니다."));
 
-        // 3. 게시글 생성 및 저장
+        // Base64 이미지 데이터 유효성 검사 (선택사항)
+        validateImageData(request.getImageData());
+
         Post post = request.toEntity(user);
         Post savedPost = postRepository.save(post);
 
         return new PostResponse.CreateDTO(savedPost);
     }
 
-    /**
-     * 커뮤니티 글 목록 조회 (비회원도 가능)
-     * - 페이징, 검색, 정렬 기능 포함
-     */
     @Transactional(readOnly = true)
     public PostResponse.PageDTO getPostList(PostRequest.ListDTO request, LoginUser loginUser) {
-        // 1. 페이징 및 정렬 설정
+
         Sort sort = createSort(request.getSortBy());
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sort);
 
-        // 2. 조건에 따른 데이터 조회
         Page<Post> postPage = getPostsByCondition(request, pageable);
 
         Long currentUserId = loginUser != null ? loginUser.getId() : null;
 
-        // 3. DTO 변환
         List<PostResponse.ListDTO> content = postPage.getContent().stream()
                 .map(post -> new PostResponse.ListDTO(post, currentUserId, likeJpaRepository))
                 .collect(Collectors.toList());
-
 
         return new PostResponse.PageDTO(
                 content,
@@ -82,23 +72,16 @@ public class PostService {
         );
     }
 
-    /**
-     * 커뮤니티 글 상세 조회
-     * - 로그인된 사용자만 상세 내용 조회 가능
-     * - 조회 시 조회수 증가
-     */
     @Transactional
     public PostResponse.DetailDTO getPostDetail(Long postId, LoginUser loginUser) {
-        // 1. 로그인 확인
+
         if (loginUser == null) {
             throw new Exception403("로그인 후 게시글을 확인할 수 있습니다.");
         }
 
-        // 2. 게시글 조회 (조인 패치 적용)
         Post post = postRepository.findActiveByIdWithUser(postId)
                 .orElseThrow(() -> new Exception404("게시글을 찾을 수 없습니다."));
 
-        // 3. 조회수 증가 (작성자 본인은 제외)
         if (!post.isOwner(loginUser.getId())) {
             post.increaseViewCount();
         }
@@ -108,36 +91,30 @@ public class PostService {
         return new PostResponse.DetailDTO(post, currentUserId, likeJpaRepository);
     }
 
-    /**
-     * 커뮤니티 글 수정
-     * - 작성자만 수정 가능
-     */
     @Transactional
     public PostResponse.UpdateDTO updatePost(Long postId, PostRequest.UpdateDTO request, LoginUser loginUser) {
-        // 1. 로그인 및 권한 확인
+
         Post post = checkOwnership(postId, loginUser);
 
-        // 2. 게시글 수정
-        post.updatePost(request.getTitle(), request.getContent());
+        // Base64 이미지 데이터 유효성 검사 (선택사항)
+        validateImageData(request.getImageData());
+
+        // 이미지 데이터 처리 로직
+        String imageDataToUpdate = processImageDataForUpdate(request.getImageData(), post.getImageUrl());
+
+        post.updatePost(request.getTitle(), request.getContent(), imageDataToUpdate);
 
         return new PostResponse.UpdateDTO(post);
     }
 
-    /**
-     * 커뮤니티 글 삭제 (하드 삭제)
-     * - 작성자만 삭제 가능
-     */
     @Transactional
     public void deletePost(Long postId, LoginUser loginUser) {
-        // 1. 로그인 및 권한 확인
+
         Post post = checkOwnership(postId, loginUser);
 
         postRepository.delete(post);
     }
 
-    /**
-     * 인기 게시글 조회 (조회수 기준)
-     */
     @Transactional(readOnly = true)
     public List<PostResponse.ListDTO> getPopularPosts(int limit, LoginUser loginUser) {
 
@@ -150,12 +127,8 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 사용자별 게시글 조회
-     */
     @Transactional(readOnly = true)
     public List<PostResponse.ListDTO> getUserPosts(Long userId, LoginUser loginUser) {
-
 
         User user = userJpaRepository.findById(userId)
                 .orElseThrow(() -> new Exception404("해당 사용자를 찾을 수 없습니다."));
@@ -169,11 +142,54 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
-    // === 내부 메서드들 ===
+    // Base64 이미지 데이터 유효성 검사
+    private void validateImageData(String imageData) {
+        if (imageData == null || imageData.trim().isEmpty()) {
+            return; // 이미지가 없는 경우는 허용
+        }
 
-    /**
-     * 정렬 조건 생성
-     */
+        // Base64 데이터 형식 확인
+        if (!imageData.startsWith("data:image/")) {
+            throw new IllegalArgumentException("올바른 이미지 데이터 형식이 아닙니다.");
+        }
+
+        // 이미지 크기 제한 (예: 5MB - Base64는 원본보다 약 33% 큼)
+        // Base64 문자열 길이로 대략적인 크기 계산: (길이 * 3/4) / 1024 / 1024 MB
+        double approximateSizeMB = (imageData.length() * 0.75) / (1024 * 1024);
+        if (approximateSizeMB > 5) {
+            throw new IllegalArgumentException("이미지 크기는 5MB 이하여야 합니다.");
+        }
+
+        // 허용되는 이미지 타입 확인
+        String[] allowedTypes = {"data:image/jpeg", "data:image/jpg", "data:image/png", "data:image/gif", "data:image/webp"};
+        boolean isValidType = false;
+        for (String type : allowedTypes) {
+            if (imageData.startsWith(type)) {
+                isValidType = true;
+                break;
+            }
+        }
+        if (!isValidType) {
+            throw new IllegalArgumentException("지원되지 않는 이미지 형식입니다. (jpeg, jpg, png, gif, webp만 허용)");
+        }
+    }
+
+    // 이미지 데이터 업데이트 처리
+    private String processImageDataForUpdate(String newImageData, String currentImageData) {
+        // null인 경우: 기존 이미지 유지
+        if (newImageData == null) {
+            return currentImageData;
+        }
+
+        // 빈 문자열인 경우: 이미지 삭제
+        if (newImageData.trim().isEmpty()) {
+            return null;
+        }
+
+        // 새로운 이미지 데이터가 있는 경우: 교체
+        return newImageData;
+    }
+
     private Sort createSort(String sortBy) {
         if ("VIEWS".equalsIgnoreCase(sortBy)) {
             return Sort.by(Sort.Direction.DESC, "viewCount")
@@ -183,36 +199,26 @@ public class PostService {
         return Sort.by(Sort.Direction.DESC, "createdAt");
     }
 
-    /**
-     * 조건에 따른 게시글 조회
-     */
     private Page<Post> getPostsByCondition(PostRequest.ListDTO request, Pageable pageable) {
         String keyword = request.getKeyword();
         String userType = request.getUserType();
 
-        // 키워드와 사용자 타입 모두 있는 경우
         if (keyword != null && !keyword.trim().isEmpty() &&
                 userType != null && !userType.trim().isEmpty()) {
             return postRepository.findActiveByKeywordAndUserTypeWithUser(keyword, userType, pageable);
         }
 
-        // 키워드만 있는 경우
         if (keyword != null && !keyword.trim().isEmpty()) {
             return postRepository.findActiveByKeywordWithUser(keyword, pageable);
         }
 
-        // 사용자 타입만 있는 경우
         if (userType != null && !userType.trim().isEmpty()) {
             return postRepository.findActiveByUserTypeWithUser(userType, pageable);
         }
 
-        // 조건이 없는 경우
         return postRepository.findAllActiveWithUser(pageable);
     }
 
-    /**
-     * 게시글 소유권 확인
-     */
     private Post checkOwnership(Long postId, LoginUser loginUser) {
         if (loginUser == null) {
             throw new Exception403("로그인이 필요합니다.");

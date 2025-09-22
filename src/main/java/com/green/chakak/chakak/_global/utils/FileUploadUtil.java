@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,24 +20,27 @@ import java.util.UUID;
 @Slf4j
 public class FileUploadUtil {
 
-    @Value("${file.upload.path:/uploads/portfolios}")
-    private String uploadPath;
+    @Value("${file.upload.base-path:/uploads}")  // 기본 업로드 경로
+    private String basePath;
 
     @Value("${file.upload.base-url:http://10.0.2.2}")
     private String baseUrl;
 
     /**
-     * Base64 이미지를 파일로 저장하고 URL 반환
+     * 기존 포트폴리오용 메서드 (호환성 유지)
      */
     public String saveBase64Image(String base64Data, String originalFileName) {
+        return saveBase64ImageWithType(base64Data, originalFileName, Define.PORTFOLIOS);
+    }
+
+    /**
+     * 타입별 Base64 이미지 저장 (새로운 범용 메서드)
+     */
+    public String saveBase64ImageWithType(String base64Data, String originalFileName, String uploadType) {
         try {
-            log.info("=== Base64 이미지 저장 시작 ===");
+            log.info("=== {} 이미지 저장 시작 ===", uploadType);
             log.info("originalFileName: {}", originalFileName);
             log.info("base64Data 길이: {}", base64Data != null ? base64Data.length() : "null");
-            log.info("base64Data 시작 100자: {}",
-                    base64Data != null && base64Data.length() > 100
-                            ? base64Data.substring(0, 100)
-                            : base64Data);
 
             // Base64 데이터 검증 및 파싱
             String[] parts = parseBase64Data(base64Data);
@@ -46,19 +48,18 @@ public class FileUploadUtil {
             String base64Content = parts[1];
 
             log.info("파싱된 MIME 타입: {}", mimeType);
-            log.info("파싱된 Base64 내용 길이: {}", base64Content.length());
 
             // 파일 확장자 결정
             String extension = getExtensionFromMimeType(mimeType);
             log.info("결정된 확장자: {}", extension);
 
-            // 고유한 파일명 생성
-            String fileName = generateUniqueFileName(originalFileName, extension);
+            // 고유한 파일명 생성 (타입별로 다른 접두사)
+            String fileName = generateUniqueFileName(originalFileName, extension, uploadType);
             log.info("생성된 파일명: {}", fileName);
 
-            // 디렉토리 생성
+            // 디렉토리 생성 (타입별 폴더 분리)
             String datePath = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-            Path directoryPath = Paths.get(uploadPath, datePath);
+            Path directoryPath = Paths.get(basePath, uploadType, datePath);
             log.info("디렉토리 경로: {}", directoryPath.toAbsolutePath());
 
             createDirectoryIfNotExists(directoryPath);
@@ -73,15 +74,15 @@ public class FileUploadUtil {
 
             saveFile(filePath, decodedBytes);
 
-            // URL 생성 및 반환
-            String fileUrl = String.format("%s/uploads/portfolios/%s/%s",
-                    baseUrl, datePath, fileName);
+            // URL 생성 및 반환 (타입별 URL)
+            String fileUrl = String.format("%s/uploads/%s/%s/%s",
+                    baseUrl, uploadType, datePath, fileName);
 
-            log.info("=== 이미지 저장 완료: {} ===", fileUrl);
+            log.info("=== {} 이미지 저장 완료: {} ===", uploadType, fileUrl);
             return fileUrl;
 
         } catch (Exception e) {
-            log.error("=== Base64 이미지 저장 실패 ===");
+            log.error("=== {} 이미지 저장 실패 ===", uploadType);
             log.error("에러 메시지: {}", e.getMessage());
             log.error("에러 스택:", e);
             throw new Exception500("이미지 저장 중 오류가 발생했습니다: " + e.getMessage());
@@ -96,7 +97,6 @@ public class FileUploadUtil {
             throw new Exception400("Base64 데이터가 비어있습니다");
         }
 
-        // 로그로 데이터 형태 확인
         log.info("받은 Base64 데이터 시작 200자: {}",
                 base64Data.length() > 200 ? base64Data.substring(0, 200) + "..." : base64Data);
 
@@ -114,8 +114,6 @@ public class FileUploadUtil {
             base64Content = base64Data.substring(commaIndex + 1);
 
             log.info("헤더 부분: {}", header);
-            log.info("Base64 콘텐츠 시작 100자: {}",
-                    base64Content.length() > 100 ? base64Content.substring(0, 100) + "..." : base64Content);
 
             // MIME 타입 추출 (data:image/jpeg;base64 -> image/jpeg)
             if (header.contains(":") && header.contains(";")) {
@@ -139,21 +137,19 @@ public class FileUploadUtil {
         base64Content = base64Content.replaceAll("\\s+", "");
         log.info("정리된 Base64 데이터 길이: {}", base64Content.length());
 
-        // Base64 데이터 유효성 검증 - 더 관대하게 수정
+        // Base64 데이터 유효성 검증
         try {
             // 패딩 추가 (필요한 경우)
             while (base64Content.length() % 4 != 0) {
                 base64Content += "=";
             }
 
-            // 실제 디코딩 테스트 (더 관대한 방식)
+            // 실제 디코딩 테스트
             Base64.getDecoder().decode(base64Content);
             log.info("Base64 디코딩 테스트 성공");
 
         } catch (IllegalArgumentException e) {
             log.error("Base64 디코딩 실패: {}", e.getMessage());
-            log.error("문제가 된 Base64 데이터 일부: {}",
-                    base64Content.length() > 50 ? base64Content.substring(0, 50) : base64Content);
             throw new Exception400("유효하지 않은 Base64 데이터입니다: " + e.getMessage());
         } catch (Exception e) {
             log.error("예상치 못한 Base64 처리 오류: {}", e.getMessage());
@@ -184,18 +180,39 @@ public class FileUploadUtil {
     }
 
     /**
-     * 고유한 파일명 생성
+     * 고유한 파일명 생성 (타입별 접두사 적용)
      */
-    private String generateUniqueFileName(String originalFileName, String extension) {
+    private String generateUniqueFileName(String originalFileName, String extension, String uploadType) {
         String uuid = UUID.randomUUID().toString().replace("-", "");
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+
+        // 타입별 접두사 설정
+        String prefix = getFilePrefix(uploadType);
 
         if (originalFileName != null && !originalFileName.trim().isEmpty()) {
             // 원본 파일명에서 확장자 제거
             String nameWithoutExt = originalFileName.replaceAll("\\.[^.]*$", "");
-            return String.format("%s_%s_%s.%s", nameWithoutExt, timestamp, uuid.substring(0, 8), extension);
+            return String.format("%s_%s_%s_%s.%s", prefix, nameWithoutExt, timestamp, uuid.substring(0, 8), extension);
         } else {
-            return String.format("portfolio_%s_%s.%s", timestamp, uuid.substring(0, 8), extension);
+            return String.format("%s_%s_%s.%s", prefix, timestamp, uuid.substring(0, 8), extension);
+        }
+    }
+
+    /**
+     * 업로드 타입별 파일명 접두사 반환
+     */
+    private String getFilePrefix(String uploadType) {
+        switch (uploadType.toLowerCase()) {
+            case "portfolios":
+                return "portfolio";
+            case "banner":
+                return "banner";
+            case "community":
+                return "community";
+            case "profile":
+                return "profile";
+            default:
+                return "file";
         }
     }
 
@@ -220,7 +237,7 @@ public class FileUploadUtil {
     }
 
     /**
-     * 파일 삭제
+     * 파일 삭제 (개선된 버전 - 모든 타입 지원)
      */
     public boolean deleteFile(String fileUrl) {
         try {
@@ -230,7 +247,8 @@ public class FileUploadUtil {
                 relativePath = relativePath.substring(1);
             }
 
-            Path filePath = Paths.get(uploadPath).getParent().resolve(relativePath);
+            // 루트 경로에서 상대 경로 조합
+            Path filePath = Paths.get(relativePath);
 
             if (Files.exists(filePath)) {
                 Files.delete(filePath);

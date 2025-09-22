@@ -21,10 +21,7 @@ public class ReplyController {
 
     private final ReplyService replyService;
 
-    /**
-     * 댓글 작성
-     * POST /api/posts/{postId}/replies
-     */
+
     @PostMapping("/{postId}/replies")
     public ResponseEntity<?> createReply(
             @PathVariable Long postId,
@@ -41,10 +38,6 @@ public class ReplyController {
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
-    /**
-     * 특정 게시글의 댓글 목록 조회 (로그인 필요)
-     * GET /api/posts/{postId}/replies
-     */
     @GetMapping("/{postId}/replies")
     public ResponseEntity<?> getRepliesByPost(
             @PathVariable Long postId,
@@ -54,10 +47,6 @@ public class ReplyController {
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
-    /**
-     * 댓글 수정 (작성자만 가능)
-     * PUT /api/replies/{replyId}
-     */
     @PutMapping("/replies/{replyId}")
     public ResponseEntity<?> updateReply(
             @PathVariable Long replyId,
@@ -73,10 +62,7 @@ public class ReplyController {
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
-    /**
-     * 댓글 삭제 (작성자만 가능)
-     * DELETE /api/replies/{replyId}
-     */
+
     @DeleteMapping("/replies/{replyId}")
     public ResponseEntity<?> deleteReply(
             @PathVariable Long replyId,
@@ -86,10 +72,7 @@ public class ReplyController {
         return ResponseEntity.ok(new ApiUtil<>("댓글이 삭제되었습니다."));
     }
 
-    /**
-     * 특정 사용자의 댓글 목록 조회
-     * GET /api/replies/user/{userId}
-     */
+
     @GetMapping("/replies/user/{userId}")
     public ResponseEntity<?> getUserReplies(
             @PathVariable Long userId,
@@ -99,10 +82,7 @@ public class ReplyController {
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 
-    /**
-     * 특정 사용자의 모든댓글 목록 조회
-     * GET /api/replies/user/{userId}
-     */
+
     @GetMapping("/replies/user/{userId}/all")
     public ResponseEntity<?> getUserAllReplies(
             @PathVariable Long userId,
@@ -113,13 +93,6 @@ public class ReplyController {
     }
 
 
-
-
-
-    /**
-     * 내가 작성한 댓글 목록 조회 (로그인 필요)
-     * GET /api/replies/my-replies
-     */
     @GetMapping("/replies/my-replies")
     public ResponseEntity<?> getMyReplies(@RequestAttribute LoginUser loginUser) {
 

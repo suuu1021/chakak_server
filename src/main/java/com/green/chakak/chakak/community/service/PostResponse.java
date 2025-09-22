@@ -5,16 +5,12 @@ import com.green.chakak.chakak.community.domain.Reply;
 import com.green.chakak.chakak.community.repository.LikeJpaRepository;
 import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-
 
 public class PostResponse {
-
 
     // 커뮤니티 글 작성 응답 DTO
     @Data
@@ -22,6 +18,7 @@ public class PostResponse {
         private Long postId;
         private String title;
         private String content;
+        private String imageData; // Base64 이미지 데이터
         private String authorNickname;
         private String authorType;
         private Timestamp createdAt;
@@ -30,7 +27,7 @@ public class PostResponse {
             this.postId = post.getPostId();
             this.title = post.getTitle();
             this.content = post.getContent();
-            // UserProfile이 있으면 닉네임, 없으면 이메일의 @ 앞부분 사용
+            this.imageData = post.getImageUrl();
             this.authorNickname = getAuthorNickname(post);
             this.authorType = post.getUser().getUserType().getTypeCode();
             this.createdAt = post.getCreatedAt();
@@ -41,18 +38,17 @@ public class PostResponse {
                     post.getUser().getUserProfile().getNickName() != null) {
                 return post.getUser().getUserProfile().getNickName();
             }
-            // 프로필이 없으면 이메일의 @ 앞부분을 닉네임으로 사용
             String email = post.getUser().getEmail();
             return email.substring(0, email.indexOf("@"));
         }
     }
 
-    // 커뮤니티 글 상세 조회 응답 DTO
     @Data
     public static class DetailDTO {
         private Long postId;
         private String title;
         private String content;
+        private String imageData; // Base64 이미지 데이터
         private String authorNickname;
         private String authorType;
         private Integer viewCount;
@@ -62,14 +58,17 @@ public class PostResponse {
         private Timestamp createdAt;
         private Timestamp updatedAt;
         private boolean isLiked;
-        private boolean isOwner; // 현재 로그인 사용자가 작성자인지
+        private boolean isOwner;
+        private boolean hasImage; // 이미지 유무
 
         @Builder
         public DetailDTO(Post post, Long currentUserId, LikeJpaRepository likeJpaRepository) {
             this.postId = post.getPostId();
             this.title = post.getTitle();
             this.content = post.getContent();
-            this.authorNickname = getAuthorNickname();
+            this.imageData = post.getImageUrl();
+            this.hasImage = post.hasImage();
+            this.authorNickname = getAuthorNickname(post);
             this.authorType = post.getUser().getUserType().getTypeCode();
             this.viewCount = post.getViewCount();
             this.likeCount = post.getLikeCount();
@@ -81,12 +80,19 @@ public class PostResponse {
             this.isLiked = currentUserId != null &&
                     likeJpaRepository.existsByPostIdAndUserId(post.getPostId(), currentUserId);
 
-            // 댓글 리스트 초기화
             this.replies = new ArrayList<>();
             for (Reply reply : post.getReplies()) {
-                // 조회용이므로 수정/삭제 권한은 무시
                 this.replies.add(new ReplyDTO(reply, currentUserId));
             }
+        }
+
+        private String getAuthorNickname(Post post) {
+            if (post.getUser().getUserProfile() != null &&
+                    post.getUser().getUserProfile().getNickName() != null) {
+                return post.getUser().getUserProfile().getNickName();
+            }
+            String email = post.getUser().getEmail();
+            return email.substring(0, email.indexOf("@"));
         }
     }
 
@@ -97,7 +103,7 @@ public class PostResponse {
         private String authorNickname;
         private String authorType;
         private Timestamp createdAt;
-        private boolean isOwner; // 현재 로그인 사용자가 작성자인지
+        private boolean isOwner;
 
         @Builder
         public ReplyDTO(Reply reply, Long currentUserId) {
@@ -119,17 +125,6 @@ public class PostResponse {
         }
     }
 
-
-    private String getAuthorNickname(Post post) {
-        if (post.getUser().getUserProfile() != null &&
-                post.getUser().getUserProfile().getNickName() != null) {
-            return post.getUser().getUserProfile().getNickName();
-        }
-        String email = post.getUser().getEmail();
-        return email.substring(0, email.indexOf("@"));
-    }
-
-    // 커뮤니티 글 목록 조회 응답 DTO
     @Data
     public static class ListDTO {
         private Long postId;
@@ -138,6 +133,8 @@ public class PostResponse {
         private String authorType;
         private Integer viewCount;
         private Integer likeCount;
+        private boolean hasImage; // 이미지 유무 (썸네일 표시용)
+        private String thumbnailData; // 썸네일용 Base64 데이터 (필요시)
         private Timestamp createdAt;
         private boolean isLiked;
 
@@ -148,11 +145,13 @@ public class PostResponse {
             this.authorType = post.getUser().getUserType().getTypeCode();
             this.viewCount = post.getViewCount();
             this.likeCount = post.getLikeCount();
+            this.hasImage = post.hasImage();
+            // 목록에서는 전체 이미지 데이터는 너무 크므로 hasImage만 표시
+            // 필요하면 thumbnailData에 작은 크기의 썸네일 데이터를 넣을 수 있음
             this.createdAt = post.getCreatedAt();
 
             this.isLiked = currentUserId != null &&
                     likeRepository.existsByPostIdAndUserId(post.getPostId(), currentUserId);
-
         }
 
         private String getAuthorNickname(Post post) {
@@ -165,25 +164,25 @@ public class PostResponse {
         }
     }
 
-    // 댓글 목록 조회 응답 DTO
-
-    // 커뮤니티 글 수정 응답 DTO
     @Data
     public static class UpdateDTO {
         private Long postId;
         private String title;
         private String content;
+        private String imageData; // Base64 이미지 데이터
+        private boolean hasImage; // 이미지 유무
         private Timestamp updatedAt;
 
         public UpdateDTO(Post post) {
             this.postId = post.getPostId();
             this.title = post.getTitle();
             this.content = post.getContent();
+            this.imageData = post.getImageUrl();
+            this.hasImage = post.hasImage();
             this.updatedAt = post.getUpdatedAt();
         }
     }
 
-    // 페이지네이션을 포함한 목록 응답 DTO
     @Data
     public static class PageDTO {
         private List<ListDTO> content;
