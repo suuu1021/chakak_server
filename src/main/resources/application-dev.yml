@@ -31,6 +31,7 @@ kakao:
 file:
   upload:
     path: ./uploads/portfolios  # 상대 경로로 변경 (프로젝트 루트 기준)
+    chat-path: ./uploads/chat  # 채팅 전용 경로 추가
     base-url: http://10.0.2.2:8080  # 서버 URL (배포 시 실제 도메인으로 변경)
 
 spring:

@@ -41,6 +41,13 @@ public class ChatMessage {
     @Column(columnDefinition = "TEXT")
     private String message;
 
+    // ChatMessage 엔티티에 필드 추가
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "image_original_name")
+    private String imageOriginalName;
+
     @Column(name = "payment_amount")
     private Integer paymentAmount;
 
@@ -60,6 +67,8 @@ public class ChatMessage {
     }
 
     public enum MessageType {
-        TEXT, PAYMENT_REQUEST
+        TEXT, PAYMENT_REQUEST, IMAGE
     }
+
+
 }

@@ -3,6 +3,7 @@ package com.green.chakak.chakak.chat.service;
 import com.green.chakak.chakak._global.errors.exception.Exception400;
 import com.green.chakak.chakak._global.errors.exception.Exception403;
 import com.green.chakak.chakak._global.errors.exception.Exception404;
+import com.green.chakak.chakak._global.utils.ChatFileUploadUtil;
 import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.account.domain.User;
 import com.green.chakak.chakak.account.domain.UserProfile;
@@ -37,6 +38,8 @@ public class ChatService {
     private final UserProfileJpaRepository userProfileJpaRepository;
     private final PhotographerRepository photographerRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ChatFileUploadUtil chatFileUploadUtil; // 새로 추가
+
 
     public ChatRoom findOrCreateRoom(ChatRoomRequestDto requestDto, LoginUser loginUser) {
         UserProfile userProfile;
@@ -45,8 +48,8 @@ public class ChatService {
         String role = loginUser.getUserTypeName();
 
         if ("user".equalsIgnoreCase(role)) {
-            userProfile = userProfileJpaRepository.findByUserId(loginUser.getId())
-                    .orElseThrow(() -> new Exception404("로그인한 유저의 프로필을 찾을 수 없습니다. ID: " + loginUser.getId()));
+            userProfile = userProfileJpaRepository.findByUserId(requestDto.getUserProfileId())
+                    .orElseThrow(() -> new Exception404("로그인한 유저의 프로필을 찾을 수 없습니다. ID: " + requestDto.getUserProfileId()));
 
             if (requestDto.getPhotographerProfileId() == null) {
                 throw new Exception400("상대방(사진작가)의 프로필 ID가 필요합니다.");
@@ -55,8 +58,8 @@ public class ChatService {
                     .orElseThrow(() -> new Exception404("해당 사진작가 프로필을 찾을 수 없습니다: " + requestDto.getPhotographerProfileId()));
 
         } else if ("photographer".equalsIgnoreCase(role)) {
-            photographerProfile = photographerRepository.findByUser_UserId(loginUser.getId())
-                    .orElseThrow(() -> new Exception404("로그인한 작가의 프로필을 찾을 수 없습니다. ID: " + loginUser.getId()));
+            photographerProfile = photographerRepository.findByUser_UserId(requestDto.getPhotographerProfileId())
+                    .orElseThrow(() -> new Exception404("로그인한 작가의 프로필을 찾을 수 없습니다. ID: " + requestDto.getPhotographerProfileId()));
 
             if (requestDto.getUserProfileId() == null) {
                 throw new Exception400("상대방(유저)의 프로필 ID가 필요합니다.");
@@ -84,6 +87,34 @@ public class ChatService {
                 .orElseThrow(() -> new Exception404("채팅방을 찾을 수 없습니다: " + messageDto.getChatRoomId()));
 
         ChatMessage chatMessage = messageDto.toEntity(chatRoom);
+
+        // 이미지 메시지인 경우 파일 저장 처리
+        if (messageDto.getMessageType() == ChatMessage.MessageType.IMAGE &&
+                messageDto.getImageBase64() != null && !messageDto.getImageBase64().trim().isEmpty()) {
+
+            log.info("Processing image message...");
+            String imageUrl = chatFileUploadUtil.saveChatImage(
+                    messageDto.getImageBase64(),
+                    messageDto.getImageOriginalName()
+            );
+
+            // ChatMessage에 이미지 URL 설정
+            chatMessage = ChatMessage.builder()
+                    .chatRoom(chatRoom)
+                    .senderType(messageDto.getSenderType())
+                    .senderId(messageDto.getSenderId())
+                    .messageType(messageDto.getMessageType())
+                    .message(messageDto.getMessage())
+                    .paymentAmount(messageDto.getPaymentAmount())
+                    .paymentOrderId(messageDto.getPaymentOrderId())
+                    .imageUrl(imageUrl)
+                    .imageOriginalName(messageDto.getImageOriginalName())
+                    .isRead(false)
+                    .build();
+
+            log.info("Image saved and URL set: {}", imageUrl);
+        }
+
         ChatMessage savedMessage = chatMessageRepository.save(chatMessage);
 
         ChatMessageResponseDto responseDto = ChatMessageResponseDto.from(savedMessage);

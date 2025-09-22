@@ -20,8 +20,12 @@ public class ChatMessageResponseDto {
     private final String paymentOrderId;
     private final String createdAt;
 
+    // 이미지 관련 새 필드들
+    private final String imageUrl;
+    private final String imageOriginalName;
+
     @Builder
-    private ChatMessageResponseDto(Long chatMessageId, Long chatRoomId, ChatMessage.SenderType senderType, Long senderId, ChatMessage.MessageType messageType, String message, Integer paymentAmount, String paymentOrderId, String createdAt) {
+    private ChatMessageResponseDto(Long chatMessageId, Long chatRoomId, ChatMessage.SenderType senderType, Long senderId, ChatMessage.MessageType messageType, String message, Integer paymentAmount, String paymentOrderId, String createdAt, String imageUrl, String imageOriginalName) {
         this.chatMessageId = chatMessageId;
         this.chatRoomId = chatRoomId;
         this.senderType = senderType;
@@ -31,6 +35,10 @@ public class ChatMessageResponseDto {
         this.paymentAmount = paymentAmount;
         this.paymentOrderId = paymentOrderId;
         this.createdAt = createdAt;
+
+        // 새 필드들
+        this.imageUrl = imageUrl;
+        this.imageOriginalName = imageOriginalName;
     }
 
     // chatmessage -> dto 변환
@@ -44,6 +52,8 @@ public class ChatMessageResponseDto {
                 .message(entity.getMessage())
                 .paymentAmount(entity.getPaymentAmount())
                 .paymentOrderId(entity.getPaymentOrderId())
+                .imageUrl(entity.getImageUrl())
+                .imageOriginalName(entity.getImageOriginalName())
                 .createdAt(entity.getCreatedAt().toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
                 .build();
     }
