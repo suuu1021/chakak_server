@@ -19,15 +19,17 @@ public class PhotoServiceResponse {
         private String title;
         private String description;
         private String imageData;
-        private int price; // 가격 옵션 중 제일 낮은 가격대 설정
+        private int price;
         private Timestamp createdAt;
         private Timestamp updatedAt;
 
         private List<PriceInfoResponse.PriceInfoListDTO> priceInfoList;
         private List<PhotoCategoryResponse.PhotoCategoryListDTO> categoryList;
 
-        private Long photographerId;        // 필수: 포토그래퍼 ID
-        private String businessName;        // 권장: 포토그래퍼 상호명
+        private Long photographerId;
+        private String businessName;
+        private List<String> portfolioImages;
+
 
         @Builder
         public PhotoServiceListDTO(PhotoServiceInfo photoServiceInfo) {
@@ -41,12 +43,13 @@ public class PhotoServiceResponse {
 
             PhotographerProfile profile = photoServiceInfo.getPhotographerProfile();
             if (profile != null) {
-                this.photographerId = profile.getPhotographerProfileId(); // 또는 적절한 ID 필드
+                this.photographerId = profile.getPhotographerProfileId();
                 this.businessName = profile.getBusinessName();
             }
 
             this.priceInfoList = new ArrayList<>();
             this.categoryList = new ArrayList<>();
+            this.portfolioImages = new ArrayList<>();
         }
 
         // 가격 정보와 카테고리 정보를 설정하는 메서드들
@@ -57,6 +60,10 @@ public class PhotoServiceResponse {
         public void setCategoryList(List<PhotoCategoryResponse.PhotoCategoryListDTO> categoryList) {
             this.categoryList = categoryList != null ? categoryList : new ArrayList<>();
         }
+        public void setPortfolioImages(List<String> portfolioImages) {
+            this.portfolioImages = portfolioImages != null ? portfolioImages : new ArrayList<>();
+        }
+
     } // END OF INNER CLASS
 
     @Data
@@ -74,6 +81,8 @@ public class PhotoServiceResponse {
         private String introduction; // 소개글
         private String location; // 활동 지역
         private Integer experienceYears; // 경력 연수
+        private List<String> portfolioImages; // 포트폴리오 이미지 목록 추가
+
 
         private boolean canEdit;
 
@@ -90,8 +99,13 @@ public class PhotoServiceResponse {
             this.introduction = photoServiceInfo.getPhotographerProfile().getIntroduction();
             this.location = photoServiceInfo.getPhotographerProfile().getLocation();
             this.experienceYears = photoServiceInfo.getPhotographerProfile().getExperienceYears();
+            this.portfolioImages = new ArrayList<>(); // 초기화 추가
+
 
             this.canEdit = false;
+        }
+        public void setPortfolioImages(List<String> portfolioImages) {
+            this.portfolioImages = portfolioImages != null ? portfolioImages : new ArrayList<>();
         }
     } // END OF INNER CLASS
 }
