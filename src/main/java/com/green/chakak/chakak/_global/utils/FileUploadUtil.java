@@ -237,29 +237,72 @@ public class FileUploadUtil {
     }
 
     /**
-     * 파일 삭제 (개선된 버전 - 모든 타입 지원)
+     * 파일 삭제 (디버깅 강화 버전)
      */
     public boolean deleteFile(String fileUrl) {
         try {
+            log.info("=== 파일 삭제 시작 ===");
+            log.info("삭제할 파일 URL: {}", fileUrl);
+
+            if (fileUrl == null || fileUrl.trim().isEmpty()) {
+                log.warn("파일 URL이 비어있음");
+                return false;
+            }
+
             // URL에서 파일 경로 추출
             String relativePath = fileUrl.replace(baseUrl, "");
             if (relativePath.startsWith("/")) {
                 relativePath = relativePath.substring(1);
             }
 
-            // 루트 경로에서 상대 경로 조합
-            Path filePath = Paths.get(relativePath);
+            log.info("baseUrl: {}", baseUrl);
+            log.info("basePath: {}", basePath);
+            log.info("추출된 상대 경로: {}", relativePath);
 
+            // 절대 경로 생성 - basePath 사용
+            Path filePath = Paths.get(basePath).getParent().resolve(relativePath);
+            log.info("계산된 절대 경로 (방법1): {}", filePath.toAbsolutePath());
+
+            // 대안 경로 - basePath에서 직접 시작
+            Path alternativePath = Paths.get(".", relativePath);
+            log.info("계산된 절대 경로 (방법2): {}", alternativePath.toAbsolutePath());
+
+            // 파일 존재 확인 (두 경로 모두 시도)
+            Path targetPath = null;
             if (Files.exists(filePath)) {
-                Files.delete(filePath);
-                log.info("파일 삭제 완료: {}", filePath);
-                return true;
+                targetPath = filePath;
+                log.info("파일 존재 확인됨 (방법1)");
+            } else if (Files.exists(alternativePath)) {
+                targetPath = alternativePath;
+                log.info("파일 존재 확인됨 (방법2)");
             } else {
-                log.warn("삭제할 파일이 존재하지 않음: {}", filePath);
+                log.warn("삭제할 파일이 존재하지 않음");
+                log.info("시도한 경로1: {}", filePath.toAbsolutePath());
+                log.info("시도한 경로2: {}", alternativePath.toAbsolutePath());
+
+                // basePath 기준으로 한 번 더 시도
+                Path basedPath = Paths.get(basePath, relativePath.replace("uploads/", ""));
+                log.info("basePath 기준 경로: {} - 존재: {}", basedPath.toAbsolutePath(), Files.exists(basedPath));
+
                 return false;
             }
+
+            // 파일 권한 확인
+            if (Files.isWritable(targetPath)) {
+                log.info("파일 쓰기 권한 확인됨");
+            } else {
+                log.warn("파일 쓰기 권한 없음");
+            }
+
+            // 파일 삭제 실행
+            Files.delete(targetPath);
+            log.info("파일 삭제 성공: {}", targetPath.toAbsolutePath());
+            return true;
+
         } catch (Exception e) {
-            log.error("파일 삭제 실패: {}", e.getMessage(), e);
+            log.error("=== 파일 삭제 실패 ===");
+            log.error("에러 메시지: {}", e.getMessage());
+            log.error("스택 트레이스:", e);
             return false;
         }
     }

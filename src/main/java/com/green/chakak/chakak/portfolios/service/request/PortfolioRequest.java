@@ -55,7 +55,6 @@ public class PortfolioRequest {
 		@Size(max = 2000, message = "설명은 2000자 이내여야 합니다")
 		private String description;
 
-		@Size(max = 512, message = "썸네일 데이터 크기 제한을 초과했습니다")
 		private String thumbnailUrl; // Base64 인코딩된 썸네일 이미지 데이터
 
 		// 카테고리 ID 목록 (수정 시 기존 매핑 삭제 후 새로 등록)
