@@ -3,6 +3,7 @@ package com.green.chakak.chakak.banner.service;
 import com.green.chakak.chakak._global.errors.exception.Exception400;
 import com.green.chakak.chakak._global.errors.exception.Exception404;
 import com.green.chakak.chakak._global.errors.exception.Exception500;
+import com.green.chakak.chakak._global.utils.Define;
 import com.green.chakak.chakak._global.utils.FileUploadUtil;
 import com.green.chakak.chakak.banner.domain.Banner;
 import com.green.chakak.chakak.banner.service.repository.BannerRepository;
@@ -84,7 +85,7 @@ public class BannerService {
             validateCreate(createDTO);
 
             String imageUrl = null;
-            imageUrl = fileUploadUtil.saveBase64ImageWithType(createDTO.getImageData(), "Image", "banner");
+            imageUrl = fileUploadUtil.saveBase64ImageWithType(createDTO.getImageData(), "Image", Define.BANNER);
 
             log.debug("이미지 등록 완료: {} ", imageUrl);
 
