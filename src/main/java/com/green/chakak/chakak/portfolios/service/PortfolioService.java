@@ -26,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -240,25 +241,30 @@ public class PortfolioService {
 	}
 
 	/**
-	 * 포트폴리오 이미지들 업데이트 (기존 이미지 삭제 후 새로 등록)
+	 * 포트폴리오 이미지들 업데이트 - 개별 삭제 방식
 	 */
 	private void updatePortfolioImages(Portfolio portfolio, List<PortfolioRequest.AddImageDTO> imageInfoList) {
-		// 기존 이미지 파일들 삭제
+		log.info("포트폴리오 이미지 업데이트 시작: portfolioId = {}", portfolio.getPortfolioId());
+
+		// 1. 기존 이미지들을 개별적으로 삭제
 		List<PortfolioImage> existingImages = portfolioImageRepository.findByPortfolioOrderByCreatedAt(portfolio);
+		log.info("기존 이미지 개수: {}", existingImages.size());
+
 		for (PortfolioImage image : existingImages) {
-			fileUploadUtil.deleteFile(image.getImageUrl());
+			if (image.getImageUrl() != null) {
+				boolean fileDeleted = fileUploadUtil.deleteFile(image.getImageUrl());
+				log.info("이미지 파일 삭제: {} - 결과: {}", image.getImageUrl(), fileDeleted);
+			}
+			portfolioImageRepository.delete(image);
 		}
 
-		// 기존 이미지 레코드 삭제
-		portfolioImageRepository.deleteByPortfolio_PortfolioId(portfolio.getPortfolioId());
-
-		// 새 이미지들 등록
-		if (!imageInfoList.isEmpty()) {
+		// 2. 새 이미지들 등록
+		if (imageInfoList != null && !imageInfoList.isEmpty()) {
+			log.info("새 이미지 등록 시작: {}개", imageInfoList.size());
 			createPortfolioImages(portfolio, imageInfoList);
 		}
 
-		log.info("포트폴리오 이미지 업데이트 완료: portfolioId = {}, 이미지 수 = {}",
-				portfolio.getPortfolioId(), imageInfoList.size());
+		log.info("포트폴리오 이미지 업데이트 완료");
 	}
 
 	/**
@@ -285,7 +291,7 @@ public class PortfolioService {
 	}
 
 	/**
-	 * 포트폴리오 삭제
+	 * 포트폴리오 삭제 - 개별 삭제 방식
 	 */
 	@Transactional
 	public void deletePortfolio(Long portfolioId, LoginUser loginUser) {
@@ -299,27 +305,33 @@ public class PortfolioService {
 					.orElseThrow(() -> new Exception404("존재하지 않는 포트폴리오입니다: " + portfolioId));
 
 			// 권한 체크
-			if (portfolio.getPhotographerProfile() != null &&
-					portfolio.getPhotographerProfile().getUser() != null &&
-					!portfolio.getPhotographerProfile().getUser().getUserId().equals(loginUser.getId())) {
+			if (!portfolio.getPhotographerProfile().getUser().getUserId().equals(loginUser.getId())) {
 				throw new Exception403("포트폴리오 삭제 권한이 없습니다");
 			}
 
-			// 썸네일 파일 삭제
+			// 1. 연관된 데이터들을 개별적으로 삭제
+			// 포트폴리오 맵 삭제
+			List<PortfolioMap> portfolioMaps = portfolioMapRepository.findByPortfolio(portfolio);
+			for (PortfolioMap map : portfolioMaps) {
+				portfolioMapRepository.delete(map);
+			}
+
+			// 포트폴리오 이미지 삭제 (파일과 DB 레코드)
+			List<PortfolioImage> portfolioImages = portfolioImageRepository.findByPortfolioOrderByCreatedAt(portfolio);
+			for (PortfolioImage image : portfolioImages) {
+				if (image.getImageUrl() != null) {
+					fileUploadUtil.deleteFile(image.getImageUrl());
+				}
+				portfolioImageRepository.delete(image);
+			}
+
+			// 2. 썸네일 파일 삭제
 			if (portfolio.getThumbnailUrl() != null) {
 				fileUploadUtil.deleteFile(portfolio.getThumbnailUrl());
 			}
 
-			// 이미지 파일들 삭제
-			List<PortfolioImage> images = portfolioImageRepository.findByPortfolioOrderByCreatedAt(portfolio);
-			for (PortfolioImage image : images) {
-				fileUploadUtil.deleteFile(image.getImageUrl());
-			}
-
-			// DB 레코드 삭제
-			portfolioMapRepository.deleteByPortfolio_PortfolioId(portfolioId);
-			portfolioImageRepository.deleteByPortfolio_PortfolioId(portfolioId);
-			portfolioRepository.deleteById(portfolioId);
+			// 3. 포트폴리오 삭제
+			portfolioRepository.delete(portfolio);
 
 			log.info("포트폴리오 삭제 완료: portfolioId = {}", portfolioId);
 
@@ -327,7 +339,7 @@ public class PortfolioService {
 			throw e;
 		} catch (Exception e) {
 			log.error("포트폴리오 삭제 중 예상치 못한 오류 발생", e);
-			throw new Exception500("포트폴리오 삭제 중 서버 오류가 발생했습니다");
+			throw new Exception500("포트폴리오 삭제 중 서버 오류가 발생했습니다: " + e.getMessage());
 		}
 	}
 
