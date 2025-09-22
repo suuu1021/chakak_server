@@ -2,6 +2,8 @@ package com.green.chakak.chakak.community.service;
 
 import com.green.chakak.chakak._global.errors.exception.Exception403;
 import com.green.chakak.chakak._global.errors.exception.Exception404;
+import com.green.chakak.chakak._global.utils.Define;
+import com.green.chakak.chakak._global.utils.FileUploadUtil;
 import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.account.domain.User;
 import com.green.chakak.chakak.account.service.repository.UserJpaRepository;
@@ -27,9 +29,11 @@ public class PostService {
     private final PostJpaRepository postRepository;
     private final UserJpaRepository userJpaRepository;
     private final LikeJpaRepository likeJpaRepository;
+    private final FileUploadUtil fileUploadUtil;
+
 
     @Transactional
-    public PostResponse.CreateDTO createPost(PostRequest.CreateDTO request, LoginUser loginUser) {
+    public PostResponse.CreateDTO createPost(PostRequest.CreateDTO createDTO, LoginUser loginUser) {
 
         if (loginUser == null) {
             throw new Exception403("로그인 후 글을 작성할 수 있습니다.");
@@ -38,10 +42,20 @@ public class PostService {
         User user = userJpaRepository.findById(loginUser.getId())
                 .orElseThrow(() -> new Exception404("사용자 정보를 찾을 수 없습니다."));
 
-        // Base64 이미지 데이터 유효성 검사 (선택사항)
-        validateImageData(request.getImageData());
+        String imageUrl = null;
 
-        Post post = request.toEntity(user);
+        if (createDTO.getImageData() != null && !createDTO.getImageData().isBlank()) {
+            // Base64 이미지 저장
+            imageUrl = fileUploadUtil.saveBase64ImageWithType(createDTO.getImageData(), "Image", Define.COMMUNITY);
+            validateImageData(createDTO.getImageData());
+        }
+
+
+        Post post = createDTO.toEntity(user);
+        if (imageUrl != null) {
+            post.setImageUrl(imageUrl);
+        }
+
         Post savedPost = postRepository.save(post);
 
         return new PostResponse.CreateDTO(savedPost);
@@ -97,13 +111,14 @@ public class PostService {
         Post post = checkOwnership(postId, loginUser);
 
         // Base64 이미지 데이터 유효성 검사 (선택사항)
+
         validateImageData(request.getImageData());
+
 
         // 이미지 데이터 처리 로직
         String imageDataToUpdate = processImageDataForUpdate(request.getImageData(), post.getImageUrl());
 
         post.updatePost(request.getTitle(), request.getContent(), imageDataToUpdate);
-
         return new PostResponse.UpdateDTO(post);
     }
 
@@ -187,7 +202,7 @@ public class PostService {
         }
 
         // 새로운 이미지 데이터가 있는 경우: 교체
-        return newImageData;
+        return fileUploadUtil.saveBase64ImageWithType(newImageData, "Image", Define.COMMUNITY);
     }
 
     private Sort createSort(String sortBy) {
