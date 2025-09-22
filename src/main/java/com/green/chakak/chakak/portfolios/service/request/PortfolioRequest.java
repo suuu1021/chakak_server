@@ -16,27 +16,22 @@ public class PortfolioRequest {
 	@NoArgsConstructor
 	public static class CreateDTO {
 
-		// photographerId 제거 - LoginUser에서 가져와야 함
-		// @NotNull(message = "사진작가 ID는 필수입니다")
-		// private Long photographerId;
-
 		@NotBlank(message = "포트폴리오 제목은 필수입니다")
 		@Size(max = 255, message = "제목은 255자 이내여야 합니다")
 		private String title;
 
-		@Size(max = 2000, message = "설명은 2000자 이내여야 합니다") // 1000자 → 2000자로 증가
+		@Size(max = 2000, message = "설명은 2000자 이내여야 합니다")
 		private String description;
 
-		@NotBlank(message = "썸네일 URL은 필수입니다")
-		@Size(max = 512, message = "썸네일 URL은 512자 이내여야 합니다")
-		@Pattern(regexp = "^https?://.*\\.(jpg|jpeg|png|gif|webp)$",
-				message = "올바른 이미지 URL 형식이어야 합니다")
-		private String thumbnailUrl;
+		@NotBlank(message = "썸네일 데이터는 필수입니다")
+		private String thumbnailUrl; // Base64 인코딩된 썸네일 이미지 데이터
 
 		// 카테고리 ID 목록 - Long 타입이 맞음
 		@Size(max = 10, message = "카테고리는 최대 10개까지 선택 가능합니다")
 		private List<@NotNull @Positive Long> categoryIds;
 
+		// Base64 이미지 데이터 목록
+		@Size(max = 20, message = "이미지는 최대 20개까지 등록 가능합니다")
 		private List<AddImageDTO> imageInfoList;
 
 		public Portfolio toEntity(PhotographerProfile photographerProfile) {
@@ -60,15 +55,15 @@ public class PortfolioRequest {
 		@Size(max = 2000, message = "설명은 2000자 이내여야 합니다")
 		private String description;
 
-		@Size(max = 512, message = "썸네일 URL은 512자 이내여야 합니다")
-		@Pattern(regexp = "^https?://.*\\.(jpg|jpeg|png|gif|webp)$",
-				message = "올바른 이미지 URL 형식이어야 합니다")
-		private String thumbnailUrl;
+		@Size(max = 512, message = "썸네일 데이터 크기 제한을 초과했습니다")
+		private String thumbnailUrl; // Base64 인코딩된 썸네일 이미지 데이터
 
 		// 카테고리 ID 목록 (수정 시 기존 매핑 삭제 후 새로 등록)
 		@Size(max = 10, message = "카테고리는 최대 10개까지 선택 가능합니다")
 		private List<@NotNull @Positive Long> categoryIds;
 
+		// Base64 이미지 데이터 목록 (수정 시 기존 이미지 삭제 후 새로 등록)
+		@Size(max = 20, message = "이미지는 최대 20개까지 등록 가능합니다")
 		private List<AddImageDTO> imageInfoList;
 	}
 
@@ -81,11 +76,12 @@ public class PortfolioRequest {
 		@Positive(message = "포트폴리오 ID는 양수여야 합니다")
 		private Long portfolioId;
 
-		@NotBlank(message = "이미지 URL은 필수입니다")
-		@Size(max = 512, message = "이미지 URL은 512자 이내여야 합니다")
-		@Pattern(regexp = "^https?://.*\\.(jpg|jpeg|png|gif|webp|crop)$",
-				message = "올바른 이미지 URL 형식이어야 합니다")
-		private String imageUrl;
+		// Base64 이미지 데이터 (data:image/jpeg;base64,/9j/4AAQ... 형태)
+		@NotBlank(message = "이미지 데이터는 필수입니다")
+		private String imageData;
+
+		// 원본 파일명 (선택사항)
+		private String originalFileName;
 
 		private Boolean isMain = false; // 기본값 설정
 	}

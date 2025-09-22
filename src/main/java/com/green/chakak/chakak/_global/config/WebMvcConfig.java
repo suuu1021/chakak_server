@@ -3,10 +3,13 @@ package com.green.chakak.chakak._global.config;
 import com.green.chakak.chakak._global.argument_resolver.LoginUserArgumentResolver;
 import com.green.chakak.chakak._global.interceptor.LoginInterceptor;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
@@ -17,6 +20,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     private final LoginInterceptor loginInterceptor;
     private final LoginUserArgumentResolver loginUserArgumentResolver;
+
+    @Value("${file.upload.path:/uploads/portfolios}")
+    private String uploadPath;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -31,7 +37,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/photographers",                  // GET 전체 목록 (공개)
                         "/api/photographers/location/**",     // 지역별 목록 (공개)
                         "/api/photographers/search",          // 검색 (공개)
-
+                        "/api/photographers/create",
                         "/api/photographer-categories/**",
                         "/api/portfolios",
                         "/api/portfolios/search",
@@ -42,7 +48,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/email/send",
                         "/api/v1/users/profile",
                         "/api/photo/services/list",
-                        "/api/photo/services/detail/{id}",
+                        //"/api/photo/services/detail/{id}",
                         "/api/photo/categories/list",
                         "/api/photo/mappings/list",
                         "/api/photo/mappings/detail/{id}",
@@ -60,17 +66,21 @@ public class WebMvcConfig implements WebMvcConfigurer {
         resolvers.add(loginUserArgumentResolver);
     }
 
-    @Configuration
-    public class WebConfig implements WebMvcConfigurer {
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 업로드된 파일에 접근할 수 있도록 정적 리소스 매핑
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + uploadPath + "/../")
+                .setCachePeriod(3600); // 1시간 캐시
+    }
 
-        @Override
-        public void addCorsMappings(CorsRegistry registry) {
-            registry.addMapping("/**")
-                    .allowedOrigins("*")
-                    .allowedMethods("GET", "POST", "PUT", "DELETE")
-                    .allowedHeaders("Authorization", "Content-Type")
-                    .exposedHeaders("Custom-Header")
-                    .maxAge(3600);
-        }
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("*")
+                .allowedMethods("GET", "POST", "PUT", "DELETE")
+                .allowedHeaders("Authorization", "Content-Type")
+                .exposedHeaders("Custom-Header")
+                .maxAge(3600);
     }
 }

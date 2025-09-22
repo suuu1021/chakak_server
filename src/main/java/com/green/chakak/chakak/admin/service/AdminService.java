@@ -1355,7 +1355,7 @@ public class AdminService {
 
             PortfolioImage image = new PortfolioImage();
             image.setPortfolio(portfolio);
-            image.setImageUrl(request.getImageUrl());
+            image.setImageUrl(request.getImageData());
             image.setIsMain(isMain);
 
             PortfolioImage savedImage = portfolioImageRepository.save(image);
@@ -1507,7 +1507,7 @@ public class AdminService {
             throw new Exception400("이미지 추가 요청 데이터가 없습니다");
         }
         validatePortfolioId(request.getPortfolioId());
-        if (request.getImageUrl() == null || request.getImageUrl().trim().isEmpty()) {
+        if (request.getImageData() == null || request.getImageData().trim().isEmpty()) {
             throw new Exception400("이미지 URL은 필수입니다");
         }
     }

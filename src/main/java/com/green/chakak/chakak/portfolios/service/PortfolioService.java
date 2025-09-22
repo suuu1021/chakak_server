@@ -4,6 +4,7 @@ import com.green.chakak.chakak._global.errors.exception.Exception400;
 import com.green.chakak.chakak._global.errors.exception.Exception403;
 import com.green.chakak.chakak._global.errors.exception.Exception404;
 import com.green.chakak.chakak._global.errors.exception.Exception500;
+import com.green.chakak.chakak._global.utils.FileUploadUtil;
 import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.portfolios.domain.Portfolio;
 import com.green.chakak.chakak.portfolios.domain.PortfolioCategory;
@@ -64,6 +65,7 @@ public class PortfolioService {
 	private final PortfolioCategoryJpaRepository categoryRepository;
 	private final PortfolioMapJpaRepository portfolioMapRepository;
 	private final PortfolioImageJpaRepository portfolioImageRepository;
+	private final FileUploadUtil fileUploadUtil; // Base64 처리용 유틸리티 추가
 
 	// ============ 포트폴리오 CRUD ============
 
@@ -83,7 +85,16 @@ public class PortfolioService {
 			PhotographerProfile photographer = photographerRepository.findByUser_UserId(loginUser.getId())
 					.orElseThrow(() -> new Exception404("사진작가 프로필이 존재하지 않습니다. 사진작가 등록을 먼저 해주세요."));
 
-			Portfolio portfolio = request.toEntity(photographer);
+			// 썸네일 Base64를 파일로 저장
+			String thumbnailUrl = fileUploadUtil.saveBase64Image(request.getThumbnailUrl(), "thumbnail");
+
+			// Portfolio 엔티티 생성 (실제 파일 URL로 설정)
+			Portfolio portfolio = new Portfolio();
+			portfolio.setPhotographerProfile(photographer);
+			portfolio.setTitle(request.getTitle());
+			portfolio.setDescription(request.getDescription());
+			portfolio.setThumbnailUrl(thumbnailUrl); // 변환된 URL 설정
+
 			Portfolio savedPortfolio = portfolioRepository.save(portfolio);
 
 			// 카테고리 매핑 생성
@@ -104,7 +115,7 @@ public class PortfolioService {
 			return PortfolioResponse.DetailDTO.from(finalPortfolio);
 
 		} catch (Exception404 | Exception400 e) {
-			throw e; // 이미 정의된 예외는 그대로 전파
+			throw e;
 		} catch (Exception e) {
 			log.error("포트폴리오 생성 중 예상치 못한 오류 발생", e);
 			throw new Exception500("포트폴리오 생성 중 서버 오류가 발생했습니다");
@@ -119,33 +130,45 @@ public class PortfolioService {
 
 		for (PortfolioRequest.AddImageDTO imageInfo : imageInfoList) {
 			// 입력값 검증
-			if (imageInfo.getImageUrl() == null || imageInfo.getImageUrl().trim().isEmpty()) {
-				log.warn("빈 이미지 URL 건너뜀");
+			if (imageInfo.getImageData() == null || imageInfo.getImageData().trim().isEmpty()) {
+				log.warn("빈 이미지 데이터 건너뜀");
 				continue;
 			}
 
-			// 메인 이미지 중복 체크
-			boolean isMain = imageInfo.getIsMain() != null ? imageInfo.getIsMain() : false;
-			if (isMain && hasMainImage) {
-				log.warn("메인 이미지가 이미 존재하므로 일반 이미지로 설정: {}", imageInfo.getImageUrl());
-				isMain = false;
+			try {
+				// Base64 이미지를 파일로 저장하고 URL 획득
+				String imageUrl = fileUploadUtil.saveBase64Image(
+						imageInfo.getImageData(),
+						imageInfo.getOriginalFileName()
+				);
+
+				// 메인 이미지 중복 체크
+				boolean isMain = imageInfo.getIsMain() != null ? imageInfo.getIsMain() : false;
+				if (isMain && hasMainImage) {
+					log.warn("메인 이미지가 이미 존재하므로 일반 이미지로 설정");
+					isMain = false;
+				}
+
+				PortfolioImage image = new PortfolioImage();
+				image.setPortfolio(portfolio);
+				image.setImageUrl(imageUrl); // 변환된 파일 URL 설정
+				image.setIsMain(isMain);
+
+				portfolioImageRepository.save(image);
+
+				if (isMain) {
+					hasMainImage = true;
+				}
+
+				log.debug("이미지 등록 완료: {} (메인: {})", imageUrl, isMain);
+
+			} catch (Exception e) {
+				log.error("이미지 저장 실패: {}", e.getMessage());
+				// 개별 이미지 실패는 전체 트랜잭션을 롤백하지 않고 건너뜀
 			}
-
-			PortfolioImage image = new PortfolioImage();
-			image.setPortfolio(portfolio);
-			image.setImageUrl(imageInfo.getImageUrl());
-			image.setIsMain(isMain);
-
-			portfolioImageRepository.save(image);
-
-			if (isMain) {
-				hasMainImage = true;
-			}
-
-			log.debug("이미지 등록 완료: {} (메인: {})", imageInfo.getImageUrl(), isMain);
 		}
 
-		log.info("총 {}개 이미지 등록 완료 (메인 이미지 포함: {})", imageInfoList.size(), hasMainImage);
+		log.info("총 {}개 이미지 처리 완료 (메인 이미지 포함: {})", imageInfoList.size(), hasMainImage);
 	}
 
 	/**
@@ -156,7 +179,6 @@ public class PortfolioService {
 		try {
 			log.info("포트폴리오 수정 시작: portfolioId = {}", portfolioId);
 
-			// 입력값 검증
 			validatePortfolioId(portfolioId);
 			validateUpdateRequest(request);
 			validateLoginUser(loginUser);
@@ -164,12 +186,15 @@ public class PortfolioService {
 			Portfolio portfolio = portfolioRepository.findById(portfolioId)
 					.orElseThrow(() -> new Exception404("존재하지 않는 포트폴리오입니다: " + portfolioId));
 
-			// 권한 체크 - 작성자 본인만 수정 가능
+			// 권한 체크
 			if (portfolio.getPhotographerProfile() != null &&
 					portfolio.getPhotographerProfile().getUser() != null &&
 					!portfolio.getPhotographerProfile().getUser().getUserId().equals(loginUser.getId())) {
 				throw new Exception403("포트폴리오 수정 권한이 없습니다");
 			}
+
+			// 기존 썸네일 파일 삭제 (새 썸네일이 있는 경우)
+			String oldThumbnailUrl = portfolio.getThumbnailUrl();
 
 			// 필드 업데이트
 			if (request.getTitle() != null) {
@@ -179,7 +204,14 @@ public class PortfolioService {
 				portfolio.setDescription(request.getDescription());
 			}
 			if (request.getThumbnailUrl() != null) {
-				portfolio.setThumbnailUrl(request.getThumbnailUrl());
+				// 새 썸네일 Base64를 파일로 저장
+				String newThumbnailUrl = fileUploadUtil.saveBase64Image(request.getThumbnailUrl(), "thumbnail");
+				portfolio.setThumbnailUrl(newThumbnailUrl);
+
+				// 기존 썸네일 파일 삭제
+				if (oldThumbnailUrl != null) {
+					fileUploadUtil.deleteFile(oldThumbnailUrl);
+				}
 			}
 
 			// 카테고리 매핑 업데이트
@@ -192,7 +224,7 @@ public class PortfolioService {
 				updatePortfolioImages(portfolio, request.getImageInfoList());
 			}
 
-			// 최종 포트폴리오 조회 (이미지와 카테고리 포함)
+			// 최종 포트폴리오 조회
 			Portfolio finalPortfolio = portfolioRepository.findById(portfolioId)
 					.orElseThrow(() -> new Exception500("수정된 포트폴리오 조회 실패"));
 
@@ -211,10 +243,13 @@ public class PortfolioService {
 	 * 포트폴리오 이미지들 업데이트 (기존 이미지 삭제 후 새로 등록)
 	 */
 	private void updatePortfolioImages(Portfolio portfolio, List<PortfolioRequest.AddImageDTO> imageInfoList) {
+		// 기존 이미지 파일들 삭제
+		List<PortfolioImage> existingImages = portfolioImageRepository.findByPortfolioOrderByCreatedAt(portfolio);
+		for (PortfolioImage image : existingImages) {
+			fileUploadUtil.deleteFile(image.getImageUrl());
+		}
 
-		log.info("portfolioId 값 확인 : {}", portfolio.getPortfolioId());
-
-		// 기존 이미지 모두 삭제
+		// 기존 이미지 레코드 삭제
 		portfolioImageRepository.deleteByPortfolio_PortfolioId(portfolio.getPortfolioId());
 
 		// 새 이미지들 등록
@@ -263,18 +298,29 @@ public class PortfolioService {
 			Portfolio portfolio = portfolioRepository.findById(portfolioId)
 					.orElseThrow(() -> new Exception404("존재하지 않는 포트폴리오입니다: " + portfolioId));
 
-			// 권한 체크 - 작성자 본인만 삭제 가능
+			// 권한 체크
 			if (portfolio.getPhotographerProfile() != null &&
 					portfolio.getPhotographerProfile().getUser() != null &&
 					!portfolio.getPhotographerProfile().getUser().getUserId().equals(loginUser.getId())) {
 				throw new Exception403("포트폴리오 삭제 권한이 없습니다");
 			}
 
-			// 연관된 매핑과 이미지부터 삭제
+			// 썸네일 파일 삭제
+			if (portfolio.getThumbnailUrl() != null) {
+				fileUploadUtil.deleteFile(portfolio.getThumbnailUrl());
+			}
+
+			// 이미지 파일들 삭제
+			List<PortfolioImage> images = portfolioImageRepository.findByPortfolioOrderByCreatedAt(portfolio);
+			for (PortfolioImage image : images) {
+				fileUploadUtil.deleteFile(image.getImageUrl());
+			}
+
+			// DB 레코드 삭제
 			portfolioMapRepository.deleteByPortfolio_PortfolioId(portfolioId);
 			portfolioImageRepository.deleteByPortfolio_PortfolioId(portfolioId);
-
 			portfolioRepository.deleteById(portfolioId);
+
 			log.info("포트폴리오 삭제 완료: portfolioId = {}", portfolioId);
 
 		} catch (Exception403 | Exception404 | Exception400 e) {
@@ -389,7 +435,7 @@ public class PortfolioService {
 
 			PortfolioImage image = new PortfolioImage();
 			image.setPortfolio(portfolio);
-			image.setImageUrl(request.getImageUrl());
+			image.setImageUrl(request.getImageData());
 			image.setIsMain(isMain);
 
 			PortfolioImage savedImage = portfolioImageRepository.save(image);
@@ -520,7 +566,7 @@ public class PortfolioService {
 			throw new Exception400("이미지 추가 요청 데이터가 없습니다");
 		}
 		validatePortfolioId(request.getPortfolioId());
-		if (request.getImageUrl() == null || request.getImageUrl().trim().isEmpty()) {
+		if (request.getImageData() == null || request.getImageData().trim().isEmpty()) {
 			throw new Exception400("이미지 URL은 필수입니다");
 		}
 	}

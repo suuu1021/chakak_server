@@ -27,7 +27,19 @@ kakao:
     token-uri: https://kauth.kakao.com/oauth/token
     user-info-uri: https://kapi.kakao.com/v2/user/me
 
+# 파일 업로드 설정
+file:
+  upload:
+    path: ./uploads/portfolios  # 상대 경로로 변경 (프로젝트 루트 기준)
+    base-url: http://localhost:8080  # 서버 URL (배포 시 실제 도메인으로 변경)
+
 spring:
+  # Spring 파일 업로드 제한 설정
+  servlet:
+    multipart:
+      max-file-size: 50MB  # Base64 이미지는 크기가 클 수 있음
+      max-request-size: 100MB
+
   config:
     import: optional:application-secret.yml
 
