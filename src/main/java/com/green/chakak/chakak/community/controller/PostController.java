@@ -7,12 +7,14 @@ import com.green.chakak.chakak.community.service.PostResponse;
 import com.green.chakak.chakak.community.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/post")
 @RequiredArgsConstructor
@@ -42,7 +44,7 @@ public class PostController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String userType,
             @RequestParam(defaultValue = "LATEST") String sortBy,
-            LoginUser loginUser) {
+            @RequestAttribute(required = false) LoginUser loginUser) {
 
         PostRequest.ListDTO request = new PostRequest.ListDTO();
         request.setPage(page);
@@ -61,6 +63,7 @@ public class PostController {
             @RequestAttribute LoginUser loginUser) {
 
         PostResponse.DetailDTO response = postService.getPostDetail(postId, loginUser);
+        log.error(String.valueOf(response));
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
 

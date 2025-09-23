@@ -20,8 +20,11 @@ public class PhotoServiceResponse {
         private String description;
         private String imageData;
         private int price;
+        private double rating; // 평균 평점
+        private int reviewCount; // 리뷰 수
         private Timestamp createdAt;
         private Timestamp updatedAt;
+        private Long photographerUserId;
 
         private List<PriceInfoResponse.PriceInfoListDTO> priceInfoList;
         private List<PhotoCategoryResponse.PhotoCategoryListDTO> categoryList;
@@ -38,6 +41,8 @@ public class PhotoServiceResponse {
             this.price = 0;
             this.description = photoServiceInfo.getDescription();
             this.imageData = photoServiceInfo.getImageData();
+            this.rating = 0.0;
+            this.reviewCount = 0;
             this.createdAt = photoServiceInfo.getCreatedAt();
             this.updatedAt = photoServiceInfo.getUpdatedAt();
 
@@ -45,11 +50,19 @@ public class PhotoServiceResponse {
             if (profile != null) {
                 this.photographerId = profile.getPhotographerProfileId();
                 this.businessName = profile.getBusinessName();
+
+                if (profile.getUser() != null) {
+                    this.photographerUserId = profile.getUser().getUserId();
+                }
             }
 
             this.priceInfoList = new ArrayList<>();
             this.categoryList = new ArrayList<>();
             this.portfolioImages = new ArrayList<>();
+        }
+
+        public void setPhotographerUserId(Long photographerUserId) {
+            this.photographerUserId = photographerUserId;
         }
 
         // 가격 정보와 카테고리 정보를 설정하는 메서드들
@@ -62,6 +75,14 @@ public class PhotoServiceResponse {
         }
         public void setPortfolioImages(List<String> portfolioImages) {
             this.portfolioImages = portfolioImages != null ? portfolioImages : new ArrayList<>();
+        }
+
+        public void setRating(double rating) {
+            this.rating = rating;
+        }
+
+        public void setReviewCount(int reviewCount) {
+            this.reviewCount = reviewCount;
         }
 
     } // END OF INNER CLASS

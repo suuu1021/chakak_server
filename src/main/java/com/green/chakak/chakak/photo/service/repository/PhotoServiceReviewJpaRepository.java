@@ -4,6 +4,7 @@ import com.green.chakak.chakak.account.domain.User;
 import com.green.chakak.chakak.booking.domain.BookingInfo;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
 import com.green.chakak.chakak.photo.domain.PhotoServiceReview;
+import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,6 +23,9 @@ public interface PhotoServiceReviewJpaRepository extends JpaRepository<PhotoServ
 	// 기존 메서드도 유지 (페이징 없는 버전)
 	List<PhotoServiceReview> findByPhotoServiceInfoOrderByCreatedAtDesc(PhotoServiceInfo photoServiceInfo);
 
+	// 포토 서비스 목록으로 모든 리뷰 조회 (N+1 문제 해결용)
+	List<PhotoServiceReview> findByPhotoServiceInfoIn(List<PhotoServiceInfo> photoServiceInfos);
+
 	// 사용자별 작성 리뷰 조회 - 페이징 처리
 	Page<PhotoServiceReview> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
 
@@ -30,6 +34,9 @@ public interface PhotoServiceReviewJpaRepository extends JpaRepository<PhotoServ
 
 	// 예약별 리뷰 조회 (1:1 관계)
 	Optional<PhotoServiceReview> findByBookingInfo(BookingInfo bookingInfo);
+
+	// 포토그래퍼 프로필 목록으로 모든 리뷰 조회 (N+1 문제 해결용)
+	List<PhotoServiceReview> findByPhotoServiceInfo_PhotographerProfileIn(List<PhotographerProfile> photographerProfiles);
 
 	// 포토서비스의 특정 평점 이상 리뷰 조회 - 페이징 처리
 	Page<PhotoServiceReview> findByPhotoServiceInfoAndRatingGreaterThanEqual(
