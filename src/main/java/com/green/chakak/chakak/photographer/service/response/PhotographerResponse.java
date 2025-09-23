@@ -3,6 +3,7 @@ package com.green.chakak.chakak.photographer.service.response;
 import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
 import com.green.chakak.chakak.photographer.domain.PhotographerMap;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
@@ -133,5 +134,12 @@ public class PhotographerResponse {
             this.categoryId = category.getCategoryId();
             this.categoryName = category.getCategoryName();
         }
+    }
+
+    @Data
+    @Builder
+    public static class MappingDTO {
+        private Long photographerProfileId;
+        private Long userId;
     }
 }

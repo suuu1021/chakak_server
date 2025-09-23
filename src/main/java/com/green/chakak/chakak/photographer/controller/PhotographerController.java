@@ -115,4 +115,11 @@ public class PhotographerController {
         PhotographerResponse.DetailDTO response = photographerService.getMyProfile(loginUser);
         return ResponseEntity.ok(new ApiUtil<>(response));
     }
+
+    // PhotographerController.java에 추가
+    @GetMapping("/profile/user/{userId}")
+    public ResponseEntity<?> getPhotographerByUserId(@PathVariable Long userId) {
+        PhotographerResponse.MappingDTO response = photographerService.getPhotographerByUserId(userId);
+        return ResponseEntity.ok(new ApiUtil<>(response));
+    }
 }

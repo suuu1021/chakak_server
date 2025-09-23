@@ -1,6 +1,7 @@
 package com.green.chakak.chakak.booking.service.repository;
 
 import com.green.chakak.chakak.booking.domain.BookingInfo;
+import com.green.chakak.chakak.booking.domain.BookingStatus;
 import com.green.chakak.chakak.payment.domain.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -42,5 +43,8 @@ public interface BookingInfoJpaRepository extends JpaRepository<BookingInfo, Lon
             "WHERE b.photographerProfile.user.userId = :userId AND b.payment IS NOT NULL " +
             "ORDER BY b.createdAt DESC")
     List<BookingInfo> findPaidBookingsByPhotographerId(@Param("userId") Long userId);
+
+    // 상태(status)를 기준으로 예약을 조회하는 메서드
+    List<BookingInfo> findByStatus(BookingStatus status);
 
 }

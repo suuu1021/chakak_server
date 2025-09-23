@@ -1,10 +1,12 @@
 package com.green.chakak.chakak.booking.controller;
 
 import com.green.chakak.chakak.account.domain.LoginUser;
+import com.green.chakak.chakak.booking.domain.BookingInfo;
 import com.green.chakak.chakak.booking.service.request.BookingInfoRequest;
 import com.green.chakak.chakak.booking.service.BookingInfoService;
 import com.green.chakak.chakak._global.utils.ApiUtil;
 import com.green.chakak.chakak._global.utils.Define;
+import com.green.chakak.chakak.booking.service.response.BookingInfoResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -69,8 +71,8 @@ public class BookingInfoRestController {
         System.out.println("Login User ID: " + loginUser.getId());
         System.out.println("Create DTO: " + createDTO);
 
-        bookingInfoService.createBooking(createDTO,loginUser);
-        return ResponseEntity.ok(new ApiUtil<>("예약 생성이 완료되었습니다."));
+        BookingInfoResponse.SaveDTO bookingInfo = bookingInfoService.createBooking(createDTO,loginUser);
+        return ResponseEntity.ok(new ApiUtil<>(bookingInfo));
     }
 
     // [포토그래퍼] 예약 확정

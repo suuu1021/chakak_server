@@ -306,4 +306,14 @@ public class PhotographerService {
         List<PhotographerMap> maps = photographerMapRepository.findByPhotographerProfileWithCategory(photographer);
         return new PhotographerResponse.DetailDTO(photographer, maps);
     }
+
+    public PhotographerResponse.MappingDTO getPhotographerByUserId(Long userId) {
+        PhotographerProfile photographer = photographerRepository.findByUser_UserId(userId)
+                .orElseThrow(() -> new Exception404("포토그래퍼 프로필을 찾을 수 없습니다. userId: " + userId));
+
+        return PhotographerResponse.MappingDTO.builder()
+                .photographerProfileId(photographer.getPhotographerProfileId())
+                .userId(userId)
+                .build();
+    }
 }

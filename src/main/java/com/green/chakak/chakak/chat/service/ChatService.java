@@ -107,6 +107,10 @@ public class ChatService {
                     .paymentOrderId(messageDto.getPaymentOrderId())
                     .imageUrl(imageUrl) // 생성된 이미지 URL 저장
                     .imageOriginalName(messageDto.getImageOriginalName())
+                    .paymentDescription(messageDto.getPaymentDescription())
+                    .photoServiceInfoId(messageDto.getPhotoServiceInfoId())
+                    .priceInfoId(messageDto.getPriceInfoId())
+                    .bookingInfoId(messageDto.getBookingInfoId())
                     .isRead(false)
                     .build();
             log.info("--- 6. ChatService: 이미지 URL이 포함된 ChatMessage 엔티티 생성 완료 ---");
