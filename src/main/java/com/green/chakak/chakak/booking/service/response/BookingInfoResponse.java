@@ -50,6 +50,7 @@ public class BookingInfoResponse {
     @Data
     public static class BookingUserListDTO{
         private Long bookingInfoId;
+        private Long photoServiceInfoId;
         private String photoServiceImageData;
         private String title;
         private String photographerNickname;
@@ -59,6 +60,7 @@ public class BookingInfoResponse {
 
         public BookingUserListDTO(BookingInfo bookingInfo){
             this.bookingInfoId = bookingInfo.getBookingInfoId();
+            this.photoServiceInfoId = bookingInfo.getPhotoServiceInfo().getServiceId();
             this.photoServiceImageData = bookingInfo.getPhotographerProfile().getProfileImageUrl();
             this.title = bookingInfo.getPhotoServiceInfo().getTitle();
             this.photographerNickname = bookingInfo.getPhotographerProfile().getBusinessName();
