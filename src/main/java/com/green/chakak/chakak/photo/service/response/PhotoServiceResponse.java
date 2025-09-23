@@ -20,6 +20,8 @@ public class PhotoServiceResponse {
         private String description;
         private String imageData;
         private int price;
+        private double rating; // 평균 평점
+        private int reviewCount; // 리뷰 수
         private Timestamp createdAt;
         private Timestamp updatedAt;
         private Long photographerUserId;
@@ -39,6 +41,8 @@ public class PhotoServiceResponse {
             this.price = 0;
             this.description = photoServiceInfo.getDescription();
             this.imageData = photoServiceInfo.getImageData();
+            this.rating = 0.0;
+            this.reviewCount = 0;
             this.createdAt = photoServiceInfo.getCreatedAt();
             this.updatedAt = photoServiceInfo.getUpdatedAt();
 
@@ -71,6 +75,14 @@ public class PhotoServiceResponse {
         }
         public void setPortfolioImages(List<String> portfolioImages) {
             this.portfolioImages = portfolioImages != null ? portfolioImages : new ArrayList<>();
+        }
+
+        public void setRating(double rating) {
+            this.rating = rating;
+        }
+
+        public void setReviewCount(int reviewCount) {
+            this.reviewCount = reviewCount;
         }
 
     } // END OF INNER CLASS

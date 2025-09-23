@@ -23,6 +23,9 @@ public interface PhotoServiceReviewJpaRepository extends JpaRepository<PhotoServ
 	// 기존 메서드도 유지 (페이징 없는 버전)
 	List<PhotoServiceReview> findByPhotoServiceInfoOrderByCreatedAtDesc(PhotoServiceInfo photoServiceInfo);
 
+	// 포토 서비스 목록으로 모든 리뷰 조회 (N+1 문제 해결용)
+	List<PhotoServiceReview> findByPhotoServiceInfoIn(List<PhotoServiceInfo> photoServiceInfos);
+
 	// 사용자별 작성 리뷰 조회 - 페이징 처리
 	Page<PhotoServiceReview> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
 
