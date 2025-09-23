@@ -57,7 +57,6 @@ public class BookingInfoResponse {
             this.photoServiceImageData = bookingInfo.getPhotographerProfile().getProfileImageUrl();
             this.title = bookingInfo.getPhotoServiceInfo().getTitle();
             this.photographerNickname = bookingInfo.getPhotographerProfile().getBusinessName();
-            // TODO - review 작업 필요
             this.review = 0.0;
             this.status = bookingInfo.getStatus();
             this.price = bookingInfo.getPriceInfo().getPrice();

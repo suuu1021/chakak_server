@@ -1,5 +1,6 @@
 package com.green.chakak.chakak.photo.domain;
 
+import com.green.chakak.chakak.booking.domain.BookingInfo;
 import com.green.chakak.chakak.photo.service.PhotoService;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -10,6 +11,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.w3c.dom.Text;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @NoArgsConstructor
 @Data
@@ -52,6 +54,9 @@ public class PriceInfo {
 
     @UpdateTimestamp
     private Timestamp updatedAt;
+
+    @OneToMany(mappedBy = "priceInfo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BookingInfo> bookingInfos;
 
     @Builder
     public PriceInfo(Long priceInfoId, PhotoServiceInfo photoServiceInfo,

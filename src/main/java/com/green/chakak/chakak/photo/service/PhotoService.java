@@ -134,13 +134,17 @@ public class PhotoService {
 
         PhotographerProfile userProfileInfo = photographerRepository.findByUser_UserId(loginUser.getId()).orElseThrow(() -> new Exception404("해당 유저가 존재하지 않습니다."));
 
-        if (!userProfileInfo.getPhotographerProfileId().equals(loginUser.getId())) {
-            throw new Exception400("해당 서비스를 등록한 회원만 수정 가능 합니다.");
-        }
+
 
         // 2. 수정할 서비스 조회
         PhotoServiceInfo photoService = photoServiceJpaRepository.findById(id)
                 .orElseThrow(() -> new Exception404("해당 서비스가 존재하지 않습니다."));
+        /*
+        if (!userProfileInfo.getUser().getUserId().equals(loginUser.getId())) {
+            throw new Exception400("해당 서비스를 등록한 회원만 수정 가능 합니다.");
+        }
+
+         */
 
         // 3. 소유자 권한 검증
         if (!photoService.getPhotographerProfile().getPhotographerProfileId().equals(userProfileInfo.getPhotographerProfileId())) {
