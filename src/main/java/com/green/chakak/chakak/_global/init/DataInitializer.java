@@ -12,12 +12,14 @@ import com.green.chakak.chakak.booking.domain.BookingInfo;
 import com.green.chakak.chakak.booking.domain.BookingStatus;
 import com.green.chakak.chakak.booking.service.repository.BookingInfoJpaRepository;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
+import com.green.chakak.chakak.photo.domain.PhotoServiceReview;
 import com.green.chakak.chakak.photo.domain.PhotoServiceCategory;
 import com.green.chakak.chakak.photo.domain.PhotoServiceMapping;
 import com.green.chakak.chakak.photo.domain.PriceInfo;
 import com.green.chakak.chakak.photo.service.repository.PhotoCategoryJpaRepository;
 import com.green.chakak.chakak.photo.service.repository.PhotoMappingRepository;
 import com.green.chakak.chakak.photo.service.repository.PhotoServiceJpaRepository;
+import com.green.chakak.chakak.photo.service.repository.PhotoServiceReviewJpaRepository;
 import com.green.chakak.chakak.photo.service.repository.PriceInfoJpaRepository;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
@@ -33,38 +35,51 @@ import com.green.chakak.chakak.portfolios.service.repository.PortfolioJpaReposit
 import com.green.chakak.chakak.portfolios.service.repository.PortfolioMapJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import com.green.chakak.chakak.community.domain.Post;
+import com.green.chakak.chakak.community.domain.Reply;
+import com.green.chakak.chakak.community.domain.Like;
+import com.green.chakak.chakak.community.repository.PostJpaRepository;
+import com.green.chakak.chakak.community.repository.ReplyJpaRepository;
+import com.green.chakak.chakak.community.repository.LikeJpaRepository;
+
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
-    private final UserTypeRepository userTypeRepository;
-    private final UserJpaRepository userJpaRepository;
-    private final UserProfileJpaRepository userProfileJpaRepository;
-    private final PhotographerRepository photographerRepository;
-    private final PhotographerCategoryRepository photographerCategoryRepository;
-    private final AdminJpaRepository adminJpaRepository;
-    private final PhotoServiceJpaRepository photoServiceJpaRepository;
-    private final PhotoCategoryJpaRepository photoServiceCategoryRepository;
-    private final PortfolioCategoryJpaRepository portfolioCategoryRepository;
-    private final PortfolioJpaRepository portfolioRepository;
-    private final PortfolioImageJpaRepository portfolioImageRepository;
-    private final PortfolioMapJpaRepository portfolioMapRepository;
-    private final PhotoMappingRepository photoMappingRepository;
-    private final PriceInfoJpaRepository priceInfoJpaRepository;
-    private final BookingInfoJpaRepository bookingInfoJpaRepository;
+	private final UserTypeRepository userTypeRepository;
+	private final UserJpaRepository userJpaRepository;
+	private final UserProfileJpaRepository userProfileJpaRepository;
+	private final PhotographerRepository photographerRepository;
+	private final PhotographerCategoryRepository photographerCategoryRepository;
+	private final AdminJpaRepository adminJpaRepository;
+	private final PhotoServiceJpaRepository photoServiceJpaRepository;
+	private final PhotoCategoryJpaRepository photoServiceCategoryRepository;
+	private final PortfolioCategoryJpaRepository portfolioCategoryRepository;
+	private final PortfolioJpaRepository portfolioRepository;
+	private final PortfolioImageJpaRepository portfolioImageRepository;
+	private final PortfolioMapJpaRepository portfolioMapRepository;
+	private final PhotoMappingRepository photoMappingRepository;
+	private final PriceInfoJpaRepository priceInfoJpaRepository;
+	private final BookingInfoJpaRepository bookingInfoJpaRepository;
+	private final PostJpaRepository postJpaRepository;
+	private final ReplyJpaRepository replyJpaRepository;
+	private final LikeJpaRepository likeJpaRepository;
+
+    private final PhotoServiceReviewJpaRepository photoServiceReviewJpaRepository;
 
     @Override
     @Transactional
@@ -72,13 +87,15 @@ public class DataInitializer implements CommandLineRunner {
 
         System.out.println("=== DataInitializer 실행 시작 ===");
 
-        // 데이터가 이미 존재하는지 확인
-        long existingUsers = userJpaRepository.count();
-        long existingBookings = bookingInfoJpaRepository.count();
+		// 데이터가 이미 존재하는지 확인
+		long existingUsers = userJpaRepository.count();
+		long existingBookings = bookingInfoJpaRepository.count();
+        long existingReviews = photoServiceReviewJpaRepository.count();
 
-        System.out.println("=== 데이터 초기화 상태 확인 ===");
-        System.out.println("기존 유저 수: " + existingUsers);
-        System.out.println("기존 예약 수: " + existingBookings);
+		System.out.println("=== 데이터 초기화 상태 확인 ===");
+		System.out.println("기존 유저 수: " + existingUsers);
+		System.out.println("기존 예약 수: " + existingBookings);
+        System.out.println("기존 리뷰 수: " + existingReviews);
 
         // UserType 생성 (항상 먼저 실행)
         UserType userRole = createUserTypeIfNotExists("user", "일반회원");
@@ -157,8 +174,25 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        System.out.println("데이터 초기화 완료!");
-    }
+// 커뮤니티 데이터 확인 및 생성
+		long existingPosts = postJpaRepository.count();
+		if (existingPosts == 0) {
+			System.out.println("=== 커뮤니티 데이터 생성 시작 ===");
+			createCommunityData();
+			System.out.println("=== 커뮤니티 데이터 생성 완료 ===");
+		}
+
+        // [추가] 리뷰 데이터 생성 (예약 데이터가 있어야 함)
+        if (existingReviews == 0 && bookingInfoJpaRepository.count() > 0) {
+            System.out.println("=== 리뷰 데이터 생성 시작 ===");
+            createReviewData();
+            System.out.println("=== 리뷰 데이터 생성 완료 ===");
+        } else if (existingReviews > 0) {
+            System.out.println("리뷰 데이터가 이미 존재합니다 (총 " + existingReviews + "개).");
+        }
+
+		System.out.println("데이터 초기화 완료!");
+	}
 
     private UserType createUserTypeIfNotExists(String typeCode, String typeName) {
         return userTypeRepository.findByTypeCode(typeCode).orElseGet(() -> {
@@ -514,12 +548,12 @@ public class DataInitializer implements CommandLineRunner {
         BookingStatus[] statuses = BookingStatus.values();
         int totalBookingsCreated = 0;
 
-        // 각 일반 유저에 대해 예약 생성
-        for (UserProfile user : generalUsers) {
-            int bookingsForUser = 2 + random.nextInt(3); // 2-4개
-            System.out.println("\n유저 '" + user.getNickName() + "' (Profile ID: " + user.getUserProfileId() +
-                    ", User ID: " + user.getUser().getUserId() + ")에게 " +
-                    bookingsForUser + "개의 예약 생성 중...");
+		// 각 일반 유저에 대해 예약 생성
+		for (UserProfile user : generalUsers) {
+			int bookingsForUser = 2 + random.nextInt(3); // 2-4개
+			System.out.println("\n유저 '" + user.getNickName() + "' (Profile ID: " + user.getUserProfileId() +
+					", User ID: " + user.getUser().getUserId() + ")에게 " +
+					bookingsForUser + "개의 예약 생성 중...");
 
             for (int i = 0; i < bookingsForUser; i++) {
                 try {
@@ -584,20 +618,292 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        System.out.println("\n=== 예약 데이터 생성 완료 ===");
-        System.out.println("총 생성된 예약 수: " + totalBookingsCreated);
-        System.out.println("DB에 저장된 총 예약 수: " + bookingInfoJpaRepository.count());
+		System.out.println("\n=== 예약 데이터 생성 완료 ===");
+		System.out.println("총 생성된 예약 수: " + totalBookingsCreated);
+		System.out.println("DB에 저장된 총 예약 수: " + bookingInfoJpaRepository.count());
 
         // User ID 1~3의 예약 확인
         for (int userId = 1; userId <= Math.min(3, generalUsers.size()); userId++) {
             List<BookingInfo> userBookings = bookingInfoJpaRepository.findByUserId((long) userId);
             System.out.println("User ID " + userId + "의 예약 수: " + userBookings.size());
 
-            for (BookingInfo booking : userBookings) {
-                System.out.println("  - Booking ID: " + booking.getBookingInfoId() +
-                        ", 상태: " + booking.getStatus() +
-                        ", 날짜: " + booking.getBookingDate());
-            }
+			for (BookingInfo booking : userBookings) {
+				System.out.println("  - Booking ID: " + booking.getBookingInfoId() +
+						", 상태: " + booking.getStatus() +
+						", 날짜: " + booking.getBookingDate());
+			}
+		}
+	}
+
+	// 새로 추가할 메서드들
+	private void createCommunityData() {
+		// 기존 방식으로 유저 조회 - findAll()을 사용하고 필터링
+		List<User> allUsers = userJpaRepository.findAll();
+
+		List<User> adminUsers = allUsers.stream()
+				.filter(user -> "admin".equals(user.getUserType().getTypeCode()))
+				.collect(Collectors.toList());
+
+		List<User> generalUsers = allUsers.stream()
+				.filter(user -> "user".equals(user.getUserType().getTypeCode()))
+				.collect(Collectors.toList());
+
+		// 관리자 공지글 생성 (3개)
+		if (!adminUsers.isEmpty()) {
+			createAdminPosts(adminUsers.get(0));
+		}
+
+		// 일반 사용자 게시글 생성 (17개)
+		if (!generalUsers.isEmpty()) {
+			createGeneralUserPosts(generalUsers);
+
+			// 댓글 생성
+			createReplies(adminUsers, generalUsers);
+
+			// 좋아요 생성
+			createLikes(generalUsers);
+		}
+	}
+
+	private void createAdminPosts(User adminUser) {
+		String[] titleKeywords = {
+				"스냅촬영 작가님 추천", "프로필 촬영 베스트", "한강 스냅촬영 명소",
+				"웨딩 촬영 가이드", "스튜디오 이용 안내"
+		};
+
+		String[] contentTemplates = {
+				"안녕하세요! 찰칵 관리팀입니다.\n\n%s에 대한 공지사항을 안내드립니다.\n\n✨ 주요 내용:\n• 전문 작가님들의 엄선된 포트폴리오\n• 고객 만족도 95%% 이상 보장\n• 다양한 컨셉과 스타일 제공\n\n📍 추천 포인트:\n• 합리적인 가격대\n• 전문적인 장비 사용\n• 친절한 상담 서비스\n\n궁금한 점이 있으시면 언제든 문의해주세요!\n\n감사합니다.",
+
+				"찰칵을 이용해주시는 고객님들께 감사드립니다.\n\n%s 관련하여 유용한 정보를 공유드립니다.\n\n💡 촬영 팁:\n1. 사전 상담을 통한 컨셉 공유\n2. 날씨와 시간대 고려\n3. 의상과 소품 미리 준비\n4. 자연스러운 표정 연습\n\n더 나은 서비스 제공을 위해 항상 노력하겠습니다.",
+
+				"회원 여러분 안녕하세요.\n\n%s에 대한 업데이트된 정보를 알려드립니다.\n\n🌟 새로운 서비스:\n• 온라인 상담 예약 시스템\n• 실시간 작가님 매칭\n• 촬영 후 빠른 보정 서비스\n\n앞으로도 최고의 촬영 경험을 제공하도록 하겠습니다."
+		};
+
+		Random random = new Random();
+
+		for (int i = 1; i <= 3; i++) {
+			String keyword = titleKeywords[random.nextInt(titleKeywords.length)];
+			String title = keyword + String.format(" %d차 업데이트", i);
+			String content = String.format(contentTemplates[random.nextInt(contentTemplates.length)], keyword);
+
+			Post adminPost = Post.builder()
+					.user(adminUser)
+					.title(title)
+					.content(content)
+					.status(Post.PostStatus.ACTIVE)
+					.build();
+
+			Post savedPost = postJpaRepository.save(adminPost);
+
+			// 조회수, 좋아요, 댓글 수 설정
+			savedPost.setViewCount(5000 + (i * 1500) + random.nextInt(3000));
+			savedPost.setLikeCount(80 + (i * 30) + random.nextInt(50));
+			savedPost.setReplyCount(25 + (i * 10) + random.nextInt(20));
+			postJpaRepository.save(savedPost);
+
+			System.out.println("관리자 게시글 생성: " + title);
+		}
+	}
+
+	private void createGeneralUserPosts(List<User> generalUsers) {
+		String[] postCategories = {
+				"후기", "질문", "정보공유", "추천", "팁", "경험담"
+		};
+
+		String[] titleTemplates = {
+				"%s에서 %s 촬영 %s",
+				"%s 스냅촬영 %s 공유합니다",
+				"%s %s 완전 만족!",
+				"%s에서 찍은 %s 후기",
+				"%s 촬영 시 %s 꿀팁",
+				"%s %s 추천드려요",
+				"%s에서의 %s 경험"
+		};
+
+		String[] locations = {
+				"연남동", "홍대", "강남", "청담", "성수", "한강공원",
+				"경복궁", "북촌", "이태원", "압구정", "신사동", "가로수길"
+		};
+
+		String[] photoTypes = {
+				"커플스냅", "가족사진", "프로필", "졸업사진", "웨딩스냅",
+				"돌잔치", "브랜딩", "반려동물", "우정사진", "개인화보"
+		};
+
+		String[] contentTemplates = {
+				"%s에서 %s 촬영했는데 정말 만족스러워요! 작가님이 친절하시고 결과물도 예뻐서 추천드립니다. 특히 %s 때문에 선택했는데 기대 이상이었어요.",
+
+				"%s 관련해서 궁금한 게 있어서 글 올려요. %s에서 촬영 고려 중인데 경험 있으신 분들 조언 부탁드려요! %s 때문에 고민이에요.",
+
+				"%s 촬영 꿀팁 공유합니다! %s에서 찍을 때 %s 참고하시면 더 예쁜 사진 나올 거에요. 저도 이번에 처음 알았는데 정말 도움됐어요.",
+
+				"드디어 %s 촬영 완료했습니다! %s에서 찍었는데 분위기가 정말 좋더라고요. %s 덕분에 만족스러운 결과 얻었어요. 추천합니다!",
+
+				"%s에 대해 정보 공유드려요. %s 지역에서 괜찮은 곳 찾고 계신 분들께 도움이 될 것 같아요. %s 고려하시면 좋을 것 같습니다."
+		};
+
+		Random random = new Random();
+
+		for (int i = 1; i <= 17; i++) {
+			User randomUser = generalUsers.get(random.nextInt(generalUsers.size()));
+			String category = postCategories[random.nextInt(postCategories.length)];
+			String location = locations[random.nextInt(locations.length)];
+			String photoType = photoTypes[random.nextInt(photoTypes.length)];
+
+			String title = String.format(
+					titleTemplates[random.nextInt(titleTemplates.length)],
+					location, photoType, category
+			);
+
+			String content = String.format(
+					contentTemplates[random.nextInt(contentTemplates.length)],
+					photoType, location, category
+			);
+
+			Post generalPost = Post.builder()
+					.user(randomUser)
+					.title(title)
+					.content(content)
+					.status(Post.PostStatus.ACTIVE)
+					.build();
+
+			generalPost.setImageUrl(String.format("https://picsum.photos/600/400?random=%d", 10 + i));
+
+			Post savedPost = postJpaRepository.save(generalPost);
+
+			// 조회수, 좋아요, 댓글 수 설정
+			savedPost.setViewCount(50 + random.nextInt(2000));
+			savedPost.setLikeCount(random.nextInt(50));
+			savedPost.setReplyCount(random.nextInt(30));
+			postJpaRepository.save(savedPost);
+
+			System.out.println("일반 게시글 생성: " + title);
+		}
+	}
+
+	private void createReplies(List<User> adminUsers, List<User> generalUsers) {
+		List<Post> allPosts = postJpaRepository.findAll();
+		List<User> allUsers = new ArrayList<>();
+		allUsers.addAll(adminUsers);
+		allUsers.addAll(generalUsers);
+
+		String[] replyTemplates = {
+				"정말 유용한 정보네요! 감사합니다 😊",
+				"저도 비슷한 경험이 있어서 공감되네요!",
+				"혹시 추천해주신 작가님 연락처 알 수 있을까요?",
+				"사진 정말 예쁘게 나왔네요! 부럽습니다",
+				"좋은 정보 공유해주셔서 감사해요",
+				"저도 그곳에서 촬영해봤는데 정말 좋더라고요",
+				"다음에 저도 참고해서 촬영해봐야겠어요",
+				"궁금했던 내용인데 덕분에 해결됐어요!",
+				"작가님 실력이 정말 좋으신 것 같네요",
+				"가격대는 어느 정도였나요?",
+				"날씨는 어떠셨나요? 촬영에 지장 없으셨어요?",
+				"보정은 얼마나 걸리셨나요?",
+				"의상은 어떤 걸로 준비하셨어요?",
+				"시간대 추천해주세요!",
+				"저도 곧 촬영 예정인데 팁 감사해요!"
+		};
+
+		Random random = new Random();
+
+		for (Post post : allPosts) {
+			int replyCount = 1 + random.nextInt(8); // 1-8개 댓글
+
+			for (int i = 0; i < replyCount; i++) {
+				User randomUser = allUsers.get(random.nextInt(allUsers.size()));
+				String replyContent = replyTemplates[random.nextInt(replyTemplates.length)];
+
+				Reply reply = Reply.builder()
+						.post(post)
+						.user(randomUser)
+						.content(replyContent)
+						.status(Reply.ReplyStatus.ACTIVE)
+						.build();
+
+				replyJpaRepository.save(reply);
+			}
+
+			// 실제 댓글 수로 업데이트
+			post.setReplyCount(replyCount);
+			postJpaRepository.save(post);
+		}
+
+		System.out.println("댓글 생성 완료");
+	}
+
+	private void createLikes(List<User> generalUsers) {
+		List<Post> allPosts = postJpaRepository.findAll();
+		Random random = new Random();
+
+		for (Post post : allPosts) {
+			int likeCount = random.nextInt(30); // 0-29개 좋아요
+
+			// 중복 방지를 위한 Set
+			Set<User> likedUsers = new HashSet<>();
+
+			while (likedUsers.size() < likeCount && likedUsers.size() < generalUsers.size()) {
+				User randomUser = generalUsers.get(random.nextInt(generalUsers.size()));
+				likedUsers.add(randomUser);
+			}
+
+			for (User user : likedUsers) {
+				Like like = Like.builder()
+						.post(post)
+						.user(user)
+						.build();
+
+				likeJpaRepository.save(like);
+			}
+
+			// 실제 좋아요 수로 업데이트
+			post.setLikeCount(likedUsers.size());
+			postJpaRepository.save(post);
+		}
+
+		System.out.println("좋아요 생성 완료");
+	}
+
+    // [추가] 더미 리뷰 데이터 생성 메서드
+    private void createReviewData() {
+        System.out.println("=== 리뷰 데이터 생성 시작 ===");
+        // 'COMPLETED' 상태인 예약 목록을 가져옵니다.
+        List<BookingInfo> completedBookings = bookingInfoJpaRepository.findByStatus(BookingStatus.REVIEWED);
+        if (completedBookings.isEmpty()) {
+            System.out.println("완료된 예약이 없어 리뷰를 생성할 수 없습니다.");
+            return;
         }
+
+        String[] sampleReviews = {
+                "인생 최고의 사진을 건졌습니다! 작가님이 정말 친절하고 프로페셔널하세요. 모든 순간이 즐거웠습니다.",
+                "결과물은 만족스럽지만, 예약 시간에 조금 늦으셔서 아쉬웠습니다. 그래도 사진은 정말 예쁘게 나왔어요.",
+                "가성비 최고의 스냅 사진! 이 가격에 이런 퀄리티라니, 정말 만족합니다.",
+                "부모님 결혼기념일 선물로 드렸는데 너무 좋아하셨어요. 감사합니다!",
+                null, // 내용 없는 리뷰
+                "분위기도 잘 이끌어주시고, 보정본도 빠르게 받을 수 있어서 좋았습니다."
+        };
+
+        Random random = new Random();
+        int reviewsCreated = 0;
+
+        for (BookingInfo booking : completedBookings) {
+            // 이미 해당 예약에 대한 리뷰가 있는지 확인
+            if (photoServiceReviewJpaRepository.findByBookingInfo(booking).isPresent()) {
+                continue;
+            }
+
+            PhotoServiceReview review = PhotoServiceReview.builder()
+                    .photoServiceInfo(booking.getPhotoServiceInfo())
+                    .user(booking.getUserProfile().getUser())
+                    .bookingInfo(booking)
+                    .rating(BigDecimal.valueOf(3.0 + random.nextDouble() * 2.0)
+                            .setScale(1, RoundingMode.HALF_UP)) // 3.0 ~ 5.0 사이의 평점
+                    .reviewContent(sampleReviews[random.nextInt(sampleReviews.length)])
+                    .build();
+
+            photoServiceReviewJpaRepository.save(review);
+            reviewsCreated++;
+        }
+        System.out.println("총 " + reviewsCreated + "개의 리뷰 데이터 생성 완료.");
     }
 }
