@@ -38,8 +38,7 @@ public class ChatService {
     private final UserProfileJpaRepository userProfileJpaRepository;
     private final PhotographerRepository photographerRepository;
     private final SimpMessagingTemplate messagingTemplate;
-    private final ChatFileUploadUtil chatFileUploadUtil; // 새로 추가
-
+    private final ChatFileUploadUtil chatFileUploadUtil;
 
     public ChatRoom findOrCreateRoom(ChatRoomRequestDto requestDto, LoginUser loginUser) {
         UserProfile userProfile;
@@ -48,8 +47,8 @@ public class ChatService {
         String role = loginUser.getUserTypeName();
 
         if ("user".equalsIgnoreCase(role)) {
-            userProfile = userProfileJpaRepository.findByUserId(requestDto.getUserProfileId())
-                    .orElseThrow(() -> new Exception404("로그인한 유저의 프로필을 찾을 수 없습니다. ID: " + requestDto.getUserProfileId()));
+            userProfile = userProfileJpaRepository.findByUserId(loginUser.getId())
+                    .orElseThrow(() -> new Exception404("로그인한 유저의 프로필을 찾을 수 없습니다. ID: " + loginUser.getId()));
 
             if (requestDto.getPhotographerProfileId() == null) {
                 throw new Exception400("상대방(사진작가)의 프로필 ID가 필요합니다.");
@@ -58,8 +57,8 @@ public class ChatService {
                     .orElseThrow(() -> new Exception404("해당 사진작가 프로필을 찾을 수 없습니다: " + requestDto.getPhotographerProfileId()));
 
         } else if ("photographer".equalsIgnoreCase(role)) {
-            photographerProfile = photographerRepository.findByUser_UserId(requestDto.getPhotographerProfileId())
-                    .orElseThrow(() -> new Exception404("로그인한 작가의 프로필을 찾을 수 없습니다. ID: " + requestDto.getPhotographerProfileId()));
+            photographerProfile = photographerRepository.findByUser_UserId(loginUser.getId())
+                    .orElseThrow(() -> new Exception404("로그인한 작가의 프로필을 찾을 수 없습니다. ID: " + loginUser.getId()));
 
             if (requestDto.getUserProfileId() == null) {
                 throw new Exception400("상대방(유저)의 프로필 ID가 필요합니다.");
@@ -82,23 +81,22 @@ public class ChatService {
     }
 
     public void processMessage(ChatMessageDto messageDto) {
-        log.info("Processing message in service for room {}", messageDto.getChatRoomId());
+        log.info("--- 3. ChatService: processMessage 시작 (Room ID: {}) ---", messageDto.getChatRoomId());
         ChatRoom chatRoom = chatRoomRepository.findById(messageDto.getChatRoomId())
                 .orElseThrow(() -> new Exception404("채팅방을 찾을 수 없습니다: " + messageDto.getChatRoomId()));
 
-        ChatMessage chatMessage = messageDto.toEntity(chatRoom);
+        ChatMessage chatMessage;
 
-        // 이미지 메시지인 경우 파일 저장 처리
         if (messageDto.getMessageType() == ChatMessage.MessageType.IMAGE &&
                 messageDto.getImageBase64() != null && !messageDto.getImageBase64().trim().isEmpty()) {
 
-            log.info("Processing image message...");
+            log.info("--- 4. ChatService: 이미지 메시지로 판단. 파일 저장 로직 호출 시작 ---");
             String imageUrl = chatFileUploadUtil.saveChatImage(
                     messageDto.getImageBase64(),
                     messageDto.getImageOriginalName()
             );
+            log.info("--- 5. ChatService: 파일 저장 완료. 반환된 이미지 URL: {} ---", imageUrl);
 
-            // ChatMessage에 이미지 URL 설정
             chatMessage = ChatMessage.builder()
                     .chatRoom(chatRoom)
                     .senderType(messageDto.getSenderType())
@@ -107,19 +105,25 @@ public class ChatService {
                     .message(messageDto.getMessage())
                     .paymentAmount(messageDto.getPaymentAmount())
                     .paymentOrderId(messageDto.getPaymentOrderId())
-                    .imageUrl(imageUrl)
+                    .imageUrl(imageUrl) // 생성된 이미지 URL 저장
                     .imageOriginalName(messageDto.getImageOriginalName())
                     .isRead(false)
                     .build();
+            log.info("--- 6. ChatService: 이미지 URL이 포함된 ChatMessage 엔티티 생성 완료 ---");
 
-            log.info("Image saved and URL set: {}", imageUrl);
+        } else {
+            log.info("--- 4. ChatService: 텍스트 또는 기타 메시지로 판단. ---");
+            chatMessage = messageDto.toEntity(chatRoom);
+            log.info("--- 6. ChatService: ChatMessage 엔티티 생성 완료 ---");
         }
 
         ChatMessage savedMessage = chatMessageRepository.save(chatMessage);
+        log.info("--- 7. ChatService: DB에 메시지 저장 완료 (Message ID: {}) ---", savedMessage.getChatMessageId());
 
         ChatMessageResponseDto responseDto = ChatMessageResponseDto.from(savedMessage);
-        log.info("Broadcasting message to /topic/chat/room/{}", responseDto.getChatRoomId());
+        log.info("--- 8. ChatService: 브로드캐스팅 시작 (Destination: /topic/chat/room/{}) ---", responseDto.getChatRoomId());
         messagingTemplate.convertAndSend("/topic/chat/room/" + responseDto.getChatRoomId(), responseDto);
+        log.info("--- 9. ChatService: processMessage 종료 ---");
     }
 
     @Transactional(readOnly = true)
