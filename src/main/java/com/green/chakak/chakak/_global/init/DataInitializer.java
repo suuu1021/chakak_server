@@ -12,12 +12,14 @@ import com.green.chakak.chakak.booking.domain.BookingInfo;
 import com.green.chakak.chakak.booking.domain.BookingStatus;
 import com.green.chakak.chakak.booking.service.repository.BookingInfoJpaRepository;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
+import com.green.chakak.chakak.photo.domain.PhotoServiceReview;
 import com.green.chakak.chakak.photo.domain.PhotoServiceCategory;
 import com.green.chakak.chakak.photo.domain.PhotoServiceMapping;
 import com.green.chakak.chakak.photo.domain.PriceInfo;
 import com.green.chakak.chakak.photo.service.repository.PhotoCategoryJpaRepository;
 import com.green.chakak.chakak.photo.service.repository.PhotoMappingRepository;
 import com.green.chakak.chakak.photo.service.repository.PhotoServiceJpaRepository;
+import com.green.chakak.chakak.photo.service.repository.PhotoServiceReviewJpaRepository;
 import com.green.chakak.chakak.photo.service.repository.PriceInfoJpaRepository;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
@@ -37,6 +39,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -65,6 +69,7 @@ public class DataInitializer implements CommandLineRunner {
     private final PhotoMappingRepository photoMappingRepository;
     private final PriceInfoJpaRepository priceInfoJpaRepository;
     private final BookingInfoJpaRepository bookingInfoJpaRepository;
+    private final PhotoServiceReviewJpaRepository photoServiceReviewJpaRepository;
 
     @Override
     @Transactional
@@ -75,10 +80,12 @@ public class DataInitializer implements CommandLineRunner {
         // 데이터가 이미 존재하는지 확인
         long existingUsers = userJpaRepository.count();
         long existingBookings = bookingInfoJpaRepository.count();
+        long existingReviews = photoServiceReviewJpaRepository.count();
 
         System.out.println("=== 데이터 초기화 상태 확인 ===");
         System.out.println("기존 유저 수: " + existingUsers);
         System.out.println("기존 예약 수: " + existingBookings);
+        System.out.println("기존 리뷰 수: " + existingReviews);
 
         // UserType 생성 (항상 먼저 실행)
         UserType userRole = createUserTypeIfNotExists("user", "일반회원");
@@ -155,6 +162,15 @@ public class DataInitializer implements CommandLineRunner {
                 System.out.println("첫 번째 예약: " + userBookings.get(0).getBookingInfoId() +
                         ", 상태: " + userBookings.get(0).getStatus());
             }
+        }
+
+        // [추가] 리뷰 데이터 생성 (예약 데이터가 있어야 함)
+        if (existingReviews == 0 && bookingInfoJpaRepository.count() > 0) {
+            System.out.println("=== 리뷰 데이터 생성 시작 ===");
+            createReviewData();
+            System.out.println("=== 리뷰 데이터 생성 완료 ===");
+        } else if (existingReviews > 0) {
+            System.out.println("리뷰 데이터가 이미 존재합니다 (총 " + existingReviews + "개).");
         }
 
         System.out.println("데이터 초기화 완료!");
@@ -517,7 +533,7 @@ public class DataInitializer implements CommandLineRunner {
         // 각 일반 유저에 대해 예약 생성
         for (UserProfile user : generalUsers) {
             int bookingsForUser = 2 + random.nextInt(3); // 2-4개
-            System.out.println("\n유저 '" + user.getNickName() + "' (Profile ID: " + user.getUserProfileId() +
+            System.out.println(" 유저 '" + user.getNickName() + "' (Profile ID: " + user.getUserProfileId() +
                     ", User ID: " + user.getUser().getUserId() + ")에게 " +
                     bookingsForUser + "개의 예약 생성 중...");
 
@@ -584,7 +600,7 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        System.out.println("\n=== 예약 데이터 생성 완료 ===");
+        System.out.println(" === 예약 데이터 생성 완료 ===");
         System.out.println("총 생성된 예약 수: " + totalBookingsCreated);
         System.out.println("DB에 저장된 총 예약 수: " + bookingInfoJpaRepository.count());
 
@@ -599,5 +615,48 @@ public class DataInitializer implements CommandLineRunner {
                         ", 날짜: " + booking.getBookingDate());
             }
         }
+    }
+
+    // [추가] 더미 리뷰 데이터 생성 메서드
+    private void createReviewData() {
+        System.out.println("=== 리뷰 데이터 생성 시작 ===");
+        // 'COMPLETED' 상태인 예약 목록을 가져옵니다.
+        List<BookingInfo> completedBookings = bookingInfoJpaRepository.findByStatus(BookingStatus.REVIEWED);
+        if (completedBookings.isEmpty()) {
+            System.out.println("완료된 예약이 없어 리뷰를 생성할 수 없습니다.");
+            return;
+        }
+
+        String[] sampleReviews = {
+                "인생 최고의 사진을 건졌습니다! 작가님이 정말 친절하고 프로페셔널하세요. 모든 순간이 즐거웠습니다.",
+                "결과물은 만족스럽지만, 예약 시간에 조금 늦으셔서 아쉬웠습니다. 그래도 사진은 정말 예쁘게 나왔어요.",
+                "가성비 최고의 스냅 사진! 이 가격에 이런 퀄리티라니, 정말 만족합니다.",
+                "부모님 결혼기념일 선물로 드렸는데 너무 좋아하셨어요. 감사합니다!",
+                null, // 내용 없는 리뷰
+                "분위기도 잘 이끌어주시고, 보정본도 빠르게 받을 수 있어서 좋았습니다."
+        };
+
+        Random random = new Random();
+        int reviewsCreated = 0;
+
+        for (BookingInfo booking : completedBookings) {
+                // 이미 해당 예약에 대한 리뷰가 있는지 확인
+                if (photoServiceReviewJpaRepository.findByBookingInfo(booking).isPresent()) {
+                    continue;
+                }
+
+                PhotoServiceReview review = PhotoServiceReview.builder()
+                        .photoServiceInfo(booking.getPhotoServiceInfo())
+                        .user(booking.getUserProfile().getUser())
+                        .bookingInfo(booking)
+                        .rating(BigDecimal.valueOf(3.0 + random.nextDouble() * 2.0)
+                                .setScale(1, RoundingMode.HALF_UP)) // 3.0 ~ 5.0 사이의 평점
+                        .reviewContent(sampleReviews[random.nextInt(sampleReviews.length)])
+                        .build();
+                
+                photoServiceReviewJpaRepository.save(review);
+                reviewsCreated++;
+        }
+        System.out.println("총 " + reviewsCreated + "개의 리뷰 데이터 생성 완료.");
     }
 }
