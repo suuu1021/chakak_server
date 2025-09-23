@@ -22,6 +22,7 @@ public class PhotoServiceResponse {
         private int price;
         private Timestamp createdAt;
         private Timestamp updatedAt;
+        private Long photographerUserId;
 
         private List<PriceInfoResponse.PriceInfoListDTO> priceInfoList;
         private List<PhotoCategoryResponse.PhotoCategoryListDTO> categoryList;
@@ -45,11 +46,19 @@ public class PhotoServiceResponse {
             if (profile != null) {
                 this.photographerId = profile.getPhotographerProfileId();
                 this.businessName = profile.getBusinessName();
+
+                if (profile.getUser() != null) {
+                    this.photographerUserId = profile.getUser().getUserId();
+                }
             }
 
             this.priceInfoList = new ArrayList<>();
             this.categoryList = new ArrayList<>();
             this.portfolioImages = new ArrayList<>();
+        }
+
+        public void setPhotographerUserId(Long photographerUserId) {
+            this.photographerUserId = photographerUserId;
         }
 
         // 가격 정보와 카테고리 정보를 설정하는 메서드들

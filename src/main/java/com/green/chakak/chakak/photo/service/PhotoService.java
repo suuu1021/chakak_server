@@ -129,21 +129,21 @@ public class PhotoService {
         }
     }
 
+    // PhotoService.java
     @Transactional
     public void updateService(Long id, PhotoServiceInfoRequest.UpdateDTO reqDTO, LoginUser loginUser) {
 
-        PhotographerProfile userProfileInfo = photographerRepository.findByUser_UserId(loginUser.getId()).orElseThrow(() -> new Exception404("해당 유저가 존재하지 않습니다."));
-
-        if (!userProfileInfo.getPhotographerProfileId().equals(loginUser.getId())) {
-            throw new Exception400("해당 서비스를 등록한 회원만 수정 가능 합니다.");
-        }
+        // 1. 로그인 유저의 프로필 정보 조회
+        PhotographerProfile userProfileInfo = photographerRepository.findByUser_UserId(loginUser.getId())
+                .orElseThrow(() -> new Exception404("해당 유저가 존재하지 않습니다."));
 
         // 2. 수정할 서비스 조회
         PhotoServiceInfo photoService = photoServiceJpaRepository.findById(id)
                 .orElseThrow(() -> new Exception404("해당 서비스가 존재하지 않습니다."));
 
-        // 3. 소유자 권한 검증
-        if (!photoService.getPhotographerProfile().getPhotographerProfileId().equals(userProfileInfo.getPhotographerProfileId())) {
+        // 3. 소유자 권한 검증 (올바른 로직)
+        // 서비스에 연결된 사진작가 프로필의 유저 ID와 로그인 유저의 ID를 비교
+        if (!photoService.getPhotographerProfile().getUser().getUserId().equals(loginUser.getId())) {
             throw new Exception400("해당 서비스를 등록한 회원만 수정 가능합니다.");
         }
 
@@ -152,22 +152,15 @@ public class PhotoService {
 
         // 5. 가격 정보 수정 (기존 삭제 후 새로 생성)
         if (reqDTO.getPriceInfoList() != null && !reqDTO.getPriceInfoList().isEmpty()) {
-            // 기존 가격 정보 삭제
             priceInfoJpaRepository.deleteByPhotoServiceInfo_serviceId(id);
-
-            // 새로운 가격 정보 생성
             updatePriceInfos(photoService, reqDTO.getPriceInfoList());
         }
 
         // 6. 카테고리 매핑 수정 (기존 삭제 후 새로 생성)
         if (reqDTO.getCategoryIdList() != null && !reqDTO.getCategoryIdList().isEmpty()) {
-            // 기존 매핑 삭제
             photoMappingRepository.deleteByPhotoServiceInfo_ServiceId(id);
-
-            // 새로운 매핑 생성
             updateCategoryMappings(photoService, reqDTO.getCategoryIdList());
         }
-
     }
 
     // 가격 정보 업데이트 헬퍼 메서드

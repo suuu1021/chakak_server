@@ -70,4 +70,5 @@ public class PriceInfo {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
+
 }
