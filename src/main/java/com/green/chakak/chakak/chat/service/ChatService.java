@@ -89,31 +89,39 @@ public class ChatService {
 
         if (messageDto.getMessageType() == ChatMessage.MessageType.IMAGE &&
                 messageDto.getImageBase64() != null && !messageDto.getImageBase64().trim().isEmpty()) {
-
-            log.info("--- 4. ChatService: 이미지 메시지로 판단. 파일 저장 로직 호출 시작 ---");
-            String imageUrl = chatFileUploadUtil.saveChatImage(
+            
+            try {
+                log.info("--- 4. ChatService: 이미지 메시지로 판단. 파일 저장 로직 호출 시작 ---");
+                String imageUrl = chatFileUploadUtil.saveChatImage(
                     messageDto.getImageBase64(),
                     messageDto.getImageOriginalName()
-            );
-            log.info("--- 5. ChatService: 파일 저장 완료. 반환된 이미지 URL: {} ---", imageUrl);
+                );
+                log.info("--- 5. ChatService: 파일 저장 완료. 반환된 이미지 URL: {} ---", imageUrl);
 
-            chatMessage = ChatMessage.builder()
+                chatMessage = ChatMessage.builder()
                     .chatRoom(chatRoom)
                     .senderType(messageDto.getSenderType())
                     .senderId(messageDto.getSenderId())
                     .messageType(messageDto.getMessageType())
                     .message(messageDto.getMessage())
-                    .paymentAmount(messageDto.getPaymentAmount())
-                    .paymentOrderId(messageDto.getPaymentOrderId())
-                    .imageUrl(imageUrl) // 생성된 이미지 URL 저장
+                    .imageUrl(imageUrl)
                     .imageOriginalName(messageDto.getImageOriginalName())
-                    .paymentDescription(messageDto.getPaymentDescription())
-                    .photoServiceInfoId(messageDto.getPhotoServiceInfoId())
-                    .priceInfoId(messageDto.getPriceInfoId())
-                    .bookingInfoId(messageDto.getBookingInfoId())
                     .isRead(false)
                     .build();
-            log.info("--- 6. ChatService: 이미지 URL이 포함된 ChatMessage 엔티티 생성 완료 ---");
+                log.info("--- 6. ChatService: 이미지 URL이 포함된 ChatMessage 엔티티 생성 완료 ---");
+
+            } catch (Exception e) {
+                log.error("!!! ChatService: 이미지 처리 중 오류 발생 !!!", e);
+                chatMessage = ChatMessage.builder()
+                    .chatRoom(chatRoom)
+                    .senderType(messageDto.getSenderType())
+                    .senderId(messageDto.getSenderId())
+                    .messageType(ChatMessage.MessageType.TEXT)
+                    .message("이미지 전송에 실패했습니다: " + e.getMessage())
+                    .isRead(false)
+                    .build();
+                log.warn("--- 6. ChatService: 이미지 처리 실패로, 실패 안내 메시지 엔티티 생성 ---");
+            }
 
         } else {
             log.info("--- 4. ChatService: 텍스트 또는 기타 메시지로 판단. ---");

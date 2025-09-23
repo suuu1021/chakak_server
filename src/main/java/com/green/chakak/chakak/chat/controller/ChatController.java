@@ -5,13 +5,17 @@ import com.green.chakak.chakak.chat.service.ChatMessageDto;
 import com.green.chakak.chakak.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
-@Controller
+@RestController
 @RequiredArgsConstructor
 public class ChatController {
 
@@ -31,4 +35,5 @@ public class ChatController {
             log.error("!!!!! JSON Deserialization FAILED !!!!! for payload: {}", payload, e);
         }
     }
+
 }
