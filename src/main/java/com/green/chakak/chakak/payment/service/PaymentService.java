@@ -75,7 +75,7 @@ public class PaymentService {
 
         // 4. 주문번호 생성
         String partnerOrderId = generatePartnerOrderId(bookingInfoId);
-        String partnerUserId = bookingInfo.getUserProfile().getUserProfileId().toString();
+        String partnerUserId = bookingInfo.getUserProfile().getUser().getUserId().toString();
 
         // 5. 상품명 생성
         String itemName = "사진촬영 서비스 - " +
