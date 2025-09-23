@@ -129,10 +129,13 @@ public class PostResponse {
     public static class ListDTO {
         private Long postId;
         private String title;
+        private String content;
         private String authorNickname;
+        private Long authorId;
         private String authorType;
         private Integer viewCount;
         private Integer likeCount;
+        private Integer replyCount;
         private boolean hasImage; // 이미지 유무 (썸네일 표시용)
         private String thumbnailData; // 썸네일용 Base64 데이터 (필요시)
         private Timestamp createdAt;
@@ -141,10 +144,13 @@ public class PostResponse {
         public ListDTO(Post post, Long currentUserId, LikeJpaRepository likeRepository) {
             this.postId = post.getPostId();
             this.title = post.getTitle();
+            this.content = post.getContent();
             this.authorNickname = getAuthorNickname(post);
+            this.authorId = post.getUser().getUserId();
             this.authorType = post.getUser().getUserType().getTypeCode();
             this.viewCount = post.getViewCount();
             this.likeCount = post.getLikeCount();
+            this.replyCount = post.getReplyCount();
             this.hasImage = post.hasImage();
             // 목록에서는 전체 이미지 데이터는 너무 크므로 hasImage만 표시
             // 필요하면 thumbnailData에 작은 크기의 썸네일 데이터를 넣을 수 있음
