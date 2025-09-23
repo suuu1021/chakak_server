@@ -98,6 +98,8 @@ public class PhotographerResponse {
         private Integer experienceYears;
         private String status;
         private String imageUrl;
+        private double averageRating;
+        private int reviewCount;
 
         public ListDTO(PhotographerProfile profile) {
             this.photographerId = profile.getPhotographerProfileId();

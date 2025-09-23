@@ -8,13 +8,15 @@ import com.green.chakak.chakak.account.domain.User;
 import com.green.chakak.chakak.account.domain.UserType;
 import com.green.chakak.chakak.account.service.repository.UserJpaRepository;
 import com.green.chakak.chakak.account.service.repository.UserTypeRepository;
+import com.green.chakak.chakak.photo.domain.PhotoServiceReview;
+import com.green.chakak.chakak.photo.service.repository.PhotoServiceReviewJpaRepository;
 import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
 import com.green.chakak.chakak.photographer.domain.PhotographerMap;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photographer.service.repository.PhotographerCategoryRepository;
-import com.green.chakak.chakak.photographer.service.request.PhotographerCategoryRequest;
 import com.green.chakak.chakak.photographer.service.repository.PhotographerMapRepository;
 import com.green.chakak.chakak.photographer.service.repository.PhotographerRepository;
+import com.green.chakak.chakak.photographer.service.request.PhotographerCategoryRequest;
 import com.green.chakak.chakak.photographer.service.request.PhotographerRequest;
 import com.green.chakak.chakak.photographer.service.response.PhotographerResponse;
 import jakarta.annotation.PostConstruct;
@@ -37,6 +39,7 @@ public class PhotographerService {
     private final PhotographerRepository photographerRepository;
     private final PhotographerCategoryRepository photographerCategoryRepository;
     private final PhotographerMapRepository photographerMapRepository;
+    private final PhotoServiceReviewJpaRepository photoServiceReviewJpaRepository;
 
     /**
      * 포토그래퍼 프로필 저장
@@ -145,8 +148,30 @@ public class PhotographerService {
     public List<PhotographerResponse.ListDTO> getActiveProfile() {
         List<PhotographerProfile> photographers = photographerRepository.findByStatus("ACTIVE");
 
+        if (photographers.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        List<PhotoServiceReview> allReviews = photoServiceReviewJpaRepository.findByPhotoServiceInfo_PhotographerProfileIn(photographers);
+        java.util.Map<Long, List<PhotoServiceReview>> reviewsByPhotographer = allReviews.stream()
+                .collect(Collectors.groupingBy(review -> review.getPhotoServiceInfo().getPhotographerProfile().getPhotographerProfileId()));
+
         return photographers.stream()
-                .map(PhotographerResponse.ListDTO::new)
+                .map(profile -> {
+                    PhotographerResponse.ListDTO dto = new PhotographerResponse.ListDTO(profile);
+                    List<PhotoServiceReview> reviews = reviewsByPhotographer.getOrDefault(profile.getPhotographerProfileId(), java.util.Collections.emptyList());
+                    int reviewCount = reviews.size();
+                    double averageRating = 0.0;
+                    if (reviewCount > 0) {
+                        java.math.BigDecimal sumOfRatings = reviews.stream()
+                                .map(PhotoServiceReview::getRating)
+                                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                        averageRating = sumOfRatings.divide(new java.math.BigDecimal(reviewCount), 2, java.math.RoundingMode.HALF_UP).doubleValue();
+                    }
+                    dto.setReviewCount(reviewCount);
+                    dto.setAverageRating(averageRating);
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -157,8 +182,30 @@ public class PhotographerService {
     public List<PhotographerResponse.ListDTO> getPhotographersByLocation(String location) {
         List<PhotographerProfile> photographers = photographerRepository.findByLocationAndStatus(location, "ACTIVE");
 
+        if (photographers.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        List<PhotoServiceReview> allReviews = photoServiceReviewJpaRepository.findByPhotoServiceInfo_PhotographerProfileIn(photographers);
+        java.util.Map<Long, List<PhotoServiceReview>> reviewsByPhotographer = allReviews.stream()
+                .collect(Collectors.groupingBy(review -> review.getPhotoServiceInfo().getPhotographerProfile().getPhotographerProfileId()));
+
         return photographers.stream()
-                .map(PhotographerResponse.ListDTO::new)
+                .map(profile -> {
+                    PhotographerResponse.ListDTO dto = new PhotographerResponse.ListDTO(profile);
+                    List<PhotoServiceReview> reviews = reviewsByPhotographer.getOrDefault(profile.getPhotographerProfileId(), java.util.Collections.emptyList());
+                    int reviewCount = reviews.size();
+                    double averageRating = 0.0;
+                    if (reviewCount > 0) {
+                        java.math.BigDecimal sumOfRatings = reviews.stream()
+                                .map(PhotoServiceReview::getRating)
+                                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                        averageRating = sumOfRatings.divide(new java.math.BigDecimal(reviewCount), 2, java.math.RoundingMode.HALF_UP).doubleValue();
+                    }
+                    dto.setReviewCount(reviewCount);
+                    dto.setAverageRating(averageRating);
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -169,8 +216,30 @@ public class PhotographerService {
     public List<PhotographerResponse.ListDTO> searchByBusinessName(String businessName) {
         List<PhotographerProfile> photographers = photographerRepository.findByBusinessNameContaining(businessName);
 
+        if (photographers.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        List<PhotoServiceReview> allReviews = photoServiceReviewJpaRepository.findByPhotoServiceInfo_PhotographerProfileIn(photographers);
+        java.util.Map<Long, List<PhotoServiceReview>> reviewsByPhotographer = allReviews.stream()
+                .collect(Collectors.groupingBy(review -> review.getPhotoServiceInfo().getPhotographerProfile().getPhotographerProfileId()));
+
         return photographers.stream()
-                .map(PhotographerResponse.ListDTO::new)
+                .map(profile -> {
+                    PhotographerResponse.ListDTO dto = new PhotographerResponse.ListDTO(profile);
+                    List<PhotoServiceReview> reviews = reviewsByPhotographer.getOrDefault(profile.getPhotographerProfileId(), java.util.Collections.emptyList());
+                    int reviewCount = reviews.size();
+                    double averageRating = 0.0;
+                    if (reviewCount > 0) {
+                        java.math.BigDecimal sumOfRatings = reviews.stream()
+                                .map(PhotoServiceReview::getRating)
+                                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                        averageRating = sumOfRatings.divide(new java.math.BigDecimal(reviewCount), 2, java.math.RoundingMode.HALF_UP).doubleValue();
+                    }
+                    dto.setReviewCount(reviewCount);
+                    dto.setAverageRating(averageRating);
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
