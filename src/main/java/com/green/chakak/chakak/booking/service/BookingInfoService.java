@@ -71,7 +71,7 @@ public class BookingInfoService {
 
     // 예약 생성 (포토그래퍼가 제안)
     @Transactional
-    public BookingInfo createBooking(BookingInfoRequest.CreateDTO createDTO, LoginUser loginUser){
+    public BookingInfoResponse.SaveDTO createBooking(BookingInfoRequest.CreateDTO createDTO, LoginUser loginUser){
         // 예약 제안은 포토그래퍼만 가능
         if (!"photographer".equalsIgnoreCase(loginUser.getUserTypeName())) {
             throw new Exception403("포토그래퍼만 예약을 생성할 수 있습니다.");
@@ -90,7 +90,9 @@ public class BookingInfoService {
                 .orElseThrow(() -> new Exception404("존재하지 않는 가격 정보입니다."));
 
         BookingInfo bookingInfo = createDTO.toEntity(userProfile, photographerProfile, priceInfo, photoServiceInfo);
-        return bookingInfoJpaRepository.save(bookingInfo);
+
+
+        return new BookingInfoResponse.SaveDTO(bookingInfoJpaRepository.save(bookingInfo));
     }
 
 

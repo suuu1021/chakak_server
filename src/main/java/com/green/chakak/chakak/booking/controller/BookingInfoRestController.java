@@ -6,6 +6,7 @@ import com.green.chakak.chakak.booking.service.request.BookingInfoRequest;
 import com.green.chakak.chakak.booking.service.BookingInfoService;
 import com.green.chakak.chakak._global.utils.ApiUtil;
 import com.green.chakak.chakak._global.utils.Define;
+import com.green.chakak.chakak.booking.service.response.BookingInfoResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -70,7 +71,7 @@ public class BookingInfoRestController {
         System.out.println("Login User ID: " + loginUser.getId());
         System.out.println("Create DTO: " + createDTO);
 
-        BookingInfo bookingInfo = bookingInfoService.createBooking(createDTO,loginUser);
+        BookingInfoResponse.SaveDTO bookingInfo = bookingInfoService.createBooking(createDTO,loginUser);
         return ResponseEntity.ok(new ApiUtil<>(bookingInfo));
     }
 

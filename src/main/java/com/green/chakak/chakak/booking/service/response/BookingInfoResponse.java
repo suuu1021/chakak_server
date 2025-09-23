@@ -9,7 +9,7 @@ import java.time.LocalTime;
 
 public class BookingInfoResponse {
 
-    /*
+    /**/
     @Data
     public static class SaveDTO{
         private Long bookingInfoId;
@@ -30,21 +30,12 @@ public class BookingInfoResponse {
             this.bookingInfoId = bookingInfo.getBookingInfoId();
             this.userProfileId = bookingInfo.getUserProfile().getUserProfileId();
             this.photographerProfileId = bookingInfo.getPhotographerProfile().getPhotographerProfileId();
-            this.photographerCategoryId = bookingInfo.getPhotographerCategory().getCategoryId();
             this.photoServiceInfoId = bookingInfo.getPhotoServiceInfo().getServiceId();
             this.bookingDate = bookingInfo.getBookingDate();
             this.bookingTime = bookingInfo.getBookingTime();
-            this.location = bookingInfo.getLocation();
-            this.budget = bookingInfo.getBudget();
-            this.specialRequest = bookingInfo.getSpecialRequest();
             this.status = bookingInfo.getStatus().name();
-            this.participantCount = bookingInfo.getParticipantCount();
-            this.shootingDuration = bookingInfo.getShootingDuration();
         }
     }
-
-     */
-
 
     // 예약 리스트(유저 입장)
     @Data
