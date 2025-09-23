@@ -5,10 +5,12 @@ import com.green.chakak.chakak._global.errors.exception.*;
 import com.green.chakak.chakak.photo.domain.PhotoServiceCategory;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
 import com.green.chakak.chakak.photo.domain.PhotoServiceMapping;
+import com.green.chakak.chakak.photo.domain.PhotoServiceReview;
 import com.green.chakak.chakak.photo.domain.PriceInfo;
 import com.green.chakak.chakak.photo.service.repository.PhotoCategoryJpaRepository;
 import com.green.chakak.chakak.photo.service.repository.PhotoMappingRepository;
 import com.green.chakak.chakak.photo.service.repository.PhotoServiceJpaRepository;
+import com.green.chakak.chakak.photo.service.repository.PhotoServiceReviewJpaRepository;
 import com.green.chakak.chakak.photo.service.repository.PriceInfoJpaRepository;
 import com.green.chakak.chakak.photo.service.request.PhotoCategoryRequest;
 import com.green.chakak.chakak.photo.service.request.PhotoMappingRequest;
@@ -32,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -45,6 +48,7 @@ public class PhotoService {
     private final PhotoCategoryJpaRepository photoCategoryJpaRepository;
     private final PhotoMappingRepository photoMappingRepository;
     private final PriceInfoJpaRepository priceInfoJpaRepository;
+    private final PhotoServiceReviewJpaRepository photoServiceReviewJpaRepository;
 
     // ========== PhotoService 관련 메서드들 ==========
     public List<PhotoServiceResponse.PhotoServiceListDTO> serviceList(int page, int size, String keyword) {
@@ -57,9 +61,19 @@ public class PhotoService {
             photoServiceInfosPage = photoServiceJpaRepository.findAllServiceInfo(pageable);
         }
 
+        List<PhotoServiceInfo> serviceInfos = photoServiceInfosPage.getContent();
+        if (serviceInfos.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        // N+1 문제 해결: 모든 리뷰를 한 번에 조회
+        List<PhotoServiceReview> allReviews = photoServiceReviewJpaRepository.findByPhotoServiceInfoIn(serviceInfos);
+        Map<Long, List<PhotoServiceReview>> reviewsByServiceId = allReviews.stream()
+                .collect(Collectors.groupingBy(review -> review.getPhotoServiceInfo().getServiceId()));
+
         List<PhotoServiceResponse.PhotoServiceListDTO> serviceInfoList = new ArrayList<>();
 
-        for (PhotoServiceInfo serviceInfo : photoServiceInfosPage.getContent()) {
+        for (PhotoServiceInfo serviceInfo : serviceInfos) {
             PhotoServiceResponse.PhotoServiceListDTO mainDTO = new PhotoServiceResponse.PhotoServiceListDTO(serviceInfo);
 
             // 가격 정보 조회 및 설정
@@ -70,6 +84,19 @@ public class PhotoService {
             // 카테고리 정보 조회 및 설정
             List<PhotoCategoryResponse.PhotoCategoryListDTO> categoryList = getServiceCategories(serviceInfo.getServiceId());
             mainDTO.setCategoryList(categoryList);
+
+            // 평점 및 리뷰 수 계산 및 설정
+            List<PhotoServiceReview> reviews = reviewsByServiceId.getOrDefault(serviceInfo.getServiceId(), java.util.Collections.emptyList());
+            int reviewCount = reviews.size();
+            double averageRating = 0.0;
+            if (reviewCount > 0) {
+                java.math.BigDecimal sumOfRatings = reviews.stream()
+                        .map(PhotoServiceReview::getRating)
+                        .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                averageRating = sumOfRatings.divide(new java.math.BigDecimal(reviewCount), 2, java.math.RoundingMode.HALF_UP).doubleValue();
+            }
+            mainDTO.setRating(averageRating);
+            mainDTO.setReviewCount(reviewCount);
 
             serviceInfoList.add(mainDTO);
         }
@@ -398,6 +425,15 @@ public class PhotoService {
         List<PhotoServiceInfo> services = photoServiceJpaRepository.findByCategoryIdWithPriceInfo(categoryId);
         List<PhotoServiceResponse.PhotoServiceListDTO> serviceDTOs = new ArrayList<>();
 
+        if (services.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        // N+1 문제 해결: 모든 리뷰를 한 번에 조회
+        List<PhotoServiceReview> allReviews = photoServiceReviewJpaRepository.findByPhotoServiceInfoIn(services);
+        Map<Long, List<PhotoServiceReview>> reviewsByServiceId = allReviews.stream()
+                .collect(Collectors.groupingBy(review -> review.getPhotoServiceInfo().getServiceId()));
+
         for (PhotoServiceInfo service : services) {
             PhotoServiceResponse.PhotoServiceListDTO serviceDTO =
                     new PhotoServiceResponse.PhotoServiceListDTO(service);
@@ -420,6 +456,19 @@ public class PhotoService {
             // 카테고리 정보 설정 (이 부분이 빠짐)
             List<PhotoCategoryResponse.PhotoCategoryListDTO> categoryList = getServiceCategories(service.getServiceId());
             serviceDTO.setCategoryList(categoryList);
+
+            // 평점 및 리뷰 수 계산 및 설정
+            List<PhotoServiceReview> reviews = reviewsByServiceId.getOrDefault(service.getServiceId(), java.util.Collections.emptyList());
+            int reviewCount = reviews.size();
+            double averageRating = 0.0;
+            if (reviewCount > 0) {
+                java.math.BigDecimal sumOfRatings = reviews.stream()
+                        .map(PhotoServiceReview::getRating)
+                        .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                averageRating = sumOfRatings.divide(new java.math.BigDecimal(reviewCount), 2, java.math.RoundingMode.HALF_UP).doubleValue();
+            }
+            serviceDTO.setRating(averageRating);
+            serviceDTO.setReviewCount(reviewCount);
 
             serviceDTOs.add(serviceDTO);
         }
@@ -537,6 +586,15 @@ public class PhotoService {
         // 해당 포토그래퍼의 서비스 조회
         List<PhotoServiceInfo> services = photoServiceJpaRepository.findByPhotographerProfile_PhotographerProfileId(photographerId);
 
+        if (services.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        // N+1 문제 해결: 모든 리뷰를 한 번에 조회
+        List<PhotoServiceReview> allReviews = photoServiceReviewJpaRepository.findByPhotoServiceInfoIn(services);
+        Map<Long, List<PhotoServiceReview>> reviewsByServiceId = allReviews.stream()
+                .collect(Collectors.groupingBy(review -> review.getPhotoServiceInfo().getServiceId()));
+
         List<PhotoServiceResponse.PhotoServiceListDTO> serviceInfoList = new ArrayList<>();
 
         for (PhotoServiceInfo serviceInfo : services) {
@@ -552,6 +610,19 @@ public class PhotoService {
             // 카테고리 정보 조회 및 설정
             List<PhotoCategoryResponse.PhotoCategoryListDTO> categoryList = getServiceCategories(serviceInfo.getServiceId());
             mainDTO.setCategoryList(categoryList);
+
+            // 평점 및 리뷰 수 계산 및 설정
+            List<PhotoServiceReview> reviews = reviewsByServiceId.getOrDefault(serviceInfo.getServiceId(), java.util.Collections.emptyList());
+            int reviewCount = reviews.size();
+            double averageRating = 0.0;
+            if (reviewCount > 0) {
+                java.math.BigDecimal sumOfRatings = reviews.stream()
+                        .map(PhotoServiceReview::getRating)
+                        .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                averageRating = sumOfRatings.divide(new java.math.BigDecimal(reviewCount), 2, java.math.RoundingMode.HALF_UP).doubleValue();
+            }
+            mainDTO.setRating(averageRating);
+            mainDTO.setReviewCount(reviewCount);
 
             serviceInfoList.add(mainDTO);
         }
