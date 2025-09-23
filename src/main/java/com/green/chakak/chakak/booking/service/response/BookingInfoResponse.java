@@ -47,6 +47,8 @@ public class BookingInfoResponse {
         private double review;
         private BookingStatus status;
         private int price;
+        private LocalDate bookingDate;
+        private LocalTime bookingTime;
 
         public BookingUserListDTO(BookingInfo bookingInfo){
             this.bookingInfoId = bookingInfo.getBookingInfoId();
@@ -57,6 +59,8 @@ public class BookingInfoResponse {
             this.review = 0.0;
             this.status = bookingInfo.getStatus();
             this.price = bookingInfo.getPriceInfo().getPrice();
+            this.bookingDate = bookingInfo.getBookingDate();
+            this.bookingTime = bookingInfo.getBookingTime();
         }
     }
 
