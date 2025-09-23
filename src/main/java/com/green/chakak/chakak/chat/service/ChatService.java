@@ -109,6 +109,10 @@ public class ChatService {
                     .paymentOrderId(messageDto.getPaymentOrderId())
                     .imageUrl(imageUrl)
                     .imageOriginalName(messageDto.getImageOriginalName())
+                    .paymentDescription(messageDto.getPaymentDescription())
+                    .photoServiceInfoId(messageDto.getPhotoServiceInfoId())
+                    .priceInfoId(messageDto.getPriceInfoId())
+                    .bookingInfoId(messageDto.getBookingInfoId())
                     .isRead(false)
                     .build();
 

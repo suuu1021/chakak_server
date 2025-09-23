@@ -62,6 +62,19 @@ public class ChatMessage {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Timestamp createdAt;
 
+    // 결제 관련 추가 필드들
+    @Column(name = "payment_description")
+    private String paymentDescription;
+
+    @Column(name = "photo_service_info_id")
+    private Long photoServiceInfoId;
+
+    @Column(name = "price_info_id")
+    private Long priceInfoId;
+
+    @Column(name = "booking_info_id")
+    private Long bookingInfoId;
+
     public enum SenderType {
         USER, PHOTOGRAPHER
     }

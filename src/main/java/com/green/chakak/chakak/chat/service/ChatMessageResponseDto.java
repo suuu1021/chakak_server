@@ -20,12 +20,22 @@ public class ChatMessageResponseDto {
     private final String paymentOrderId;
     private final String createdAt;
 
-    // 이미지 관련 새 필드들
+    // 이미지 관련 필드들
     private final String imageUrl;
     private final String imageOriginalName;
 
+    // 🔥 추가된 결제 관련 필드들
+    private final String paymentDescription;
+    private final Long photoServiceInfoId;
+    private final Long priceInfoId;
+    private Long bookingInfoId;
+
     @Builder
-    private ChatMessageResponseDto(Long chatMessageId, Long chatRoomId, ChatMessage.SenderType senderType, Long senderId, ChatMessage.MessageType messageType, String message, Integer paymentAmount, String paymentOrderId, String createdAt, String imageUrl, String imageOriginalName) {
+    private ChatMessageResponseDto(Long chatMessageId, Long chatRoomId, ChatMessage.SenderType senderType,
+                                   Long senderId, ChatMessage.MessageType messageType, String message,
+                                   Integer paymentAmount, String paymentOrderId, String createdAt,
+                                   String imageUrl, String imageOriginalName,
+                                   String paymentDescription, Long photoServiceInfoId, Long priceInfoId, Long bookingInfoId) {
         this.chatMessageId = chatMessageId;
         this.chatRoomId = chatRoomId;
         this.senderType = senderType;
@@ -36,9 +46,15 @@ public class ChatMessageResponseDto {
         this.paymentOrderId = paymentOrderId;
         this.createdAt = createdAt;
 
-        // 새 필드들
+        // 이미지 관련 필드들
         this.imageUrl = imageUrl;
         this.imageOriginalName = imageOriginalName;
+
+        // 추가된 결제 관련 필드들
+        this.paymentDescription = paymentDescription;
+        this.photoServiceInfoId = photoServiceInfoId;
+        this.priceInfoId = priceInfoId;
+        this.bookingInfoId = bookingInfoId;
     }
 
     // chatmessage -> dto 변환
@@ -54,6 +70,10 @@ public class ChatMessageResponseDto {
                 .paymentOrderId(entity.getPaymentOrderId())
                 .imageUrl(entity.getImageUrl())
                 .imageOriginalName(entity.getImageOriginalName())
+                .paymentDescription(entity.getPaymentDescription())
+                .photoServiceInfoId(entity.getPhotoServiceInfoId())
+                .priceInfoId(entity.getPriceInfoId())
+                .bookingInfoId(entity.getBookingInfoId())
                 .createdAt(entity.getCreatedAt().toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
                 .build();
     }
