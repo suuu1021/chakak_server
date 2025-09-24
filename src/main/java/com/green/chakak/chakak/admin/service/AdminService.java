@@ -1,7 +1,9 @@
 package com.green.chakak.chakak.admin.service;
 
 import com.green.chakak.chakak._global.errors.exception.*;
+import com.green.chakak.chakak._global.utils.Define;
 import com.green.chakak.chakak._global.utils.JwtUtil;
+import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.account.domain.User;
 import com.green.chakak.chakak.account.domain.UserProfile;
 import com.green.chakak.chakak.account.domain.UserType;
@@ -18,6 +20,14 @@ import com.green.chakak.chakak.admin.domain.LoginAdmin;
 import com.green.chakak.chakak.admin.service.repository.AdminJpaRepository;
 import com.green.chakak.chakak.admin.service.request.AdminRequest;
 import com.green.chakak.chakak.admin.service.response.AdminResponse;
+import com.green.chakak.chakak.booking.domain.BookingCancelInfo;
+import com.green.chakak.chakak.booking.domain.BookingInfo;
+import com.green.chakak.chakak.booking.domain.BookingStatus;
+import com.green.chakak.chakak.booking.service.repository.BookingCancelInfoJpaRepository;
+import com.green.chakak.chakak.booking.service.repository.BookingInfoJpaRepository;
+import com.green.chakak.chakak.booking.service.request.BookingInfoRequest;
+import com.green.chakak.chakak.booking.service.response.BookingCancelInfoResponse;
+import com.green.chakak.chakak.booking.service.response.BookingInfoResponse;
 import com.green.chakak.chakak.photo.domain.PhotoServiceCategory;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
 import com.green.chakak.chakak.photo.domain.PhotoServiceMapping;
@@ -62,11 +72,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestAttribute;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -90,6 +102,8 @@ public class AdminService {
     private final PhotoMappingRepository photoMappingRepository;
     private final PhotoCategoryJpaRepository photoCategoryJpaRepository;
     private final PortfolioCategoryJpaRepository categoryRepository;
+    private final BookingCancelInfoJpaRepository bookingCancelInfoJpaRepository;
+    private final BookingInfoJpaRepository bookingInfoJpaRepository;
 
 
     // 관리자 로그인 기능
@@ -217,19 +231,29 @@ public class AdminService {
         return UserResponse.UpdateResponse.from(updatedUser);
     }
 
-//    // 유저 프로필 생성
-//    @Transactional
-//    public UserProfileResponse.DetailDTO createdProfileByAdmin(Long userId, UserProfileRequest.CreateDTO createDTO){
-//        User user = userJpaRepository.findById(createDTO.getUserInfoId()).orElseThrow(
-//                () -> new Exception404("존재하지 않는 유저입니다.")
-//        );
-//
-//        userProfileJpaRepository.findByNickName(createDTO.getNickName()).ifPresent(up -> {
-//            throw new Exception400("이미 사용중인 닉네임입니다.");
-//        });
-//        UserProfile savedProfile = userProfileJpaRepository.save(createDTO.toEntity(user));
-//        return new UserProfileResponse.DetailDTO(savedProfile);
-//    }
+    // 유저 프로필 생성
+    @Transactional
+    public UserProfileResponse.DetailDTO createdProfileByAdmin(Long userId, UserProfileRequest.CreateDTO createDTO,
+                                                               LoginAdmin loginAdmin){
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+
+        User user = userJpaRepository.findById(createDTO.getUserInfoId()).orElseThrow(
+                () -> new Exception404("존재하지 않는 유저입니다.")
+        );
+
+        userProfileJpaRepository.findByUserId(userId).ifPresent(up -> {
+            throw new Exception400("이미 프로필이 존재합니다.");
+        });
+
+        userProfileJpaRepository.findByNickName(createDTO.getNickName()).ifPresent(up -> {
+            throw new Exception400("이미 사용중인 닉네임입니다.");
+        });
+
+        UserProfile savedProfile = userProfileJpaRepository.save(createDTO.toEntity(user));
+        return new UserProfileResponse.DetailDTO(savedProfile);
+    }
 
     // 유저 프로필 수정
 
@@ -913,14 +937,12 @@ public class AdminService {
     @Transactional
     public void removeMappingByAdmin(Long serviceId) {
 
-        // TODO 1. 삭제할 매핑의 서비스ID 조회
         List<PhotoServiceMapping> mapping = photoMappingRepository.findByPhotoServiceInfo_ServiceId(serviceId);
 
         if(mapping.isEmpty()) {
             throw new Exception404("해당 서비스 ID와 관련된 매핑 데이터가 존재하지 않습니다.");
         }
 
-        // TODO - 매핑 테이블 WHERE service_id = serviceId; 작업 필요
         photoMappingRepository.deleteByPhotoServiceInfo_serviceId(serviceId);
     }
 
@@ -1547,6 +1569,201 @@ public class AdminService {
             throw new Exception400("유효하지 않은 이미지 ID입니다: " + imageId);
         }
     }
+
+    // 예약 관련  -- 취소내역
+
+    public BookingCancelInfoResponse.BookingCancelInfoGetResponse getBookingCancelInfoByAdmin(Long bookingCancelInfoId, Long userId ,LoginAdmin loginAdmin) {
+
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+
+        User user = userJpaRepository.findById(userId)
+                .orElseThrow(() -> new Exception404("존재하지 않는 유저입니다."));
+
+        BookingCancelInfo bookingCancelInfo = bookingCancelInfoJpaRepository.findById(bookingCancelInfoId)
+                .orElseThrow(() -> new Exception404("존재하지 않는 내역입니다."));
+
+
+        String userTypeName = user.getUserType().getTypeName();
+
+        switch (userTypeName) {
+            case "user" -> {
+                if (!bookingCancelInfo.getUserProfile().getUser().getUserId().equals(user.getUserId())) {
+                    throw new Exception403("해당 유저의 내역이 아닙니다.");
+                }
+            }
+            case "photographer" -> {
+                if (!bookingCancelInfo.getBookingInfo().getPhotographerProfile().getUser().getUserId()
+                        .equals(user.getUserId())) {
+                    throw new Exception403("해당 유저의 내역이 아닙니다.");
+                }
+            }
+            default -> throw new Exception403("지원하지 않는 유저 유형입니다.");
+        }
+        return BookingCancelInfoResponse.BookingCancelInfoGetResponse.from(bookingCancelInfo);
+    }
+
+    // 예약관련
+
+    public List<BookingInfoResponse.BookingUserListDTO> getUserBookingsByAdmin(Long userId, LoginAdmin loginAdmin){
+
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+
+        User user = userJpaRepository.findById(userId)
+                .orElseThrow(() -> new Exception404("존재하지 않는 유저입니다."));
+
+        return bookingInfoJpaRepository.findByUserId(user.getUserId())
+                .stream()
+                .map(BookingInfoResponse.BookingUserListDTO::new)
+                .toList();
+    }
+
+    // [포토그래퍼]
+    public List<BookingInfoResponse.BookingPhotographerListDTO> getPhotographerBookingsByAdmin(Long userId, LoginAdmin loginAdmin){
+
+        User user = userJpaRepository.findById(userId)
+                .orElseThrow(() -> new Exception404("존재하지 않는 유저입니다."));
+
+        return bookingInfoJpaRepository.findByPhotographerId(user.getUserId())
+                .stream()
+                .map(BookingInfoResponse.BookingPhotographerListDTO::new)
+                .toList();
+    }
+
+
+    // 예약 상세 조회
+    public BookingInfoResponse.BookingDetailDTO getBookingDetailByAdmin(Long userId, Long photographerId, Long bookingInfoId, LoginAdmin loginAdmin){
+
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+
+        User user = userJpaRepository.findById(userId)
+                .orElseThrow(() -> new Exception404("존재하지 않는 유저입니다."));
+
+        BookingInfo bookingInfo = bookingInfoJpaRepository.findById(bookingInfoId)
+                .orElseThrow(() -> new Exception404("존재하지 않는 예약입니다."));
+
+
+        Long bookingUserId = bookingInfo.getUserProfile().getUser().getUserId();
+        Long bookingPhotographerId = bookingInfo.getPhotographerProfile().getUser().getUserId();
+
+        // 관리자 검증: 예약자와 포토그래퍼 모두 일치해야 함
+        if (!bookingUserId.equals(userId) || !bookingPhotographerId.equals(photographerId)) {
+            throw new Exception403("해당 유저와 포토그래퍼 간의 예약이 아닙니다.");
+        }
+
+        return new BookingInfoResponse.BookingDetailDTO(bookingInfo);
+    }
+
+
+    // 예약 생성
+    @Transactional
+    public void createBookingByAdmin(BookingInfoRequest.CreateDTO createDTO, LoginAdmin loginAdmin) {
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+
+        UserProfile userProfile = userProfileJpaRepository.findByUserId(createDTO.getUserProfileId())
+                .orElseThrow(() -> new Exception404("예약을 받을 사용자를 찾을 수 없습니다."));
+
+        PhotographerProfile photographerProfile = photographerRepository.findById(createDTO.getPhotographerProfileId())
+                .orElseThrow(() -> new Exception404("존재하지 않는 작가입니다."));
+
+        PhotoServiceInfo photoServiceInfo = photoServiceJpaRepository.findById(createDTO.getPhotoServiceId())
+                .orElseThrow(() -> new Exception404("존재하지 않는 포토 서비스입니다."));
+
+        PriceInfo priceInfo = priceInfoJpaRepository.findById(createDTO.getPriceInfoId())
+                .orElseThrow(() -> new Exception404("존재하지 않는 가격 정보입니다."));
+
+        BookingInfo bookingInfo = createDTO.toEntity(userProfile, photographerProfile, priceInfo, photoServiceInfo);
+
+
+        bookingInfo.setStatus(BookingStatus.PENDING);
+
+        bookingInfoJpaRepository.save(bookingInfo);
+    }
+
+
+    // [포토그래퍼] 예약 확정
+    @Transactional
+    public void confirmBookingByAdmin(AdminRequest.ConfirmBookingDTO request, LoginAdmin loginAdmin) {
+        BookingInfo bookingInfo = bookingInfoJpaRepository.findById(request.getBookingInfoId())
+                .orElseThrow(() -> new Exception404("존재하지 않는 예약 내역입니다."));
+
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+
+        // 관리자 권한으로 확인 → 포토그래퍼 본인 여부 체크 제거
+        if(!bookingInfo.getStatus().canChangeTo(BookingStatus.CONFIRMED)){
+            throw new Exception400("예약대기 상태일 때만 예약을 확정할 수 있습니다. 현재 상태: "
+                    + bookingInfo.getStatus().getDescription());
+        }
+
+        bookingInfo.setStatus(BookingStatus.CONFIRMED);
+    }
+    // [사용자] 예약 취소
+    @Transactional
+    public void cancelBookingByAdmin(AdminRequest.ConfirmBookingDTO request, LoginAdmin loginAdmin){
+
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+
+        BookingInfo bookingInfo = bookingInfoJpaRepository.findById(request.getBookingInfoId())
+                .orElseThrow(() -> new Exception404("존재하지 않는 예약 내역입니다."));
+
+        if(!bookingInfo.getStatus().canChangeTo(BookingStatus.CANCELED)){
+            throw new Exception400("예약대기 상태일 때만 예약을 확정할 수 있습니다. 현재 상태: "
+                    + bookingInfo.getStatus().getDescription());
+        }
+
+        bookingInfo.setStatus(BookingStatus.CANCELED);
+    }
+
+
+    // [포토그래퍼] 촬영 완료 처리
+    @Transactional
+    public void completeBookingByAdmin(AdminRequest.ConfirmBookingDTO request, LoginAdmin loginAdmin){
+
+        BookingInfo bookingInfo = bookingInfoJpaRepository.findById(request.getBookingInfoId())
+                .orElseThrow(() -> new Exception404("존재하지 않는 예약 내역입니다."));
+
+        if (loginAdmin == null) {
+            throw new Exception403("관리자 권한이 필요합니다.");
+        }
+
+        // CONFIRMED 상태일 때만 촬영 완료 처리 가능
+        if(!bookingInfo.getStatus().canChangeTo(BookingStatus.COMPLETED)){
+            throw new Exception400("예약확정 상태일 때만 촬영 완료로 처리할 수 있습니다. 현재 상태: " + bookingInfo.getStatus().getDescription());
+        }
+        bookingInfo.setStatus(BookingStatus.COMPLETED);
+    }
+
+    // TODO - 리뷰 남길 시 사용할 서비스
+    // [사용자] 리뷰 작성 후 상태 변경
+    @Transactional
+    public void reviewBooking(Long bookingInfoId, LoginUser loginUser){
+        BookingInfo bookingInfo = bookingInfoJpaRepository.findById(bookingInfoId)
+                .orElseThrow(() -> new Exception404("존재하지 않는 예약 내역입니다."));
+
+        // 예약자 본인만 리뷰 작성 가능
+        if (!bookingInfo.getUserProfile().getUser().getUserId().equals(loginUser.getId())){
+            throw new Exception403("해당 서비스에 리뷰를 남길 수 없습니다.");
+        }
+
+        // COMPLETED 상태일 때만 리뷰 작성 가능
+        if(!bookingInfo.getStatus().canChangeTo(BookingStatus.REVIEWED)){
+            throw new Exception400("촬영완료 상태일 때만 리뷰를 작성할 수 있습니다. 현재 상태: " + bookingInfo.getStatus().getDescription());
+        }
+        bookingInfo.setStatus(BookingStatus.REVIEWED);
+    }
+
+
 }
 
 

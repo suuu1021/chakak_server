@@ -3,10 +3,8 @@ package com.green.chakak.chakak.admin.controller;
 import com.green.chakak.chakak._global.errors.exception.Exception403;
 import com.green.chakak.chakak._global.utils.ApiUtil;
 import com.green.chakak.chakak._global.utils.Define;
+import com.green.chakak.chakak.account.domain.LoginUser;
 import com.green.chakak.chakak.account.domain.UserType;
-import com.green.chakak.chakak.account.service.UserProfileService;
-import com.green.chakak.chakak.account.service.UserService;
-import com.green.chakak.chakak.account.service.UserTypeService;
 import com.green.chakak.chakak.account.service.request.UserProfileRequest;
 import com.green.chakak.chakak.account.service.request.UserRequest;
 import com.green.chakak.chakak.account.service.request.UserTypeRequest;
@@ -16,7 +14,9 @@ import com.green.chakak.chakak.admin.domain.LoginAdmin;
 import com.green.chakak.chakak.admin.service.AdminService;
 import com.green.chakak.chakak.admin.service.request.AdminRequest;
 import com.green.chakak.chakak.admin.service.response.AdminResponse;
-import com.green.chakak.chakak.photo.service.PhotoService;
+import com.green.chakak.chakak.booking.service.request.BookingInfoRequest;
+import com.green.chakak.chakak.booking.service.response.BookingCancelInfoResponse;
+import com.green.chakak.chakak.booking.service.response.BookingInfoResponse;
 import com.green.chakak.chakak.photo.service.request.PhotoCategoryRequest;
 import com.green.chakak.chakak.photo.service.request.PhotoMappingRequest;
 import com.green.chakak.chakak.photo.service.request.PhotoServiceInfoRequest;
@@ -26,12 +26,12 @@ import com.green.chakak.chakak.photo.service.response.PhotoServiceResponse;
 import com.green.chakak.chakak.photographer.service.request.PhotographerCategoryRequest;
 import com.green.chakak.chakak.photographer.service.request.PhotographerRequest;
 import com.green.chakak.chakak.photographer.service.response.PhotographerResponse;
-import com.green.chakak.chakak.portfolios.service.PortfolioService;
 import com.green.chakak.chakak.portfolios.service.request.PortfolioRequest;
 import com.green.chakak.chakak.portfolios.service.response.PortfolioCategoryResponse;
 import com.green.chakak.chakak.portfolios.service.response.PortfolioResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -43,18 +43,13 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("api/admin")
 @RequiredArgsConstructor
 public class AdminRestController {
 
     private final AdminService adminService;
-    private final PhotoService photoService;
-    private final UserProfileService userProfileService;
-    private final UserService userService;
-    private final UserTypeService userTypeService;
-    private final PortfolioService portfolioService;
-
 
 
     @PostMapping("/login")
@@ -97,19 +92,19 @@ public class AdminRestController {
     // 유저 관련
 
     @PutMapping("/users/update/{id}")
-    public ResponseEntity<?> updateByUserAdmin(@PathVariable Long id, @Valid @RequestBody UserRequest.UpdateRequest req,
+    public ResponseEntity<?> updateByUserAdmin(@Valid @RequestBody UserRequest.UpdateRequest req,
                                         @RequestAttribute(value = Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
 
         if (loginAdmin == null) {
             throw new Exception403("관리자 권한이 필요합니다.");
         }
-        UserResponse.UpdateResponse response = adminService.updateUserByAdmin(id, req, loginAdmin);
+        UserResponse.UpdateResponse response = adminService.updateUserByAdmin(req.toEntity().getUserId(), req, loginAdmin);
         return ResponseEntity.ok(response);
     }
 
 
     @DeleteMapping("/users/delete/{id}")
-    public ResponseEntity<?> deleteUserByAdmin(@PathVariable Long id, @RequestAttribute(value = Define.LOGIN_ADMIN) LoginAdmin loginAdmin) { // LoginUser 자동 주입
+    public ResponseEntity<?> deleteUserByAdmin(@PathVariable Long id, @RequestAttribute(value = Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
         if (loginAdmin == null) {
             throw new Exception403("관리자 권한이 필요합니다.");
         }
@@ -118,6 +113,16 @@ public class AdminRestController {
     }
 
     // 유저프로파일 관련
+
+    @PostMapping("/users/{userId}/profiles")
+    public ResponseEntity<?> createProfileByAdmin(
+            @PathVariable Long userId,
+            @Valid @RequestBody UserProfileRequest.CreateDTO createDTO,
+            @RequestAttribute(value = Define.LOGIN_ADMIN, required = false) LoginAdmin loginAdmin) {
+
+        UserProfileResponse.DetailDTO response = adminService.createdProfileByAdmin(userId, createDTO, loginAdmin);
+        return ResponseEntity.ok(new ApiUtil<>("처리가 완료 되었습니다."));
+    }
 
 
     @PutMapping("v1/users/{userId}/profile/update")
@@ -434,7 +439,7 @@ public class AdminRestController {
     }
 
 
-    @PostMapping("users/{userId}/portfolios")
+    @PostMapping("/users/{userId}/portfolios")
     public ResponseEntity<?> createPortfolioByAdmin(@PathVariable Long userId,
                                                     @Valid @RequestBody PortfolioRequest.CreateDTO createRequest,
                                                     @RequestAttribute(value = Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
@@ -467,7 +472,7 @@ public class AdminRestController {
     }
 
 
-    @PutMapping("users/{userId}/portfolios/{portfolioId}")
+    @PutMapping("/users/{userId}/portfolios/{portfolioId}")
     public ResponseEntity<?> updatePortfolio(@PathVariable Long portfolioId,
                                              @Valid @RequestBody PortfolioRequest.UpdateDTO updateRequest,
                                              @PathVariable Long userId,
@@ -477,7 +482,7 @@ public class AdminRestController {
     }
 
 
-    @DeleteMapping("user/{userId}/portfolios/{portfolioId}")
+    @DeleteMapping("/user/{userId}/portfolios/{portfolioId}")
     public ResponseEntity<?> deletePortfolio(@PathVariable Long userId, @PathVariable Long portfolioId,
                                              @RequestAttribute(value = Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
 
@@ -520,7 +525,7 @@ public class AdminRestController {
     }
 
 
-    @DeleteMapping("users/{userId}/portfolios/images/{imageId}")
+    @DeleteMapping("/users/{userId}/portfolios/images/{imageId}")
     public ResponseEntity<?> deleteImageByAdmin(@PathVariable Long userId, @PathVariable Long imageId,
                                          @RequestAttribute(value = Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
 
@@ -539,6 +544,126 @@ public class AdminRestController {
         return ResponseEntity.ok(new ApiUtil<>("카테고리가 추가되었습니다."));
     }
 
+
+    // [예약취소] 단일 조회
+    @GetMapping("/users/{userId}/booking-cancel-infos/{bookingCancelInfoId}")
+    public ResponseEntity<?> getBookingCancelInfo(@PathVariable Long userId, @PathVariable Long bookingCancelInfoId,
+                                                  @RequestAttribute(value = Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
+        BookingCancelInfoResponse.BookingCancelInfoGetResponse response =
+                adminService.getBookingCancelInfoByAdmin(userId, bookingCancelInfoId, loginAdmin);
+        return ResponseEntity.ok(response);
+    }
+
+
+    // 예약 관련
+
+    @GetMapping("/booking-infos/users/{userId}/list")
+    public ResponseEntity<?> getUserBookingsByAdmin(
+            @PathVariable Long userId,
+            @RequestAttribute(value = Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
+
+        log.info("=== 관리자 유저 예약 목록 조회 API 호출 ===");
+        log.info("Admin ID: {}", loginAdmin.getAdminId());
+        log.info("조회 대상 User ID: {}", userId);
+
+        List<BookingInfoResponse.BookingUserListDTO> result =
+                adminService.getUserBookingsByAdmin(userId, loginAdmin);
+        log.info("조회된 예약 개수: {}", result != null ? result.size() : 0);
+
+        if (result != null && !result.isEmpty()) {
+            log.info("첫 번째 예약 정보: {}", result.get(0));
+        } else {
+            log.info("예약 데이터가 비어있습니다.");
+        }
+
+        return ResponseEntity.ok(new ApiUtil<>(result));
+    }
+
+    @GetMapping("/booking-infos/photographers/{userId}/list")
+    public ResponseEntity<?> getPhotographerBookingsByAdmin(
+            @PathVariable Long userId,
+            @RequestAttribute(value = Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
+
+        log.info("=== 관리자 포토그래퍼 예약 목록 조회 API 호출 ===");
+        log.info("Admin ID: {}", loginAdmin.getAdminId());
+        log.info("조회 대상 Photographer ID: {}", userId);
+
+        List<BookingInfoResponse.BookingPhotographerListDTO> result = adminService.getPhotographerBookingsByAdmin(userId, loginAdmin);
+        log.info("조회된 예약 개수: {}", result != null ? result.size() : 0);
+
+        return ResponseEntity.ok(new ApiUtil<>(result));
+    }
+
+    @GetMapping("/booking-infos/users/{userId}/photographers/{photographerId}/{bookingInfoId}")
+    public ResponseEntity<?> getBookingDetailByAdmin(
+            @PathVariable Long userId,
+            @PathVariable Long photographerId,
+            @PathVariable Long bookingInfoId,
+            @RequestAttribute(value = Define.LOGIN_ADMIN) LoginAdmin loginAdmin) {
+
+        log.info("=== 관리자 예약 상세 조회 API 호출 ===");
+        log.info("Admin ID: {}, Booking ID: {}, User ID: {}, Photographer ID: {}",
+                loginAdmin.getAdminId(), bookingInfoId, userId, photographerId);
+
+        BookingInfoResponse.BookingDetailDTO result = adminService.getBookingDetailByAdmin(userId, photographerId, bookingInfoId, loginAdmin);
+        log.info("조회된 예약 상세: {}", result);
+
+        return ResponseEntity.ok(new ApiUtil<>(result));
+    }
+
+    // 예약 생성 (포토그래퍼가 사용자에게 제안)
+    @PostMapping("/booking-infos/users/{userId}/photographers/{photographerId}")
+    public ResponseEntity<?> createBooking(@PathVariable(name = "userId") Long userId,
+                                           @PathVariable(name = "photographerId") Long photographerId,
+                                           @Valid @RequestBody BookingInfoRequest.CreateDTO createDTO,
+                                           @RequestAttribute(value = Define.LOGIN_ADMIN) LoginAdmin loginAdmin){
+        log.info("=== createBooking API 호출됨 ===");
+        log.info("Login User ID: " + loginAdmin.getAdminId());
+        log.info("Create DTO: " + createDTO);
+
+        adminService.createBookingByAdmin(createDTO,loginAdmin);
+        return ResponseEntity.ok(new ApiUtil<>("예약 생성이 완료되었습니다."));
+    }
+
+
+    // [포토그래퍼] 예약 확정
+    @PatchMapping("/{bookingInfoId}/confirm")
+    public ResponseEntity<?> confirmBookingByAdmin(@RequestBody @Valid AdminRequest.ConfirmBookingDTO request,
+                                                   @RequestAttribute(value = Define.LOGIN_ADMIN) LoginAdmin loginAdmin){
+
+
+        adminService.confirmBookingByAdmin(request, loginAdmin);
+        return ResponseEntity.ok(new ApiUtil<>("예약이 확정되었습니다."));
+    }
+
+    // [포토그래퍼] 촬영 완료 처리
+    @PatchMapping("/{bookingInfoId}/complete")
+    public ResponseEntity<?> completeBooking(@RequestBody @Valid AdminRequest.ConfirmBookingDTO request,
+                                             @RequestAttribute(value = Define.LOGIN_ADMIN) LoginAdmin loginAdmin){
+
+        Long bookingInfoId = request.getBookingInfoId();
+
+        System.out.println("=== completeBooking API 호출됨 ===");
+        System.out.println("Booking ID: " + bookingInfoId);
+        System.out.println("Login User ID: " + loginAdmin.getAdminId());
+
+        adminService.completeBookingByAdmin(request, loginAdmin);
+        return ResponseEntity.ok(new ApiUtil<>("촬영 완료로 처리되었습니다."));
+    }
+
+    // [사용자] 예약 취소
+    @PatchMapping("/{bookingInfoId}/cancel")
+    public ResponseEntity<?> cancelBooking(@RequestBody @Valid AdminRequest.ConfirmBookingDTO request,
+                                           @RequestAttribute(value = Define.LOGIN_ADMIN) LoginAdmin loginAdmin){
+        Long bookingInfoId = request.getBookingInfoId();
+
+        System.out.println("=== cancelBooking API 호출됨 ===");
+        System.out.println("Booking ID: " + bookingInfoId);
+        System.out.println("Login Admin ID: " + loginAdmin.getAdminId());
+
+        adminService.cancelBookingByAdmin(request, loginAdmin);
+        return ResponseEntity.ok(new ApiUtil<>("예약이 취소되었습니다."));
+    }
 
 
 }

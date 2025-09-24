@@ -1,6 +1,8 @@
 package com.green.chakak.chakak.booking.controller;
 
+import com.green.chakak.chakak._global.utils.Define;
 import com.green.chakak.chakak.account.domain.LoginUser;
+import com.green.chakak.chakak.admin.domain.LoginAdmin;
 import com.green.chakak.chakak.booking.service.BookingCancelInfoService;
 import com.green.chakak.chakak.booking.service.request.BookingCancelInfoRequest;
 import com.green.chakak.chakak.booking.service.response.BookingCancelInfoResponse;
@@ -41,7 +43,15 @@ public class BookingCancelInfoRestController {
 
     // [유지] 통합형 예약 취소 내역 페이징 조회 (관리자용)
     @GetMapping("/paged")
-    public ResponseEntity<PageResponse<BookingCancelInfoResponse.BookingCancelInfoListResponse>> getPagedCancelInfoList(BookingCancelInfoRequest.BookingCancelInfoListRequest req) {
+    public ResponseEntity<PageResponse<BookingCancelInfoResponse.BookingCancelInfoListResponse>> getPagedCancelInfoList(BookingCancelInfoRequest.BookingCancelInfoListRequest req,
+                                                                                                                        @RequestAttribute(value = Define.LOGIN_ADMIN, required = false) LoginAdmin loginAdmin) {
+        if (loginAdmin == null) {
+            loginAdmin = LoginAdmin.builder()
+                    .adminId(0L)
+                    .adminName("testAdmin")
+                    .userTypeName("admin")
+                    .build();
+        }
         PageResponse<BookingCancelInfoResponse.BookingCancelInfoListResponse> response =
                 bookingCancelInfoService.getPagedCancelInfoList(req);
         return ResponseEntity.ok(response);
