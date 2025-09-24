@@ -386,34 +386,34 @@ public class DataInitializer implements CommandLineRunner {
         // 서비스 정의: {서비스명, 설명, 카테고리명, 이미지URL}
         String[][] serviceDefinitions = {
                 // 웨딩 관련
-                {"따뜻한 웨딩스냅 원하는 예비부부님 기다립니다", "자연스러운 감성으로 두 분만의 특별한 순간을 담아드려요. 편안한 분위기에서 진짜 웃음을 찾아드릴게요.", "웨딩", "https://images.unsplash.com/photo-1481980235850-66e47651e431?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
-                {"평생 간직할 결혼사진 함께 만들어요", "웃음과 눈물이 공존하는 그 순간들, 놓치고 싶지 않은 모든 표정을 소중히 담겠습니다.", "웨딩", "https://plus.unsplash.com/premium_photo-1711132425055-1c289c69b950?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
-                {"진짜 예쁜 웨딩사진 찍어드립니다", "포즈보다는 마음을, 완벽함보다는 진심을 담는 웨딩 촬영을 지향해요.", "웨딩", "https://images.unsplash.com/photo-1704283135253-218a9d250302?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"따뜻한 웨딩스냅 원하는 예비부부님 기다립니다", "자연스러운 감성으로 두 분만의 특별한 순간을 담아드려요. 편안한 분위기에서 진짜 웃음을 찾아드릴게요.", "웨딩", "https://images.unsplash.com/photo-1481980235850-66e47651e431?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"평생 간직할 결혼사진 함께 만들어요", "웃음과 눈물이 공존하는 그 순간들, 놓치고 싶지 않은 모든 표정을 소중히 담겠습니다.", "웨딩", "https://plus.unsplash.com/premium_photo-1711132425055-1c289c69b950?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"진짜 예쁜 웨딩사진 찍어드립니다", "포즈보다는 마음을, 완벽함보다는 진심을 담는 웨딩 촬영을 지향해요.", "웨딩", "https://images.unsplash.com/photo-1704283135253-218a9d250302?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
 
                 // 가족사진 관련
-                {"우리 가족만의 특별한 하루 남겨드려요", "아이들 웃음소리가 가득한 그 순간, 엄마 아빠의 따뜻한 시선까지 모두 담고 싶어요.", "가족사진", "https://images.unsplash.com/photo-1641849461096-7e796050f12b?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
-                {"집에서 편하게 찍는 가족사진 어떠세요", "스튜디오보다 편안한 우리집에서, 가장 자연스러운 모습의 가족을 만나보세요.", "가족사진", "https://images.unsplash.com/photo-1581579186913-45ac3e6efe93?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
-                {"아이들과 함께하는 나들이 촬영 문의주세요", "공원에서 뛰노는 아이들과 행복한 부모님의 모습을 생동감 있게 담아드릴게요.", "가족사진", "https://images.unsplash.com/photo-1581952976147-5a2d15560349?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"우리 가족만의 특별한 하루 남겨드려요", "아이들 웃음소리가 가득한 그 순간, 엄마 아빠의 따뜻한 시선까지 모두 담고 싶어요.", "가족사진", "https://images.unsplash.com/photo-1641849461096-7e796050f12b?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"집에서 편하게 찍는 가족사진 어떠세요", "스튜디오보다 편안한 우리집에서, 가장 자연스러운 모습의 가족을 만나보세요.", "가족사진", "https://images.unsplash.com/photo-1581579186913-45ac3e6efe93?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"아이들과 함께하는 나들이 촬영 문의주세요", "공원에서 뛰노는 아이들과 행복한 부모님의 모습을 생동감 있게 담아드릴게요.", "가족사진", "https://images.unsplash.com/photo-1581952976147-5a2d15560349?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
 
                 // 프로필 관련
-                {"취업용 프로필 예쁘게 찍어드립니다", "첫인상이 중요한 순간, 자신감 넘치는 모습을 자연스럽게 표현해드려요.", "프로필", "https://images.unsplash.com/photo-1659353219150-377222056797?q=80&w=1031&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
-                {"SNS용 감성 프로필 촬영해요", "나만의 매력을 찾아서 감성적이고 자연스러운 프로필 사진을 완성해드릴게요.", "프로필", "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
-                {"사업자 프로필 전문적으로 촬영합니다", "신뢰감 있고 전문적인 이미지의 비즈니스 프로필을 원하시는 분들 연락주세요.", "프로필", "https://images.unsplash.com/photo-1511367461989-f85a21fda167?q=80&w=1031&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"취업용 프로필 예쁘게 찍어드립니다", "첫인상이 중요한 순간, 자신감 넘치는 모습을 자연스럽게 표현해드려요.", "프로필", "https://images.unsplash.com/photo-1659353219150-377222056797?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"SNS용 감성 프로필 촬영해요", "나만의 매력을 찾아서 감성적이고 자연스러운 프로필 사진을 완성해드릴게요.", "프로필", "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"사업자 프로필 전문적으로 촬영합니다", "신뢰감 있고 전문적인 이미지의 비즈니스 프로필을 원하시는 분들 연락주세요.", "프로필", "https://images.unsplash.com/photo-1511367461989-f85a21fda167?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
 
                 // 커플 관련
-                {"커플스냅 달달하게 찍어드려요", "두 분만의 케미와 설렘을 놓치지 않고 담아드릴게요. 부끄러워도 괜찮아요!", "커플", "https://plus.unsplash.com/premium_photo-1661777338951-93cbd7d60499?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
-                {"연남동에서 커플촬영 하실 분 구해요", "예쁜 카페와 골목길이 가득한 연남동에서 로맨틱한 커플 사진 남기실래요?", "커플", "https://images.unsplash.com/photo-1474401639975-278ecfd1b421?q=80&w=1175&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
-                {"바닷가 커플촬영 함께 떠나요", "푸른 바다를 배경으로 한 낭만적인 커플 사진, 생각만 해도 설레지 않나요?", "커플", "https://images.unsplash.com/photo-1491582990992-68ec88e070a3?q=80&w=1031&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"커플스냅 달달하게 찍어드려요", "두 분만의 케미와 설렘을 놓치지 않고 담아드릴게요. 부끄러워도 괜찮아요!", "커플", "https://plus.unsplash.com/premium_photo-1661777338951-93cbd7d60499?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"연남동에서 커플촬영 하실 분 구해요", "예쁜 카페와 골목길이 가득한 연남동에서 로맨틱한 커플 사진 남기실래요?", "커플", "https://images.unsplash.com/photo-1474401639975-278ecfd1b421?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"바닷가 커플촬영 함께 떠나요", "푸른 바다를 배경으로 한 낭만적인 커플 사진, 생각만 해도 설레지 않나요?", "커플", "https://images.unsplash.com/photo-1491582990992-68ec88e070a3?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
 
                 // 졸업사진 관련
-                {"졸업사진 이쁘게 찍어드려요", "인생의 중요한 순간을 멋지게 남기고 싶은 졸업생분들, 함께 만들어봐요.", "졸업사진", "https://images.unsplash.com/photo-1607013407627-6ee814329547?q=80&w=964&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
-                {"개성 있는 졸업사진 원하시는 분들 환영", "똑같은 포즈는 NO! 여러분만의 특별한 졸업 사진을 만들어드릴게요.", "졸업사진", "https://images.unsplash.com/photo-1621052123734-b54bd83c92e3?q=80&w=1115&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
-                {"친구들과 함께하는 졸업촬영 해드려요", "소중한 친구들과의 마지막 순간, 평생 기억에 남을 단체사진 남겨보세요.", "졸업사진", "https://images.unsplash.com/photo-1496469888073-80de7e952517?q=80&w=1032&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"졸업사진 이쁘게 찍어드려요", "인생의 중요한 순간을 멋지게 남기고 싶은 졸업생분들, 함께 만들어봐요.", "졸업사진", "https://images.unsplash.com/photo-1607013407627-6ee814329547?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"개성 있는 졸업사진 원하시는 분들 환영", "똑같은 포즈는 NO! 여러분만의 특별한 졸업 사진을 만들어드릴게요.", "졸업사진", "https://images.unsplash.com/photo-1621052123734-b54bd83c92e3?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"친구들과 함께하는 졸업촬영 해드려요", "소중한 친구들과의 마지막 순간, 평생 기억에 남을 단체사진 남겨보세요.", "졸업사진", "https://images.unsplash.com/photo-1496469888073-80de7e952517?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
 
                 // 돌잔치 관련
-                {"우리 아기 돌잔치 예쁘게 남겨드려요", "평생 한 번뿐인 첫 생일, 아기의 귀여운 모든 순간을 소중히 담아드릴게요.", "돌잔치", "https://images.unsplash.com/photo-1734943842257-268c716c2701?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
-                {"전통 돌잔치 촬영 전문으로 해요", "한복 입은 아기의 모습과 전통적인 돌잔치 상차림까지 완벽하게 기록해드려요.", "돌잔치", "https://images.unsplash.com/photo-1610276141437-adde67613a5a?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
-                {"심플한 돌촬영 원하시는 분들 연락주세요", "화려함보다는 아기의 자연스러운 모습에 집중한 깔끔한 돌잔치 사진을 촬영해요.", "돌잔치", "https://images.unsplash.com/flagged/photo-1571275460369-dc7c65c85082?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"}
+                {"우리 아기 돌잔치 예쁘게 남겨드려요", "평생 한 번뿐인 첫 생일, 아기의 귀여운 모든 순간을 소중히 담아드릴게요.", "돌잔치", "https://images.unsplash.com/photo-1734943842257-268c716c2701?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"전통 돌잔치 촬영 전문으로 해요", "한복 입은 아기의 모습과 전통적인 돌잔치 상차림까지 완벽하게 기록해드려요.", "돌잔치", "https://images.unsplash.com/photo-1610276141437-adde67613a5a?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"심플한 돌촬영 원하시는 분들 연락주세요", "화려함보다는 아기의 자연스러운 모습에 집중한 깔끔한 돌잔치 사진을 촬영해요.", "돌잔치", "https://images.unsplash.com/flagged/photo-1571275460369-dc7c65c85082?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"}
         };
 
         Random random = new Random();
