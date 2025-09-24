@@ -219,12 +219,12 @@ public class DataInitializer implements CommandLineRunner {
 
     private void createPhotoServiceCategories() {
         String[][] categories = {
-                {"웨딩", "https://images.unsplash.com/photo-1519741497674-611481863552?w=300&h=300&fit=crop"},
-                {"가족사진", "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=300&h=300&fit=crop"},
+                {"웨딩", "https://images.unsplash.com/photo-1519741497674-611481863552?w=300&h=300&fit=crop&crop=face"},
+                {"가족사진", "https://images.unsplash.com/photo-1758513359570-af5ef9134943?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
                 {"프로필", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face"},
-                {"커플", "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=300&h=300&fit=crop"},
-                {"졸업사진", "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=300&h=300&fit=crop"},
-                {"돌잔치", "https://images.unsplash.com/photo-1515488764276-beab7607c1e6?w=300&h=300&fit=crop"}
+                {"커플", "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=300&h=300&fit=crop&crop=face"},
+                {"졸업사진", "https://images.unsplash.com/photo-1636231945376-3d40fdcbc462?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"돌잔치", "https://images.unsplash.com/photo-1734943598774-d0f20418a9a2?q=80&w=300&h=300&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"}
         };
 
         for (String[] category : categories) {
@@ -269,8 +269,64 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void createPhotographerUsers(UserType photographerRole) {
+        // 다양한 스튜디오/작가 이름
+        String[] studioNames = {
+                "감성스튜디오", "빛과그림자", "순간포착", "아틀리에", "모먼트스튜디오",
+                "캔버스스냅", "프레임워크", "렌즈스토리", "픽처퍼펙트", "비주얼아트",
+                "스냅앤샷", "포커스온", "클릭스튜디오", "이미지크래프트", "뷰파인더",
+                "라이트박스", "컬러풀", "드림샷", "아이캐처", "모멘텀"
+        };
+
+        String[] locationSuffixes = {
+                "스튜디오", "포토", "갤러리", "아틀리에", "", "포토그래피",
+                "이미지", "비주얼", "크리에이티브", "아트"
+        };
+
+        String[] locations = {
+                "강남", "홍대", "신촌", "이태원", "압구정", "청담", "성수", "연남동",
+                "가로수길", "삼청동", "인사동", "명동", "종로", "잠실", "여의도"
+        };
+
+        String[] introTemplates = {
+                "특별한 순간을 아름다운 추억으로 남겨드립니다.",
+                "자연스럽고 감성적인 사진으로 여러분만의 이야기를 완성해요.",
+                "소중한 날들을 예쁘게 기록하는 것이 저의 행복입니다.",
+                "진심이 담긴 사진으로 평생 간직할 추억을 만들어드려요.",
+                "고객 한 분 한 분의 개성을 살린 맞춤 촬영을 진행합니다.",
+                "편안한 분위기에서 가장 자연스러운 모습을 담아드릴게요.",
+                "트렌디하면서도 감성적인 사진으로 여러분을 만나뵙겠습니다.",
+                "오랜 경험과 전문성으로 최고의 결과물을 약속드려요.",
+                "따뜻하고 밝은 에너지로 즐거운 촬영을 만들어갑니다.",
+                "디테일까지 놓치지 않는 세심함으로 완벽한 사진을 완성해요.",
+                "고객님의 만족이 저의 최고 목표입니다.",
+                "창의적인 구도와 감각적인 편집으로 차별화된 작품을 제공합니다."
+        };
+
+        Random random = new Random();
+        Set<String> usedNames = new HashSet<>(); // 중복 방지
+
         for (int i = 1; i <= 10; i++) {
-            // User 생성 (평문 비밀번호)
+            // 유니크한 스튜디오명 생성
+            String businessName;
+            do {
+                String baseName = studioNames[random.nextInt(studioNames.length)];
+                String suffix = locationSuffixes[random.nextInt(locationSuffixes.length)];
+
+                if (suffix.isEmpty()) {
+                    businessName = baseName;
+                } else {
+                    businessName = baseName + suffix;
+                }
+
+                // 숫자 추가로 유니크함 보장
+                if (random.nextBoolean() && !businessName.matches(".*\\d+.*")) {
+                    businessName += (random.nextInt(99) + 1);
+                }
+            } while (usedNames.contains(businessName));
+
+            usedNames.add(businessName);
+
+            // User 생성
             User newPhotographerUser = User.builder()
                     .email(String.format("photo%d@example.com", i))
                     .password("123456")
@@ -280,17 +336,37 @@ public class DataInitializer implements CommandLineRunner {
                     .build();
             User savedUser = userJpaRepository.save(newPhotographerUser);
 
+            // 랜덤 데이터 생성
+            String location = locations[random.nextInt(locations.length)];
+            String introduction = introTemplates[random.nextInt(introTemplates.length)];
+            int experienceYears = 1 + random.nextInt(15); // 1-15년 경력
+
+            // 경력에 따른 소개말 개인화
+            String personalizedIntro;
+            if (experienceYears <= 3) {
+                personalizedIntro = "새로운 시선으로 " + introduction;
+            } else if (experienceYears <= 7) {
+                personalizedIntro = String.format("%d년 경력으로 ", experienceYears) + introduction;
+            } else {
+                personalizedIntro = String.format("%d년간의 풍부한 경험으로 ", experienceYears) + introduction;
+            }
+
             // PhotographerProfile 생성
             PhotographerProfile photographerProfile = PhotographerProfile.builder()
                     .user(savedUser)
-                    .businessName(String.format("감성스튜디오%d호점", i))
-                    .introduction(String.format("최고의 순간을 담아드립니다. 감성스튜디오 %d입니다.", i))
+                    .businessName(businessName)
+                    .introduction(personalizedIntro)
                     .status("ACTIVE")
-                    .location("서울")
-                    .experienceYears(i)
-                    .profileImageUrl(String.format("https://picsum.photos/300/300?random=%d", i))
+                    .location(location)
+                    .experienceYears(experienceYears)
+                    .profileImageUrl(String.format("https://picsum.photos/300/300?random=%d",
+                            100 + (i * random.nextInt(50)))) // 더 다양한 이미지
                     .build();
+
             photographerRepository.save(photographerProfile);
+
+            System.out.println(String.format("포토그래퍼 생성: %s (%s, %d년 경력)",
+                    businessName, location, experienceYears));
         }
     }
 
@@ -307,54 +383,83 @@ public class DataInitializer implements CommandLineRunner {
         List<PhotographerProfile> photographers = photographerRepository.findAll();
         List<PhotoServiceCategory> serviceCategories = photoServiceCategoryRepository.findAll();
 
-        String[] serviceTypes = {
-                "웨딩촬영", "프로필촬영", "가족사진", "돌잔치", "커플촬영",
-                "졸업사진", "브랜딩촬영", "제품촬영", "인물사진", "야외촬영"
-        };
+        // 서비스 정의: {서비스명, 설명, 카테고리명, 이미지URL}
+        String[][] serviceDefinitions = {
+                // 웨딩 관련
+                {"따뜻한 웨딩스냅 원하는 예비부부님 기다립니다", "자연스러운 감성으로 두 분만의 특별한 순간을 담아드려요. 편안한 분위기에서 진짜 웃음을 찾아드릴게요.", "웨딩", "https://images.unsplash.com/photo-1481980235850-66e47651e431?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"평생 간직할 결혼사진 함께 만들어요", "웃음과 눈물이 공존하는 그 순간들, 놓치고 싶지 않은 모든 표정을 소중히 담겠습니다.", "웨딩", "https://plus.unsplash.com/premium_photo-1711132425055-1c289c69b950?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"진짜 예쁜 웨딩사진 찍어드립니다", "포즈보다는 마음을, 완벽함보다는 진심을 담는 웨딩 촬영을 지향해요.", "웨딩", "https://images.unsplash.com/photo-1704283135253-218a9d250302?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
 
-        String[] sampleDescriptions = {
-                "소중한 순간을 아름답게 담아드립니다. 전문적인 장비와 오랜 경험으로 최고의 결과물을 제공합니다.",
-                "자연스럽고 감성적인 사진으로 여러분의 특별한 날을 기록해드립니다.",
-                "트렌디하면서도 클래식한 감성을 담은 촬영 서비스를 제공합니다.",
-                "고객 맞춤형 컨셉으로 진행되는 프리미엄 촬영 서비스입니다.",
-                "따뜻하고 자연스러운 분위기의 촬영으로 소중한 추억을 만들어드립니다."
-        };
+                // 가족사진 관련
+                {"우리 가족만의 특별한 하루 남겨드려요", "아이들 웃음소리가 가득한 그 순간, 엄마 아빠의 따뜻한 시선까지 모두 담고 싶어요.", "가족사진", "https://images.unsplash.com/photo-1641849461096-7e796050f12b?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"집에서 편하게 찍는 가족사진 어떠세요", "스튜디오보다 편안한 우리집에서, 가장 자연스러운 모습의 가족을 만나보세요.", "가족사진", "https://images.unsplash.com/photo-1581579186913-45ac3e6efe93?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"아이들과 함께하는 나들이 촬영 문의주세요", "공원에서 뛰노는 아이들과 행복한 부모님의 모습을 생동감 있게 담아드릴게요.", "가족사진", "https://images.unsplash.com/photo-1581952976147-5a2d15560349?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
 
-        String[] sampleImageData = {
-                "https://picsum.photos/400/300?random=1",
-                "https://picsum.photos/400/300?random=2",
-                "https://picsum.photos/400/300?random=3",
-                "https://picsum.photos/400/300?random=4",
-                "https://picsum.photos/400/300?random=5"
+                // 프로필 관련
+                {"취업용 프로필 예쁘게 찍어드립니다", "첫인상이 중요한 순간, 자신감 넘치는 모습을 자연스럽게 표현해드려요.", "프로필", "https://images.unsplash.com/photo-1659353219150-377222056797?q=80&w=1031&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"SNS용 감성 프로필 촬영해요", "나만의 매력을 찾아서 감성적이고 자연스러운 프로필 사진을 완성해드릴게요.", "프로필", "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"사업자 프로필 전문적으로 촬영합니다", "신뢰감 있고 전문적인 이미지의 비즈니스 프로필을 원하시는 분들 연락주세요.", "프로필", "https://images.unsplash.com/photo-1511367461989-f85a21fda167?q=80&w=1031&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+
+                // 커플 관련
+                {"커플스냅 달달하게 찍어드려요", "두 분만의 케미와 설렘을 놓치지 않고 담아드릴게요. 부끄러워도 괜찮아요!", "커플", "https://plus.unsplash.com/premium_photo-1661777338951-93cbd7d60499?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"연남동에서 커플촬영 하실 분 구해요", "예쁜 카페와 골목길이 가득한 연남동에서 로맨틱한 커플 사진 남기실래요?", "커플", "https://images.unsplash.com/photo-1474401639975-278ecfd1b421?q=80&w=1175&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"바닷가 커플촬영 함께 떠나요", "푸른 바다를 배경으로 한 낭만적인 커플 사진, 생각만 해도 설레지 않나요?", "커플", "https://images.unsplash.com/photo-1491582990992-68ec88e070a3?q=80&w=1031&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+
+                // 졸업사진 관련
+                {"졸업사진 이쁘게 찍어드려요", "인생의 중요한 순간을 멋지게 남기고 싶은 졸업생분들, 함께 만들어봐요.", "졸업사진", "https://images.unsplash.com/photo-1607013407627-6ee814329547?q=80&w=964&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"개성 있는 졸업사진 원하시는 분들 환영", "똑같은 포즈는 NO! 여러분만의 특별한 졸업 사진을 만들어드릴게요.", "졸업사진", "https://images.unsplash.com/photo-1621052123734-b54bd83c92e3?q=80&w=1115&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"친구들과 함께하는 졸업촬영 해드려요", "소중한 친구들과의 마지막 순간, 평생 기억에 남을 단체사진 남겨보세요.", "졸업사진", "https://images.unsplash.com/photo-1496469888073-80de7e952517?q=80&w=1032&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+
+                // 돌잔치 관련
+                {"우리 아기 돌잔치 예쁘게 남겨드려요", "평생 한 번뿐인 첫 생일, 아기의 귀여운 모든 순간을 소중히 담아드릴게요.", "돌잔치", "https://images.unsplash.com/photo-1734943842257-268c716c2701?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"전통 돌잔치 촬영 전문으로 해요", "한복 입은 아기의 모습과 전통적인 돌잔치 상차림까지 완벽하게 기록해드려요.", "돌잔치", "https://images.unsplash.com/photo-1610276141437-adde67613a5a?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"},
+                {"심플한 돌촬영 원하시는 분들 연락주세요", "화려함보다는 아기의 자연스러운 모습에 집중한 깔끔한 돌잔치 사진을 촬영해요.", "돌잔치", "https://images.unsplash.com/flagged/photo-1571275460369-dc7c65c85082?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"}
         };
 
         Random random = new Random();
 
         for (PhotographerProfile photographer : photographers) {
-            int serviceCount = 2 + random.nextInt(2); // 2 또는 3개
+            int serviceCount = 2 + random.nextInt(2); // 2-3개 서비스
+
+            // 이미 선택된 서비스를 추적하여 중복 방지
+            Set<Integer> selectedServices = new HashSet<>();
 
             for (int j = 0; j < serviceCount; j++) {
-                int typeIndex = random.nextInt(serviceTypes.length);
-                int descIndex = random.nextInt(sampleDescriptions.length);
-                int imageIndex = random.nextInt(sampleImageData.length);
-                int categoryIndex = random.nextInt(serviceCategories.size());
+                // 중복되지 않은 서비스 선택
+                int serviceIndex;
+                do {
+                    serviceIndex = random.nextInt(serviceDefinitions.length);
+                } while (selectedServices.contains(serviceIndex));
+                selectedServices.add(serviceIndex);
+
+                String[] serviceData = serviceDefinitions[serviceIndex];
+                String serviceName = serviceData[0];
+                String serviceDescription = serviceData[1];
+                String categoryName = serviceData[2];
+                String imageUrl = serviceData[3];
+
+                // 카테고리 찾기
+                PhotoServiceCategory category = serviceCategories.stream()
+                        .filter(cat -> cat.getCategoryName().equals(categoryName))
+                        .findFirst()
+                        .orElse(serviceCategories.get(0)); // 기본값
 
                 // PhotoServiceInfo 생성
                 PhotoServiceInfo photoService = PhotoServiceInfo.builder()
                         .photographerProfile(photographer)
-                        .title(serviceTypes[typeIndex])
-                        .description(sampleDescriptions[descIndex])
-                        .imageData(sampleImageData[imageIndex])
+                        .title(serviceName)
+                        .description(serviceDescription)
+                        .imageData(imageUrl)
                         .createdAt(Timestamp.from(Instant.now()))
                         .updatedAt(Timestamp.from(Instant.now()))
                         .build();
 
                 PhotoServiceInfo savedPhotoService = photoServiceJpaRepository.save(photoService);
 
-                // PhotoServiceMapping 생성
+                // PhotoServiceMapping 생성 - 해당 카테고리로 매핑
                 PhotoServiceMapping mapping = PhotoServiceMapping.builder()
                         .photoServiceInfo(savedPhotoService)
-                        .photoServiceCategory(serviceCategories.get(categoryIndex))
+                        .photoServiceCategory(category)
                         .createdAt(Timestamp.from(Instant.now()))
                         .build();
 
