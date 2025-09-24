@@ -23,7 +23,7 @@ public class PortfolioRequest {
 		@Size(max = 2000, message = "설명은 2000자 이내여야 합니다")
 		private String description;
 
-		@NotBlank(message = "썸네일 데이터는 필수입니다")
+		//@NotBlank(message = "썸네일 데이터는 필수입니다")
 		private String thumbnailUrl; // Base64 인코딩된 썸네일 이미지 데이터
 
 		// 카테고리 ID 목록 - Long 타입이 맞음

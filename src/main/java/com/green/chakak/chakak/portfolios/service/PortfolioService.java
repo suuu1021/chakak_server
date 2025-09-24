@@ -87,14 +87,14 @@ public class PortfolioService {
 					.orElseThrow(() -> new Exception404("사진작가 프로필이 존재하지 않습니다. 사진작가 등록을 먼저 해주세요."));
 
 			// 썸네일 Base64를 파일로 저장
-			String thumbnailUrl = fileUploadUtil.saveBase64Image(request.getThumbnailUrl(), "thumbnail");
+			//String thumbnailUrl = fileUploadUtil.saveBase64Image(request.getThumbnailUrl(), "thumbnail");
 
 			// Portfolio 엔티티 생성 (실제 파일 URL로 설정)
 			Portfolio portfolio = new Portfolio();
 			portfolio.setPhotographerProfile(photographer);
 			portfolio.setTitle(request.getTitle());
 			portfolio.setDescription(request.getDescription());
-			portfolio.setThumbnailUrl(thumbnailUrl); // 변환된 URL 설정
+			portfolio.setThumbnailUrl("temporary");
 
 			Portfolio savedPortfolio = portfolioRepository.save(portfolio);
 
@@ -103,9 +103,16 @@ public class PortfolioService {
 				createCategoryMappings(savedPortfolio, request.getCategoryIds());
 			}
 
-			// 이미지 등록
+			// 이미지 등록 (한 번만!)
 			if (request.getImageInfoList() != null && !request.getImageInfoList().isEmpty()) {
 				createPortfolioImages(savedPortfolio, request.getImageInfoList());
+
+				// 첫 번째 이미지를 썸네일로 설정
+				List<PortfolioImage> images = portfolioImageRepository.findByPortfolioOrderByCreatedAt(savedPortfolio);
+				if (!images.isEmpty()) {
+					savedPortfolio.setThumbnailUrl(images.get(0).getImageUrl());
+					portfolioRepository.save(savedPortfolio);
+				}
 			}
 
 			// 최종 포트폴리오 조회 (이미지와 카테고리 포함)
@@ -194,9 +201,6 @@ public class PortfolioService {
 				throw new Exception403("포트폴리오 수정 권한이 없습니다");
 			}
 
-			// 기존 썸네일 파일 삭제 (새 썸네일이 있는 경우)
-			String oldThumbnailUrl = portfolio.getThumbnailUrl();
-
 			// 필드 업데이트
 			if (request.getTitle() != null) {
 				portfolio.setTitle(request.getTitle());
@@ -204,25 +208,33 @@ public class PortfolioService {
 			if (request.getDescription() != null) {
 				portfolio.setDescription(request.getDescription());
 			}
-			if (request.getThumbnailUrl() != null) {
-				// 새 썸네일 Base64를 파일로 저장
-				String newThumbnailUrl = fileUploadUtil.saveBase64Image(request.getThumbnailUrl(), "thumbnail");
-				portfolio.setThumbnailUrl(newThumbnailUrl);
-
-				// 기존 썸네일 파일 삭제
-				if (oldThumbnailUrl != null) {
-					fileUploadUtil.deleteFile(oldThumbnailUrl);
-				}
-			}
 
 			// 카테고리 매핑 업데이트
 			if (request.getCategoryIds() != null) {
 				updateCategoryMappings(portfolio, request.getCategoryIds());
 			}
 
-			// 이미지 업데이트
+			// 이미지 업데이트 (한 번만!)
 			if (request.getImageInfoList() != null) {
 				updatePortfolioImages(portfolio, request.getImageInfoList());
+
+				// 첫 번째 이미지를 썸네일로 설정
+				if (!request.getImageInfoList().isEmpty()) {
+					List<PortfolioImage> newImages = portfolioImageRepository.findByPortfolioOrderByCreatedAt(portfolio);
+					if (!newImages.isEmpty()) {
+						String firstImageUrl = newImages.get(0).getImageUrl();
+
+						// 기존 썸네일이 첫 번째 이미지와 다르고 "temporary"가 아니면 삭제
+						String oldThumbnailUrl = portfolio.getThumbnailUrl();
+						if (oldThumbnailUrl != null &&
+								!oldThumbnailUrl.equals(firstImageUrl) &&
+								!oldThumbnailUrl.equals("temporary")) {
+							fileUploadUtil.deleteFile(oldThumbnailUrl);
+						}
+
+						portfolio.setThumbnailUrl(firstImageUrl);
+					}
+				}
 			}
 
 			// 최종 포트폴리오 조회
