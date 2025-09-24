@@ -73,6 +73,7 @@ public class PhotoServiceReviewResponse {
 	@Data
 	public static class ListDTO {
 		private Long reviewId;
+		private Long serviceId; // serviceId 필드 추가
 		private Long userId;
 		private BigDecimal rating;
 		private String reviewContent;
@@ -80,6 +81,7 @@ public class PhotoServiceReviewResponse {
 
 		public ListDTO(PhotoServiceReview review) {
 			this.reviewId = review.getReviewId();
+			this.serviceId = review.getPhotoServiceInfo().getServiceId(); // serviceId 값 할당
 			this.userId = review.getUser().getUserId();
 			this.rating = review.getRating();
 			this.reviewContent = review.getReviewContent();
