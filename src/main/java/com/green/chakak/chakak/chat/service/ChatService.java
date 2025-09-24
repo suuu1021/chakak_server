@@ -87,44 +87,69 @@ public class ChatService {
 
         ChatMessage chatMessage;
 
+        // 1. 이미지 메시지 처리
         if (messageDto.getMessageType() == ChatMessage.MessageType.IMAGE &&
                 messageDto.getImageBase64() != null && !messageDto.getImageBase64().trim().isEmpty()) {
-            
+
             try {
                 log.info("--- 4. ChatService: 이미지 메시지로 판단. 파일 저장 로직 호출 시작 ---");
                 String imageUrl = chatFileUploadUtil.saveChatImage(
-                    messageDto.getImageBase64(),
-                    messageDto.getImageOriginalName()
+                        messageDto.getImageBase64(),
+                        messageDto.getImageOriginalName()
                 );
                 log.info("--- 5. ChatService: 파일 저장 완료. 반환된 이미지 URL: {} ---", imageUrl);
 
                 chatMessage = ChatMessage.builder()
-                    .chatRoom(chatRoom)
-                    .senderType(messageDto.getSenderType())
-                    .senderId(messageDto.getSenderId())
-                    .messageType(messageDto.getMessageType())
-                    .message(messageDto.getMessage())
-                    .imageUrl(imageUrl)
-                    .imageOriginalName(messageDto.getImageOriginalName())
-                    .isRead(false)
-                    .build();
+                        .chatRoom(chatRoom)
+                        .senderType(messageDto.getSenderType())
+                        .senderId(messageDto.getSenderId())
+                        .messageType(ChatMessage.MessageType.IMAGE)
+                        .message(messageDto.getMessage())
+                        .imageUrl(imageUrl)
+                        .imageOriginalName(messageDto.getImageOriginalName())
+                        .isRead(false)
+                        .build();
                 log.info("--- 6. ChatService: 이미지 URL이 포함된 ChatMessage 엔티티 생성 완료 ---");
 
             } catch (Exception e) {
                 log.error("!!! ChatService: 이미지 처리 중 오류 발생 !!!", e);
                 chatMessage = ChatMessage.builder()
-                    .chatRoom(chatRoom)
-                    .senderType(messageDto.getSenderType())
-                    .senderId(messageDto.getSenderId())
-                    .messageType(ChatMessage.MessageType.TEXT)
-                    .message("이미지 전송에 실패했습니다: " + e.getMessage())
-                    .isRead(false)
-                    .build();
+                        .chatRoom(chatRoom)
+                        .senderType(messageDto.getSenderType())
+                        .senderId(messageDto.getSenderId())
+                        .messageType(ChatMessage.MessageType.TEXT)
+                        .message("이미지 전송에 실패했습니다: " + e.getMessage())
+                        .isRead(false)
+                        .build();
                 log.warn("--- 6. ChatService: 이미지 처리 실패로, 실패 안내 메시지 엔티티 생성 ---");
             }
 
+            // 2. 결제 요청 메시지 처리
+        } else if (messageDto.getMessageType() == ChatMessage.MessageType.PAYMENT_REQUEST) {
+            log.info("--- 4. ChatService: 결제 요청 메시지로 판단 ---");
+
+            if (messageDto.getBookingInfoId() == null) {
+                throw new Exception400("PAYMENT_REQUEST 메시지에는 bookingInfoId가 반드시 필요합니다.");
+            }
+
+            chatMessage = ChatMessage.builder()
+                    .chatRoom(chatRoom)
+                    .senderType(messageDto.getSenderType())
+                    .senderId(messageDto.getSenderId())
+                    .messageType(ChatMessage.MessageType.PAYMENT_REQUEST)
+                    .message(messageDto.getMessage())
+                    .paymentAmount(messageDto.getPaymentAmount())
+                    .paymentDescription(messageDto.getPaymentDescription())
+                    .photoServiceInfoId(messageDto.getPhotoServiceInfoId())
+                    .priceInfoId(messageDto.getPriceInfoId())
+                    .bookingInfoId(messageDto.getBookingInfoId()) // ✅ 반드시 세팅
+                    .isRead(false)
+                    .build();
+            log.info("--- 6. ChatService: 결제 요청 ChatMessage 엔티티 생성 완료 ---");
+
+            // 3. 텍스트 메시지 처리
         } else {
-            log.info("--- 4. ChatService: 텍스트 또는 기타 메시지로 판단. ---");
+            log.info("--- 4. ChatService: 텍스트 메시지로 판단 ---");
             chatMessage = messageDto.toEntity(chatRoom);
             log.info("--- 6. ChatService: ChatMessage 엔티티 생성 완료 ---");
         }
