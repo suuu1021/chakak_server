@@ -59,7 +59,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/v1/photo-services/*/reviews/rating-distribution",// 평점 분포
                         "/api/v1/photo-services/*/reviews/search",             // 검색
                         "/api/v1/photo-services/users/*/reviews",              // 특정 사용자 리뷰 조회 (공개)
-                        "/api/v1/photo-services/photographers/*/reviews"
+                        "/api/v1/photo-services/photographers/*/reviews"       // 포토그래퍼별 리뷰 조회 (공개)
                 );
     }
 
