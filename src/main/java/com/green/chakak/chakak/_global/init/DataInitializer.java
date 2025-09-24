@@ -184,9 +184,8 @@ public class DataInitializer implements CommandLineRunner {
 
         // [추가] 리뷰 데이터 생성 (예약 데이터가 있어야 함)
         if (existingReviews == 0 && bookingInfoJpaRepository.count() > 0) {
-            System.out.println("=== 리뷰 데이터 생성 시작 ===");
             createReviewData();
-            System.out.println("=== 리뷰 데이터 생성 완료 ===");
+            addSpecialReviewsForService1(); // 특정 서비스에 리뷰 추가
         } else if (existingReviews > 0) {
             System.out.println("리뷰 데이터가 이미 존재합니다 (총 " + existingReviews + "개).");
         }
@@ -969,46 +968,187 @@ public class DataInitializer implements CommandLineRunner {
 		System.out.println("좋아요 생성 완료");
 	}
 
-    // [추가] 더미 리뷰 데이터 생성 메서드
+    // [수정] 더 현실적인 더미 리뷰 데이터 생성 메서드
     private void createReviewData() {
         System.out.println("=== 리뷰 데이터 생성 시작 ===");
         // 'COMPLETED' 상태인 예약 목록을 가져옵니다.
-        List<BookingInfo> completedBookings = bookingInfoJpaRepository.findByStatus(BookingStatus.REVIEWED);
+        List<BookingInfo> completedBookings = bookingInfoJpaRepository.findByStatus(BookingStatus.COMPLETED);
         if (completedBookings.isEmpty()) {
-            System.out.println("완료된 예약이 없어 리뷰를 생성할 수 없습니다.");
+            System.out.println("리뷰를 생성할 완료된 예약이 없습니다.");
             return;
         }
 
-        String[] sampleReviews = {
-                "인생 최고의 사진을 건졌습니다! 작가님이 정말 친절하고 프로페셔널하세요. 모든 순간이 즐거웠습니다.",
-                "결과물은 만족스럽지만, 예약 시간에 조금 늦으셔서 아쉬웠습니다. 그래도 사진은 정말 예쁘게 나왔어요.",
-                "가성비 최고의 스냅 사진! 이 가격에 이런 퀄리티라니, 정말 만족합니다.",
-                "부모님 결혼기념일 선물로 드렸는데 너무 좋아하셨어요. 감사합니다!",
-                null, // 내용 없는 리뷰
-                "분위기도 잘 이끌어주시고, 보정본도 빠르게 받을 수 있어서 좋았습니다."
-        };
+        // 다양한 리뷰 템플릿
+        String[] positiveOpenings = {"정말 최고의 경험이었어요!", "기대 이상으로 만족스러운 촬영이었습니다.", "작가님 덕분에 인생 사진 건졌어요!", "결과물 보고 감동받았습니다 ㅠㅠ"};
+        String[] positivePoints = {"작가님이 정말 친절하고 편안하게 리드해주셨어요.", "시간 가는 줄 모를 정도로 즐겁게 촬영했어요.", "사진 컨셉이나 구도가 너무 마음에 들어요.", "보정본 퀄리티가 정말 높고, 작업 속도도 빠르셨어요.", "제가 원하는 느낌을 정확히 캐치해서 담아주셨습니다."};
+        String[] neutralPoints = {"전반적으로 만족하지만, 다음엔 다른 컨셉도 시도해보고 싶네요.", "사진은 예쁘게 나왔는데, 원본 파일을 받기까지 시간이 조금 걸렸어요.", "가격대는 조금 있었지만 결과물을 보니 납득이 가네요.", "현장 분위기는 좋았는데, 날씨가 조금 아쉬웠어요."};
+        String[] negativePoints = {"예약 시간보다 조금 늦게 시작되어서 아쉬웠습니다.", "제가 생각했던 컨셉과는 조금 다른 방향으로 진행된 것 같아요.", "보정본이 조금 과한 느낌이라 자연스러운 사진을 원하시면 미리 말씀드려야 할 것 같아요.", "소품 종류가 더 다양했으면 좋았을 것 같아요."};
+        String[] closings = {"다음에도 꼭 다시 이용하고 싶어요!", "주변에 많이 추천하고 있습니다. 감사합니다!", "덕분에 좋은 추억 만들었습니다.", "고민하시는 분들께 강력 추천합니다!"};
 
         Random random = new Random();
         int reviewsCreated = 0;
 
         for (BookingInfo booking : completedBookings) {
+            // 80% 확률로 리뷰 작성
+            if (random.nextDouble() > 0.8) {
+                continue;
+            }
+
             // 이미 해당 예약에 대한 리뷰가 있는지 확인
             if (photoServiceReviewJpaRepository.findByBookingInfo(booking).isPresent()) {
                 continue;
             }
 
+            // 평점 생성 (긍정적인 평점이 더 많도록)
+            double ratingValue;
+            double r = random.nextDouble();
+            if (r < 0.6) { // 60% 확률로 4.5 ~ 5.0
+                ratingValue = 4.5 + random.nextDouble() * 0.5;
+            } else if (r < 0.9) { // 30% 확률로 3.5 ~ 4.4
+                ratingValue = 3.5 + random.nextDouble() * 0.9;
+            } else { // 10% 확률로 2.5 ~ 3.4
+                ratingValue = 2.5 + random.nextDouble() * 0.9;
+            }
+            BigDecimal rating = BigDecimal.valueOf(ratingValue).setScale(1, RoundingMode.HALF_UP);
+
+            // 평점에 따른 리뷰 내용 조합
+            StringBuilder reviewContentBuilder = new StringBuilder();
+            if (rating.doubleValue() >= 4.5) {
+                reviewContentBuilder.append(positiveOpenings[random.nextInt(positiveOpenings.length)]).append(" ");
+                reviewContentBuilder.append(positivePoints[random.nextInt(positivePoints.length)]).append(" ");
+                if (random.nextBoolean()) {
+                    reviewContentBuilder.append(positivePoints[random.nextInt(positivePoints.length)]).append(" ");
+                }
+                reviewContentBuilder.append(closings[random.nextInt(closings.length)]);
+            } else if (rating.doubleValue() >= 3.5) {
+                reviewContentBuilder.append(positivePoints[random.nextInt(positivePoints.length)]).append(" ");
+                reviewContentBuilder.append(neutralPoints[random.nextInt(neutralPoints.length)]);
+            } else {
+                reviewContentBuilder.append(negativePoints[random.nextInt(negativePoints.length)]).append(" ");
+                reviewContentBuilder.append("그래도 작가님은 친절하셨어요.");
+            }
+
+            // 10% 확률로 리뷰 내용 없음
+            String finalReviewContent = random.nextDouble() < 0.1 ? null : reviewContentBuilder.toString();
+
+
             PhotoServiceReview review = PhotoServiceReview.builder()
                     .photoServiceInfo(booking.getPhotoServiceInfo())
                     .user(booking.getUserProfile().getUser())
                     .bookingInfo(booking)
-                    .rating(BigDecimal.valueOf(3.0 + random.nextDouble() * 2.0)
-                            .setScale(1, RoundingMode.HALF_UP)) // 3.0 ~ 5.0 사이의 평점
-                    .reviewContent(sampleReviews[random.nextInt(sampleReviews.length)])
+                    .rating(rating)
+                    .reviewContent(finalReviewContent)
                     .build();
 
             photoServiceReviewJpaRepository.save(review);
+
+            // 리뷰 작성 후 예약 상태를 'REVIEWED'로 변경
+            booking.setStatus(BookingStatus.REVIEWED);
+            bookingInfoJpaRepository.save(booking);
+
             reviewsCreated++;
         }
-        System.out.println("총 " + reviewsCreated + "개의 리뷰 데이터 생성 완료.");
+        System.out.println("총 " + reviewsCreated + "개의 리뷰 데이터 생성 및 예약 상태 업데이트 완료.");
+    }
+
+    private void addSpecialReviewsForService1() {
+        System.out.println("=== 특정 서비스에 대한 추가 리뷰 데이터 생성 시작 ===");
+
+        long serviceId = 1L;
+        Optional<PhotoServiceInfo> serviceOpt = photoServiceJpaRepository.findById(serviceId);
+        if (serviceOpt.isEmpty()) {
+            System.out.println("Service ID " + serviceId + "를 찾을 수 없어 리뷰를 추가할 수 없습니다.");
+            return;
+        }
+        PhotoServiceInfo targetService = serviceOpt.get();
+        PhotographerProfile photographer = targetService.getPhotographerProfile();
+        Long photographerUserId = photographer.getUser().getUserId();
+
+        Optional<PriceInfo> priceInfoOpt = priceInfoJpaRepository.findAll().stream()
+                .filter(p -> p.getPhotoServiceInfo().getServiceId().equals(targetService.getServiceId()))
+                .findFirst();
+
+        if (priceInfoOpt.isEmpty()) {
+            System.out.println("Service ID " + serviceId + "에 대한 가격 정보를 찾을 수 없어 리뷰를 추가할 수 없습니다.");
+            return;
+        }
+        PriceInfo targetPriceInfo = priceInfoOpt.get();
+
+        List<UserProfile> generalUsers = userProfileJpaRepository.findAll().stream()
+                .filter(up -> "user".equals(up.getUser().getUserType().getTypeCode()) && !up.getUser().getUserId().equals(photographerUserId))
+                .limit(10)
+                .collect(Collectors.toList());
+
+        if (generalUsers.size() < 10) {
+            System.out.println("리뷰를 작성할 일반 유저가 10명 미만입니다. (" + generalUsers.size() + "명)");
+        }
+
+        String[] positiveOpenings = {"정말 최고의 경험이었어요!", "기대 이상으로 만족스러운 촬영이었습니다.", "작가님 덕분에 인생 사진 건졌어요!", "결과물 보고 감동받았습니다 ㅠㅠ"};
+        String[] positivePoints = {"작가님이 정말 친절하고 편안하게 리드해주셨어요.", "시간 가는 줄 모를 정도로 즐겁게 촬영했어요.", "사진 컨셉이나 구도가 너무 마음에 들어요.", "보정본 퀄리티가 정말 높고, 작업 속도도 빠르셨어요.", "제가 원하는 느낌을 정확히 캐치해서 담아주셨습니다."};
+        String[] neutralPoints = {"전반적으로 만족하지만, 다음엔 다른 컨셉도 시도해보고 싶네요.", "사진은 예쁘게 나왔는데, 원본 파일을 받기까지 시간이 조금 걸렸어요.", "가격대는 조금 있었지만 결과물을 보니 납득이 가네요.", "현장 분위기는 좋았는데, 날씨가 조금 아쉬웠어요."};
+        String[] negativePoints = {"예약 시간보다 조금 늦게 시작되어서 아쉬웠습니다.", "제가 생각했던 컨셉과는 조금 다른 방향으로 진행된 것 같아요.", "보정본이 조금 과한 느낌이라 자연스러운 사진을 원하시면 미리 말씀드려야 할 것 같아요.", "소품 종류가 더 다양했으면 좋았을 것 같아요."};
+        String[] closings = {"다음에도 꼭 다시 이용하고 싶어요!", "주변에 많이 추천하고 있습니다. 감사합니다!", "덕분에 좋은 추억 만들었습니다.", "고민하시는 분들께 강력 추천합니다!"};
+        Random random = new Random();
+        int reviewsCreated = 0;
+
+        for (UserProfile userProfile : generalUsers) {
+            BookingInfo booking = BookingInfo.builder()
+                    .userProfile(userProfile)
+                    .photographerProfile(photographer)
+                    .photoServiceInfo(targetService)
+                    .priceInfo(targetPriceInfo)
+                    .bookingDate(LocalDate.now().minusDays(random.nextInt(60) + 1))
+                    .bookingTime(LocalTime.of(10 + random.nextInt(8), 0))
+                    .status(BookingStatus.COMPLETED)
+                    .build();
+            BookingInfo savedBooking = bookingInfoJpaRepository.save(booking);
+
+            if (photoServiceReviewJpaRepository.findByBookingInfo(savedBooking).isPresent()) {
+                continue;
+            }
+
+            double ratingValue;
+            double r = random.nextDouble();
+            if (r < 0.7) {
+                ratingValue = 4.5 + random.nextDouble() * 0.5;
+            } else if (r < 0.95) {
+                ratingValue = 3.5 + random.nextDouble() * 0.9;
+            } else {
+                ratingValue = 2.5 + random.nextDouble() * 0.9;
+            }
+            BigDecimal rating = BigDecimal.valueOf(ratingValue).setScale(1, RoundingMode.HALF_UP);
+
+            StringBuilder reviewContentBuilder = new StringBuilder();
+            if (rating.doubleValue() >= 4.5) {
+                reviewContentBuilder.append(positiveOpenings[random.nextInt(positiveOpenings.length)]).append(" ");
+                reviewContentBuilder.append(positivePoints[random.nextInt(positivePoints.length)]).append(" ");
+                if (random.nextBoolean()) {
+                    reviewContentBuilder.append(positivePoints[random.nextInt(positivePoints.length)]).append(" ");
+                }
+                reviewContentBuilder.append(closings[random.nextInt(closings.length)]);
+            } else if (rating.doubleValue() >= 3.5) {
+                reviewContentBuilder.append(positivePoints[random.nextInt(positivePoints.length)]).append(" ");
+                reviewContentBuilder.append(neutralPoints[random.nextInt(neutralPoints.length)]);
+            } else {
+                reviewContentBuilder.append(negativePoints[random.nextInt(negativePoints.length)]).append(" ");
+                reviewContentBuilder.append("그래도 작가님은 친절하셨어요.");
+            }
+            String finalReviewContent = reviewContentBuilder.toString();
+
+            PhotoServiceReview review = PhotoServiceReview.builder()
+                    .photoServiceInfo(savedBooking.getPhotoServiceInfo())
+                    .user(savedBooking.getUserProfile().getUser())
+                    .bookingInfo(savedBooking)
+                    .rating(rating)
+                    .reviewContent(finalReviewContent)
+                    .build();
+            photoServiceReviewJpaRepository.save(review);
+
+            savedBooking.setStatus(BookingStatus.REVIEWED);
+            bookingInfoJpaRepository.save(savedBooking);
+
+            reviewsCreated++;
+        }
+        System.out.println("=== 특정 서비스에 대한 추가 리뷰 " + reviewsCreated + "개 생성 완료 ===");
     }
 }
