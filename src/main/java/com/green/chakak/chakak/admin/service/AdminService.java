@@ -18,6 +18,7 @@ import com.green.chakak.chakak.account.service.response.UserResponse;
 import com.green.chakak.chakak.admin.domain.Admin;
 import com.green.chakak.chakak.admin.domain.LoginAdmin;
 import com.green.chakak.chakak.admin.service.repository.AdminJpaRepository;
+import com.green.chakak.chakak.admin.service.repository.AdminPaymentJpaRepository;
 import com.green.chakak.chakak.admin.service.request.AdminRequest;
 import com.green.chakak.chakak.admin.service.response.AdminResponse;
 import com.green.chakak.chakak.booking.domain.BookingCancelInfo;
@@ -28,6 +29,13 @@ import com.green.chakak.chakak.booking.service.repository.BookingInfoJpaReposito
 import com.green.chakak.chakak.booking.service.request.BookingInfoRequest;
 import com.green.chakak.chakak.booking.service.response.BookingCancelInfoResponse;
 import com.green.chakak.chakak.booking.service.response.BookingInfoResponse;
+import com.green.chakak.chakak.payment.domain.Payment;
+import com.green.chakak.chakak.payment.domain.PaymentStatus;
+import com.green.chakak.chakak.payment.repository.PaymentJpaRepository;
+import com.green.chakak.chakak.payment.repository.request.PaymentListRequest;
+import com.green.chakak.chakak.payment.repository.response.PageResponse;
+import com.green.chakak.chakak.payment.repository.response.PaymentDetailResponse;
+import com.green.chakak.chakak.payment.repository.response.PaymentListResponse;
 import com.green.chakak.chakak.photo.domain.PhotoServiceCategory;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
 import com.green.chakak.chakak.photo.domain.PhotoServiceMapping;
@@ -74,7 +82,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestAttribute;
 
+import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -104,6 +115,8 @@ public class AdminService {
     private final PortfolioCategoryJpaRepository categoryRepository;
     private final BookingCancelInfoJpaRepository bookingCancelInfoJpaRepository;
     private final BookingInfoJpaRepository bookingInfoJpaRepository;
+    private final PaymentJpaRepository paymentJpaRepository;
+    private final AdminPaymentJpaRepository adminPaymentJpaRepository;
 
 
     // 관리자 로그인 기능
@@ -304,9 +317,7 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 카테고리 ID로 조회
-     */
+
     @Transactional(readOnly = true)
     public PhotographerResponse.CategoryDTO getCategoryByIdByAdmin(Long categoryId) {
         return photographerCategoryRepository.findById(categoryId)
@@ -314,9 +325,7 @@ public class AdminService {
                 .orElseThrow(() -> new Exception404("카테고리를 찾을 수 없습니다."));
     }
 
-    /**
-     * 카테고리명으로 조회
-     */
+
     @Transactional(readOnly = true)
     public PhotographerResponse.CategoryDTO getCategoryByNameByAdmin(String categoryName) {
         return photographerCategoryRepository.findByCategoryName(categoryName)
@@ -324,9 +333,7 @@ public class AdminService {
                 .orElseThrow(() -> new Exception404("카테고리를 찾을 수 없습니다."));
     }
 
-    /**
-     * 특정 카테고리에 속한 포토그래퍼들 조회
-     */
+
     @Transactional(readOnly = true)
     public List<PhotographerResponse.ListDTO> getPhotographersByCategoryByAdmin(Long categoryId) {
         PhotographerCategory category = photographerCategoryRepository.findById(categoryId)
@@ -339,9 +346,7 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 카테고리명 중복 확인
-     */
+
     @Transactional(readOnly = true)
     public boolean existsByCategoryName(String categoryName) {
         return photographerCategoryRepository.existsByCategoryName(categoryName);
@@ -355,22 +360,22 @@ public class AdminService {
     @Transactional
     public PhotographerResponse.SaveDTO createProfileByAdmin(PhotographerRequest.SaveProfile saveDTO) {
 
-        // 1. dto의 UserId로 회원 존재여부 조회
+
         User searchUser = userJpaRepository.findById(saveDTO.getUserId()).orElseThrow(() -> new Exception404("해당 유저가 존재하지 않습니다."));
 
-        // 2. 이미 프로필이 등록되어 있는지 확인 (중복 생성 방지)
+
         if (photographerRepository.existsByUser_UserId(searchUser.getUserId())) {
             throw new Exception400("이미 등록된 프로필이 존재합니다.");
         }
 
-        // 3. 포토그래퍼 프로필 생성 및 저장
+
         if (photographerRepository.existsByUser_UserId(searchUser.getUserId()))
             throw new Exception400("이미 등록된 프로필이 존재합니다.");
         PhotographerProfile photographerProfile = saveDTO.toEntity(searchUser);
         PhotographerProfile saved = photographerRepository.save(photographerProfile);
         List<PhotographerMap> maps = new ArrayList<>();
 
-        // 4. 카테고리 매핑 생성
+
         if (saveDTO.getCategoryIds() != null && !saveDTO.getCategoryIds().isEmpty()) {
             createCategoryMappingsByAdmin(saved, saveDTO.getCategoryIds());
             maps = photographerMapRepository.findByPhotographerProfileWithCategory(saved);
@@ -379,15 +384,15 @@ public class AdminService {
     }
 
 
-    // 포토그래퍼 프로필과 카테고리 목록을 받아 매핑 데이터를 생성하고 저장
+
     @Transactional
     private void createCategoryMappingsByAdmin(PhotographerProfile profile, List<Long> categoryIds) {
-        // 1. 요청된 ID에 해당하는 카테고리들을 한 번의 쿼리로 모두 조회
+
         List<Long> distinctIds = categoryIds.stream().distinct().collect(Collectors.toList());
         List<PhotographerCategory> categories = photographerCategoryRepository.findAllById(distinctIds);
 
         if (categories.size() != distinctIds.size()) {
-            // 요청된 ID 개수와 실제 조회된 카테고리 개수가 다를 경우, 존재하지 않는 ID를 찾아서 에러 메시지에 포함
+
             List<Long> foundIds = categories.stream()
                     .map(PhotographerCategory::getCategoryId)
                     .collect(Collectors.toList());
@@ -397,59 +402,50 @@ public class AdminService {
             throw new Exception404("다음 ID에 해당하는 카테고리를 찾을 수 없습니다: " + notFoundIds);
         }
 
-        // 2. 조회된 카테고리들로 매핑 객체 리스트를 생성
+
         List<PhotographerMap> mappings = categories.stream()
                 .map(category -> PhotographerMap.builder().photographerProfile(profile).photographerCategory(category).build())
                 .collect(Collectors.toList());
 
-        // 3. 생성된 매핑들을 한 번의 쿼리로 모두 저장
+
         photographerMapRepository.saveAll(mappings);
     }
 
-    /**
-     * 포토그래퍼 프로필 수정
-     */
+
     @Transactional
     public PhotographerResponse.UpdateDTO updateProfileByAdmin(Long photographerId, PhotographerRequest.UpdateProfile updateDTO) {
         PhotographerProfile photographer = getPhotographerById(photographerId);
 
-        // 1. 프로필 기본 정보 업데이트
+
         photographer.update(updateDTO);
 
-        // 2. 카테고리 정보 업데이트
-        // categoryIds 필드가 요청에 포함된 경우에만 카테고리 업데이트 수행
         if (updateDTO.getCategoryIds() != null) {
-            // 기존 매핑을 모두 삭제
+
             List<PhotographerMap> existingMappings = photographerMapRepository.findByPhotographerProfile(photographer);
             photographerMapRepository.deleteAll(existingMappings);
 
-            // 새로운 카테고리 목록이 비어있지 않다면, 다시 생성
+
             if (!updateDTO.getCategoryIds().isEmpty()) {
                 createCategoryMappingsByAdmin(photographer, updateDTO.getCategoryIds());
             }
         }
 
-        // 3. 업데이트된 카테고리 정보를 포함하여 DTO 반환
+
         List<PhotographerMap> updatedMaps = photographerMapRepository.findByPhotographerProfileWithCategory(photographer);
         return new PhotographerResponse.UpdateDTO(photographer, updatedMaps);
     }
 
-    /**
-     * 포토그래퍼 상세 조회
-     */
+
     @Transactional(readOnly = true)
     public PhotographerResponse.DetailDTO getProfileDetailByAdmin(Long photographerId) {
-        // 1. 포토그래퍼 프로필 조회
+
         PhotographerProfile photographer = getPhotographerById(photographerId);
 
-        // 2. N+1 문제 없이 연관된 카테고리 목록을 함께 조회
         List<PhotographerMap> maps = photographerMapRepository.findByPhotographerProfileWithCategory(photographer);
         return new PhotographerResponse.DetailDTO(photographer, maps);
     }
 
-    /**
-     * 활성 포토그래퍼 목록 조회
-     */
+
     @Transactional(readOnly = true)
     public List<PhotographerResponse.ListDTO> getActiveProfileByAdmin() {
         List<PhotographerProfile> photographers = photographerRepository.findByStatus("ACTIVE");
@@ -459,9 +455,7 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 지역별 포토그래퍼 조회
-     */
+
     @Transactional(readOnly = true)
     public List<PhotographerResponse.ListDTO> getPhotographersByLocationbyAdmin(String location) {
         List<PhotographerProfile> photographers = photographerRepository.findByLocationAndStatus(location, "ACTIVE");
@@ -471,9 +465,7 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 상호명으로 포토그래퍼 검색
-     */
+
     @Transactional(readOnly = true)
     public List<PhotographerResponse.ListDTO> searchByBusinessNameByAdmin(String businessName) {
         List<PhotographerProfile> photographers = photographerRepository.findByBusinessNameContaining(businessName);
@@ -483,27 +475,19 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 포토그래퍼 ID로 조회 (내부 사용)
-     */
+
     @Transactional(readOnly = true)
     public PhotographerProfile getPhotographerById(Long photographerId) {
         return photographerRepository.findById(photographerId)
                 .orElseThrow(() -> new Exception404("포토그래퍼를 찾을 수 없습니다."));
     }
 
-    /**
-     * 포토그래퍼 활성화
-     */
-    /**
-     * 포토그래퍼 활성화 (관리자용)
-     */
     @Transactional
     public PhotographerResponse.UpdateDTO activatePhotographerByAdmin(Long photographerId, LoginAdmin loginAdmin) {
-        // 1. ID로 프로필을 직접 조회 (소유권 체크 없음)
+
         PhotographerProfile photographer = getPhotographerById(photographerId);
 
-        // 2. 상태 변경
+
         if(!photographer.getStatus().equals("ACTIVE")) {
             photographer.changeStatus("ACTIVE");
         } else {
@@ -511,57 +495,42 @@ public class AdminService {
         }
 
 
-        // 3. 결과 반환
+
         List<PhotographerMap> maps = photographerMapRepository.findByPhotographerProfileWithCategory(photographer);
         return new PhotographerResponse.UpdateDTO(photographer, maps);
     }
 
-    /**
-     * 포토그래퍼 비활성화
-     */
-    /**
-     * 포토그래퍼 비활성화 (관리자용)
-     */
+
     @Transactional
     public PhotographerResponse.UpdateDTO deactivatePhotographerByAdmin(Long photographerId, LoginAdmin loginAdmin) {
-        // ID로 프로필을 직접 조회 (소유권 체크 없음)
+
         PhotographerProfile photographer = getPhotographerById(photographerId);
 
-        // 상태 변경
         if(!photographer.getStatus().equals("INACTIVE")) {
             photographer.changeStatus("INACTIVE");
         } else {
             throw new Exception400("이미 비활성화된 포토그래퍼입니다.");
         }
 
-        // 결과 반환
         List<PhotographerMap> maps = photographerMapRepository.findByPhotographerProfileWithCategory(photographer);
         return new PhotographerResponse.UpdateDTO(photographer, maps);
     }
 
 
-
-    /**
-     * 포토그래퍼에 카테고리 추가
-     */
-    /**
-     * 포토그래퍼에 카테고리 추가 (관리자용)
-     */
     @Transactional
     public PhotographerResponse.mapDTO addCategoryToPhotographerByAdmin(Long photographerId, PhotographerCategoryRequest.AddCategoryToPhotographer request, LoginAdmin loginAdmin) {
-        // 1. ID로 프로필을 직접 조회 (소유권 체크 없음)
+
         PhotographerProfile photographer = getPhotographerById(photographerId);
 
-        // 2. 추가할 카테고리 조회
+
         PhotographerCategory category = photographerCategoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new Exception404("카테고리를 찾을 수 없습니다."));
 
-        // 3. 중복 매핑 확인 (데이터 무결성을 위해 유지)
+
         if (photographerMapRepository.existsByPhotographerProfileAndPhotographerCategory(photographer, category)) {
             throw new Exception400("이미 등록된 카테고리입니다.");
         }
 
-        // 4. 매핑 객체 생성 및 저장
         PhotographerMap photographerMap = PhotographerMap.builder()
                 .photographerProfile(photographer)
                 .photographerCategory(category)
@@ -571,9 +540,7 @@ public class AdminService {
         return new PhotographerResponse.mapDTO(savedMap);
     }
 
-    /**
-     * 포토그래퍼 카테고리 목록 조회
-     */
+
     @Transactional(readOnly = true)
     public List<PhotographerResponse.mapDTO> getPhotographerCategoriesByAdmin(Long photographerId) {
         PhotographerProfile photographer = getPhotographerById(photographerId);
@@ -582,55 +549,38 @@ public class AdminService {
     }
 
 
-
-    /**
-     * 포토그래퍼에서 카테고리 제거
-     */
-    /**
-     * 포토그래퍼에서 카테고리 제거 (관리자용)
-     */
     @Transactional
     public void removeCategoryFromPhotographerByAdmin(Long photographerId, Long categoryId) {
-        // ID로 프로필을 직접 조회 (소유권 체크 없음)
+
         PhotographerProfile photographer = getPhotographerById(photographerId);
 
-        // 제거할 카테고리 조회
+
         PhotographerCategory category = photographerCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new Exception404("카테고리를 찾을 수 없습니다."));
 
-        // 삭제할 매핑 정보 조회
+
         PhotographerMap mapping = photographerMapRepository
                 .findByPhotographerProfileAndPhotographerCategory(photographer, category)
                 .orElseThrow(() -> new Exception404("매핑을 찾을 수 없습니다."));
 
-        // 매핑 정보 삭제
+
         photographerMapRepository.delete(mapping);
     }
 
-    /**
-     * 포토그래퍼 완전 삭제 (물리적 삭제)
-     */
-    /**
-     * 포토그래퍼 완전 삭제 (관리자용)
-     */
+
     @Transactional
     public void removePhotographerByAdmin(Long photographerId) {
-        // ID로 프로필을 직접 조회 (소유권 체크 없음)
+
         PhotographerProfile photographer = getPhotographerById(photographerId);
 
-        // 관련 매핑 데이터 먼저 삭제 (데이터 무결성을 위해 필수)
+
         List<PhotographerMap> mappings = photographerMapRepository.findByPhotographerProfile(photographer);
         photographerMapRepository.deleteAll(mappings);
 
-        // 포토그래퍼 최종 삭제
+
         photographerRepository.deleteById(photographerId);
     }
 
-
-    // 포토 관련
-
-
-    // 포토 서비스
 
     public List<PhotoServiceResponse.PhotoServiceListDTO> serviceList(int page, int size, String keyword) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
@@ -647,11 +597,11 @@ public class AdminService {
         for (PhotoServiceInfo serviceInfo : photoServiceInfosPage.getContent()) {
             PhotoServiceResponse.PhotoServiceListDTO mainDTO = new PhotoServiceResponse.PhotoServiceListDTO(serviceInfo);
 
-            // 가격 정보 조회 및 설정
+
             List<PriceInfoResponse.PriceInfoListDTO> priceInfoList = getPriceInfoListByPhotoServiceId(serviceInfo.getServiceId());
             mainDTO.setPriceInfoList(priceInfoList);
 
-            // 카테고리 정보 조회 및 설정
+
             List<PhotoCategoryResponse.PhotoCategoryListDTO> categoryList = getServiceCategoriesByAdmin(serviceInfo.getServiceId());
             mainDTO.setCategoryList(categoryList);
 
@@ -695,7 +645,6 @@ public class AdminService {
             throw new Exception500("서비스 생성이 처리되지 않았습니다.");
         }
 
-        // 2. 가격 정보들 등록 (새로 추가)
         if (saveDTO.getPriceInfoList() != null && !saveDTO.getPriceInfoList().isEmpty()) {
             createPriceInfosByadmin(savedInfo, saveDTO.getPriceInfoList());
         } else {
@@ -703,7 +652,6 @@ public class AdminService {
         }
 
 
-        // 3. 카테고리 매핑 생성
         if (saveDTO.getCategoryIdList() != null && !saveDTO.getCategoryIdList().isEmpty()) {
             PhotoMappingRequest.SaveDTO mappingDTO = PhotoMappingRequest.SaveDTO.builder()
                     .serviceId(savedInfo.getServiceId())
@@ -720,7 +668,7 @@ public class AdminService {
         PhotographerProfile userProfileInfo = photographerRepository.findByUser_UserId(userId).orElseThrow(() -> new Exception404("해당 유저가 존재하지 않습니다."));
 
 
-        // 2. 수정할 서비스 조회
+
         PhotoServiceInfo photoService = photoServiceJpaRepository.findById(serviceId)
                 .orElseThrow(() -> new Exception404("해당 서비스가 존재하지 않습니다."));
 
@@ -730,30 +678,28 @@ public class AdminService {
         }
 
 
-        // 4. 엔티티 수정
         photoService.updateFromDto(reqDTO);
 
-        // 5. 가격 정보 수정 (기존 삭제 후 새로 생성)
         if (reqDTO.getPriceInfoList() != null && !reqDTO.getPriceInfoList().isEmpty()) {
-            // 기존 가격 정보 삭제
+
             priceInfoJpaRepository.deleteByPhotoServiceInfo_serviceId(serviceId);
 
-            // 새로운 가격 정보 생성
+
             updatePriceInfosByAdmin(photoService, reqDTO.getPriceInfoList());
         }
 
-        // 6. 카테고리 매핑 수정 (기존 삭제 후 새로 생성)
+
         if (reqDTO.getCategoryIdList() != null && !reqDTO.getCategoryIdList().isEmpty()) {
-            // 기존 매핑 삭제
+
             photoMappingRepository.deleteByPhotoServiceInfo_ServiceId(serviceId);
 
-            // 새로운 매핑 생성
+
             updateCategoryMappingsByAdmin(photoService, reqDTO.getCategoryIdList());
         }
 
     }
 
-    // 가격 정보 업데이트 헬퍼 메서드
+
     private void updatePriceInfosByAdmin(PhotoServiceInfo savedInfo, List<PriceInfoRequest.CreateDTO> priceInfoList) {
         for (PriceInfoRequest.CreateDTO priceInfoDTO : priceInfoList) {
             PriceInfo priceInfo = priceInfoDTO.toEntity(savedInfo);
@@ -761,7 +707,7 @@ public class AdminService {
         }
     }
 
-    // 카테고리 매핑 업데이트 헬퍼 메서드
+
     private void updateCategoryMappingsByAdmin(PhotoServiceInfo savedInfo, List<Long> categoryIdList) {
         for (Long categoryId : categoryIdList) {
             PhotoServiceCategory category = photoCategoryJpaRepository.findById(categoryId)
@@ -779,21 +725,21 @@ public class AdminService {
     @Transactional
     public void deleteServiceByAdmin(Long userId, Long serviceId, LoginAdmin loginAdmin) {
 
-        // 1. 로그인 사용자의 프로필 조회
+
         PhotographerProfile userProfileInfo = photographerRepository
                 .findByUser_UserId(userId)
                 .orElseThrow(() -> new Exception404("해당 유저가 존재하지 않습니다."));
 
-        // 2. 삭제할 서비스 조회
+
         PhotoServiceInfo photoService = photoServiceJpaRepository.findById(serviceId)
                 .orElseThrow(() -> new Exception404("해당 서비스가 존재하지 않습니다."));
 
-        // 3. 유효성 검증 (서비스 주인이 맞는지 확인)
+
         if (!photoService.getPhotographerProfile().getPhotographerProfileId().equals(userProfileInfo.getPhotographerProfileId())) {
             throw new Exception403("해당 유저의 서비스가 아닙니다.");
         }
 
-        // 4. 삭제 실행
+
         photoServiceJpaRepository.deleteById(serviceId);
     }
 
@@ -847,7 +793,7 @@ public class AdminService {
         return categoryList;
     }
 
-    // 카테고리 상세 조회
+
     public PhotoCategoryResponse.PhotoCategoryDetailDTO categoryDetailByAdmin(Long id) {
         PhotoServiceCategory category = photoCategoryJpaRepository.findById(id)
                 .orElseThrow(() -> new Exception404("해당 카테고리가 존재하지 않습니다."));
@@ -864,16 +810,16 @@ public class AdminService {
         List<PhotoServiceMapping> mappings;
 
         if (serviceId != null && categoryId != null) {
-            // 특정 서비스와 카테고리 매핑 조회
+
             mappings = photoMappingRepository.findByPhotoServiceInfo_ServiceIdAndPhotoServiceCategory_CategoryId(serviceId, categoryId);
         } else if (serviceId != null) {
-            // 특정 서비스의 모든 매핑 조회
+
             mappings = photoMappingRepository.findByPhotoServiceInfo_ServiceId(serviceId);
         } else if (categoryId != null) {
-            // 특정 카테고리의 모든 매핑 조회
+
             mappings = photoMappingRepository.findByPhotoServiceCategory_CategoryId(categoryId);
         } else {
-            // 전체 매핑 조회
+
             mappings = photoMappingRepository.findAll();
         }
 
@@ -887,7 +833,7 @@ public class AdminService {
         return mappingList;
     }
 
-    // 매핑 상세 조회
+
     public PhotoMappingResponse.PhotoMappingDetailDTO getMappingDetailByAdmin(Long id) {
         PhotoServiceMapping mapping = photoMappingRepository.findById(id)
                 .orElseThrow(() -> new Exception404("해당 매핑이 존재하지 않습니다."));
@@ -900,10 +846,10 @@ public class AdminService {
     @Transactional
     public void createMappingByAdmin(Long userId, PhotoMappingRequest.SaveDTO saveDTO, LoginAdmin loginAdmin) {
 
-        // 1. 유저 프로필 조회
+
         PhotographerProfile userProfile = photographerRepository.findByUser_UserId(userId)
                 .orElseThrow(() -> new Exception404("해당 유저가 존재하지 않습니다."));
-        // 서비스 존재 여부 확인
+
         PhotoServiceInfo photoServiceInfo = photoServiceJpaRepository.findById(saveDTO.getServiceId())
                 .orElseThrow(() -> new Exception404("해당 서비스가 존재하지 않습니다."));
 
@@ -911,19 +857,19 @@ public class AdminService {
             throw new Exception400("해당 유저의 서비스가 아닙니다.");
         }
 
-        // 여러 카테고리 처리
+
         for (Long categoryId : saveDTO.getCategoryIdList()) {
-            // 카테고리 존재 여부 확인
+
             PhotoServiceCategory photoServiceCategory = photoCategoryJpaRepository.findById(categoryId)
                     .orElseThrow(() -> new Exception404("카테고리 ID " + categoryId + "가 존재하지 않습니다."));
 
-            // 중복 매핑 체크
+
             if (photoMappingRepository.existsByPhotoServiceInfoAndPhotoServiceCategory(photoServiceInfo, photoServiceCategory)) {
                 log.warn("이미 연결된 서비스-카테고리입니다. serviceId: {}, categoryId: {}", saveDTO.getServiceId(), categoryId);
                 continue;
             }
 
-            // 매핑 생성
+
             PhotoServiceMapping mapping = PhotoServiceMapping.builder()
                     .photoServiceInfo(photoServiceInfo)
                     .photoServiceCategory(photoServiceCategory)
@@ -980,7 +926,7 @@ public class AdminService {
 
 
     // priceInfo 관련 메서드
-    // 가격 정보 등록 (단독으로 추가할 때)
+
     @Transactional
     public PriceInfoResponse.PriceInfoListDTO createPriceInfoByAdmin(Long photoServiceInfoId, PriceInfoRequest.CreateDTO request) {
         PhotoServiceInfo photoServiceInfo = photoServiceJpaRepository.findById(photoServiceInfoId)
@@ -992,7 +938,6 @@ public class AdminService {
     }
 
 
-    // 새로운 메서드 추가
     public List<PriceInfoResponse.PriceInfoListDTO> getPriceInfoListByPhotoServiceId(Long photoServiceInfoId) {
         if (!photoServiceJpaRepository.existsById(photoServiceInfoId)) {
             throw new Exception404("PhotoService를 찾을 수 없습니다: " + photoServiceInfoId);
@@ -1022,7 +967,6 @@ public class AdminService {
         PriceInfo priceInfo = priceInfoJpaRepository.findById(request.getPriceInfoId())
                 .orElseThrow(() -> new Exception404("가격 정보를 찾을 수 없습니다: " + request.getPriceInfoId()));
 
-        // 필드 업데이트
         priceInfo = PriceInfo.builder()
                 .priceInfoId(priceInfo.getPriceInfoId())
                 .photoServiceInfo(priceInfo.getPhotoServiceInfo())
@@ -1073,11 +1017,7 @@ public class AdminService {
 
     // 포트폴리오 관련
 
-    // ============ 포트폴리오 CRUD ============
 
-    /**
-     * 카테고리 단건 조회
-     */
     public PortfolioCategoryResponse.DetailDTO getPortCategoryByAdmin(Long categoryId) {
         try {
             log.info("카테고리 조회: ID = {}", categoryId);
@@ -1097,9 +1037,7 @@ public class AdminService {
         }
     }
 
-    /**
-     * 활성화된 카테고리 목록 조회
-     */
+
     public List<PortfolioCategoryResponse.DetailDTO> getPortActiveCategoriesByAdmin() {
         try {
             log.info("활성화된 카테고리 목록 조회");
@@ -1116,9 +1054,7 @@ public class AdminService {
         }
     }
 
-    /**
-     * 포트폴리오 생성
-     */
+
     @Transactional
     public PortfolioResponse.DetailDTO createPortfolioByAdmin(Long userId, PortfolioRequest.CreateDTO request) {
         try {
@@ -1127,18 +1063,18 @@ public class AdminService {
             User user = userJpaRepository.findById(userId)
                     .orElseThrow(() -> new Exception404("해당 유저가 존재하지 않습니다."));
 
-            // 입력값 검증
+
             validateCreateRequest(request);
             validateLoginUserByAdmin(user);
 
-            // 로그인한 사용자의 사진작가 프로필 조회
+
             PhotographerProfile photographer = photographerRepository.findByUser_UserId(user.getUserId())
                     .orElseThrow(() -> new Exception404("사진작가 프로필이 존재하지 않습니다. 사진작가 등록을 먼저 해주세요."));
 
             Portfolio portfolio = request.toEntity(photographer);
             Portfolio savedPortfolio = portfolioRepository.save(portfolio);
 
-            // 카테고리 매핑 생성
+
             if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
                 createCategoryMappingsByAdmin(savedPortfolio, request.getCategoryIds());
             }
@@ -1147,16 +1083,14 @@ public class AdminService {
             return PortfolioResponse.DetailDTO.from(savedPortfolio);
 
         } catch (Exception404 | Exception400 e) {
-            throw e; // 이미 정의된 예외는 그대로 전파
+            throw e;
         } catch (Exception e) {
             log.error("포트폴리오 생성 중 예상치 못한 오류 발생", e);
             throw new Exception500("포트폴리오 생성 중 서버 오류가 발생했습니다");
         }
     }
 
-    /**
-     * 포트폴리오 수정
-     */
+
     @Transactional
     public PortfolioResponse.DetailDTO updatePortfolioByAdmin(Long userId, Long portfolioId, PortfolioRequest.UpdateDTO request) {
         try {
@@ -1165,7 +1099,7 @@ public class AdminService {
             User user = userJpaRepository.findById(userId)
                     .orElseThrow(() -> new Exception404("해당 유저가 존재하지 않습니다."));
 
-            // 입력값 검증
+
             validatePortfolioId(portfolioId);
             validateUpdateRequest(request);
             validateLoginUserByAdmin(user);
@@ -1178,7 +1112,7 @@ public class AdminService {
             }
 
 
-            // 필드 업데이트
+
             if (request.getTitle() != null) {
                 portfolio.setTitle(request.getTitle());
             }
@@ -1189,7 +1123,7 @@ public class AdminService {
                 portfolio.setThumbnailUrl(request.getThumbnailUrl());
             }
 
-            // 카테고리 매핑 업데이트
+
             if (request.getCategoryIds() != null) {
                 updateCategoryMappings(portfolio, request.getCategoryIds());
             }
@@ -1205,9 +1139,7 @@ public class AdminService {
         }
     }
 
-    /**
-     * 포트폴리오 상세 조회 (조회수 증가)
-     */
+
     @Transactional
     public PortfolioResponse.DetailDTO getPortfolioDetailByAdmin(Long portfolioId) {
         try {
@@ -1218,8 +1150,6 @@ public class AdminService {
             Portfolio portfolio = portfolioRepository.findById(portfolioId)
                     .orElseThrow(() -> new Exception404("존재하지 않는 포트폴리오입니다: " + portfolioId));
 
-            // 조회수 증가 로직은 엔티티에 없으므로 주석 처리
-            // portfolioRepository.incrementViewCount(portfolioId);
 
             return PortfolioResponse.DetailDTO.from(portfolio);
 
@@ -1231,9 +1161,6 @@ public class AdminService {
         }
     }
 
-    /**
-     * 포트폴리오 삭제
-     */
     @Transactional
     public void deletePortfolioByAdmin(Long userId, Long portfolioId) {
         try {
@@ -1252,7 +1179,6 @@ public class AdminService {
                 throw new Exception403("해당 유저의 포트폴리오가 아닙니다.");
             }
 
-            // 연관된 매핑과 이미지부터 삭제
             portfolioMapRepository.deleteByPortfolio_PortfolioId(portfolioId);
             portfolioImageRepository.deleteByPortfolio_PortfolioId(portfolioId);
 
@@ -1269,9 +1195,7 @@ public class AdminService {
 
     // ============ 포트폴리오 조회/검색 ============
 
-    /**
-     * 포트폴리오 목록 조회 (페이징)
-     */
+
     public Page<PortfolioResponse.ListDTO> getPortfolioListByAdmin(PortfolioRequest.SearchDTO searchRequest) {
         try {
             log.info("포트폴리오 목록 조회: sortBy = {}", searchRequest.getSortBy());
@@ -1281,7 +1205,6 @@ public class AdminService {
             Pageable pageable = PageRequest.of(searchRequest.getPage(), searchRequest.getSize());
             Page<Portfolio> portfolioPage;
 
-            // 엔티티에 viewCount, likeCount, isPublic 필드가 없으므로, 최신순으로만 조회하도록 수정
             portfolioPage = portfolioRepository.findAllByOrderByCreatedAtDesc(pageable);
 
             return portfolioPage.map(PortfolioResponse.ListDTO::from);
@@ -1294,9 +1217,7 @@ public class AdminService {
         }
     }
 
-    /**
-     * 포트폴리오 검색
-     */
+
     public Page<PortfolioResponse.ListDTO> searchPortfoliosByAdmin(PortfolioRequest.SearchDTO searchRequest) {
         try {
             log.info("포트폴리오 검색: keyword = {}", searchRequest.getKeyword());
@@ -1319,9 +1240,7 @@ public class AdminService {
         }
     }
 
-    /**
-     * 사진작가별 포트폴리오 조회
-     */
+
     public List<PortfolioResponse.ListDTO> getPhotographerPortfoliosByAdmin(Long photographerId) {
         try {
             log.info("사진작가 포트폴리오 조회: photographerId = {}", photographerId);
@@ -1347,9 +1266,7 @@ public class AdminService {
 
     // ============ 이미지 관리 ============
 
-    /**
-     * 포트폴리오에 이미지 추가
-     */
+
     @Transactional
     public PortfolioResponse.ImageDTO addImagePortByAdmin(Long userId, PortfolioRequest.AddImageDTO request,
                                                           LoginAdmin admin) {
@@ -1366,10 +1283,9 @@ public class AdminService {
             Portfolio portfolio = portfolioRepository.findById(request.getPortfolioId())
                     .orElseThrow(() -> new Exception404("존재하지 않는 포트폴리오입니다: " + request.getPortfolioId()));
 
-            // isMain이 null일 경우 false로 설정
+
             Boolean isMain = (request.getIsMain() != null) ? request.getIsMain() : false;
 
-            // 이미 메인 이미지가 존재하면 해제
             if (isMain) {
                 portfolioImageRepository.findByPortfolioAndIsMainTrue(portfolio)
                         .ifPresent(mainImage -> mainImage.setIsMain(false));
@@ -1393,9 +1309,7 @@ public class AdminService {
         }
     }
 
-    /**
-     * 이미지 삭제
-     */
+
     @Transactional
     public void deletePortImageByAdmin(Long userId, Long imageId, LoginAdmin loginAdmin) {
         try {
@@ -1433,9 +1347,6 @@ public class AdminService {
 
     // ============ 카테고리 매핑 관리 ============
 
-    /**
-     * 포트폴리오에 카테고리 추가
-     */
     @Transactional
     public void addCategoryToPortfolioByAdmin(Long userId, Long portfolioId, Long categoryId) {
         try {
@@ -1744,23 +1655,149 @@ public class AdminService {
         bookingInfo.setStatus(BookingStatus.COMPLETED);
     }
 
-    // TODO - 리뷰 남길 시 사용할 서비스
-    // [사용자] 리뷰 작성 후 상태 변경
+
     @Transactional
     public void reviewBooking(Long bookingInfoId, LoginUser loginUser){
         BookingInfo bookingInfo = bookingInfoJpaRepository.findById(bookingInfoId)
                 .orElseThrow(() -> new Exception404("존재하지 않는 예약 내역입니다."));
 
-        // 예약자 본인만 리뷰 작성 가능
+
         if (!bookingInfo.getUserProfile().getUser().getUserId().equals(loginUser.getId())){
             throw new Exception403("해당 서비스에 리뷰를 남길 수 없습니다.");
         }
 
-        // COMPLETED 상태일 때만 리뷰 작성 가능
-        if(!bookingInfo.getStatus().canChangeTo(BookingStatus.REVIEWED)){
+         if(!bookingInfo.getStatus().canChangeTo(BookingStatus.REVIEWED)){
             throw new Exception400("촬영완료 상태일 때만 리뷰를 작성할 수 있습니다. 현재 상태: " + bookingInfo.getStatus().getDescription());
         }
         bookingInfo.setStatus(BookingStatus.REVIEWED);
+    }
+
+
+
+    public PageResponse<PaymentListResponse> getPaymentListByAdmin(PaymentListRequest request, Pageable pageable) {
+        if (!request.isValidDateRange()) {
+            throw new RuntimeException("시작일이 종료일보다 늦을 수 없습니다.");
+        }
+
+        Page<Payment> paymentPage = adminPaymentJpaRepository.findAllByStatusAndDateRange(
+                request.getStatus(),
+                request.getStartDate(),
+                request.getEndDate(),
+                pageable
+        );
+
+        List<PaymentListResponse> responseList = paymentPage.getContent().stream()
+                .map(payment -> {
+                    BookingInfo bookingInfo = bookingInfoJpaRepository.findByPayment(payment).orElse(null);
+                    if (bookingInfo != null) {
+                        return PaymentListResponse.of(
+                                payment,
+                                bookingInfo.getBookingInfoId(),
+                                bookingInfo.getPhotographerProfile().getBusinessName(),
+                                bookingInfo.getPhotoServiceInfo().getTitle()
+                        );
+                    } else {
+                        return PaymentListResponse.of(payment);
+                    }
+                })
+                .collect(Collectors.toList());
+
+        return PageResponse.of(paymentPage, responseList);
+    }
+
+
+    public PaymentDetailResponse getPaymentDetailByAdmin(Long paymentId) {
+        Payment payment = paymentJpaRepository.findById(paymentId)
+                .orElseThrow(() -> new Exception404("결제 정보를 찾을 수 없습니다."));
+
+        BookingInfo bookingInfo = bookingInfoJpaRepository.findByPayment(payment).orElse(null);
+
+        if (bookingInfo != null) {
+            return PaymentDetailResponse.ofFull(
+                    payment,
+                    bookingInfo.getBookingInfoId(),
+                    bookingInfo.getStatus().name(),
+                    Timestamp.valueOf(bookingInfo.getBookingDate().atTime(bookingInfo.getBookingTime())),
+                    bookingInfo.getPhotographerProfile().getPhotographerProfileId(),
+                    bookingInfo.getPhotographerProfile().getBusinessName(),
+                    bookingInfo.getPhotographerProfile().getUser().getEmail(),
+                    bookingInfo.getPhotoServiceInfo().getTitle(),
+                    bookingInfo.getPhotoServiceInfo().getDescription(),
+                    "촬영 장소 없음",
+                    bookingInfo.getUserProfile().getUserProfileId(),
+                    bookingInfo.getUserProfile().getNickName(),
+                    bookingInfo.getUserProfile().getUser().getEmail()
+            );
+        } else {
+            return PaymentDetailResponse.of(payment);
+        }
+    }
+
+    @Transactional
+    public void approvePaymentByAdmin(Long paymentId) {
+        Payment payment = paymentJpaRepository.findById(paymentId)
+                .orElseThrow(() -> new Exception404("결제 정보를 찾을 수 없습니다."));
+
+        payment.setStatus(PaymentStatus.APPROVED);
+
+        BookingInfo bookingInfo = bookingInfoJpaRepository.findByPayment(payment).orElse(null);
+        if (bookingInfo != null) {
+            bookingInfo.setStatus(BookingStatus.CONFIRMED);
+        }
+
+        log.info("관리자 강제 승인 완료 - paymentId: {}", paymentId);
+    }
+
+    @Transactional
+    public void cancelPaymentByAdmin(Long paymentId) {
+        Payment payment = paymentJpaRepository.findById(paymentId)
+                .orElseThrow(() -> new Exception404("결제 정보를 찾을 수 없습니다."));
+
+        payment.setStatus(PaymentStatus.CANCELED);
+
+        BookingInfo bookingInfo = bookingInfoJpaRepository.findByPayment(payment).orElse(null);
+        if (bookingInfo != null) {
+            bookingInfo.setStatus(BookingStatus.CANCELED);
+        }
+
+        log.info("관리자 결제 취소 완료 - paymentId: {}", paymentId);
+    }
+
+    /**
+     * 관리자 결제 삭제 (Soft delete 권장)
+     */
+    @Transactional
+    public void deletePaymentByAdmin(Long paymentId) {
+        Payment payment = paymentJpaRepository.findById(paymentId)
+                .orElseThrow(() -> new Exception404("결제 정보를 찾을 수 없습니다."));
+
+        paymentJpaRepository.delete(payment);
+        log.info("관리자 결제 삭제 완료 - paymentId: {}", paymentId);
+    }
+
+    public AdminResponse.AdminPaymentStatsResponse getPaymentStatsByAdmin() {
+        LocalDate now = LocalDate.now();
+        YearMonth thisMonth = YearMonth.now();
+        YearMonth lastMonth = thisMonth.minusMonths(1);
+
+        int totalCount = adminPaymentJpaRepository.countAll(null);
+        int successCount = adminPaymentJpaRepository.countAll(PaymentStatus.APPROVED);
+        int failedCount = adminPaymentJpaRepository.countAll(PaymentStatus.FAILED);
+        int canceledCount = adminPaymentJpaRepository.countAll(PaymentStatus.CANCELED);
+
+        long totalAmount = adminPaymentJpaRepository.sumAllTotalAmount();
+        long thisMonthAmount = adminPaymentJpaRepository.sumTotalAmountByMonth(thisMonth.getYear(), thisMonth.getMonthValue());
+        long lastMonthAmount = adminPaymentJpaRepository.sumTotalAmountByMonth(lastMonth.getYear(), lastMonth.getMonthValue());
+
+        return AdminResponse.AdminPaymentStatsResponse.builder()
+                .totalPaymentCount(totalCount)
+                .successPaymentCount(successCount)
+                .failedPaymentCount(failedCount)
+                .canceledPaymentCount(canceledCount)
+                .totalPaymentAmount(totalAmount)
+                .thisMonthPaymentAmount(thisMonthAmount)
+                .lastMonthPaymentAmount(lastMonthAmount)
+                .build();
     }
 
 

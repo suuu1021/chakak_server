@@ -27,20 +27,18 @@ public class AdminProfileService {
         Admin admin = adminJpaRepository.findById(adminId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 관리자입니다."));
 
-        // 이미 프로필이 있는지 확인
+
         if (adminProfileJpaRepository.findByAdmin_AdminId(adminId).isPresent()) {
             throw new RuntimeException("이미 프로필이 존재합니다.");
         }
 
-        // DTO를 Entity로 변환
         AdminProfile adminProfileEntity = dto.toEntity(admin);
 
-        // 닉네임 중복 체크
+
         if (adminProfileJpaRepository.existsByNickName(adminProfileEntity.getNickName())) {
             throw new RuntimeException("이미 사용 중인 닉네임입니다.");
         }
 
-        // 프로필 생성 및 저장
         AdminProfile savedProfile = adminProfileJpaRepository.save(adminProfileEntity);
 
         log.info("관리자 프로필 생성 완료 - profileId: {}", savedProfile.getProfileId());
@@ -63,17 +61,15 @@ public class AdminProfileService {
     public AdminProfileResponse.UpdateDTO updateAdminProfile(Long adminId, AdminProfileRequest.UpdateDTO dto) {
         log.info("관리자 프로필 수정 시작 - adminId: {}", adminId);
 
-        // 기존 프로필 조회
+
         AdminProfile adminProfile = adminProfileJpaRepository.findByAdmin_AdminId(adminId)
                 .orElseThrow(() -> new RuntimeException("관리자 프로필을 찾을 수 없습니다."));
 
-        // 닉네임 중복 체크 (현재 닉네임과 다른 경우에만)
         if (!adminProfile.getNickName().equals(dto.getNickName())
                 && adminProfileJpaRepository.existsByNickName(dto.getNickName())) {
             throw new RuntimeException("이미 사용 중인 닉네임입니다.");
         }
 
-        // 프로필 정보 업데이트
         updateProfileFields(adminProfile, dto);
 
         log.info("관리자 프로필 수정 완료 - profileId: {}", adminProfile.getProfileId());

@@ -158,6 +158,13 @@ public class PostResponse {
 
             this.isLiked = currentUserId != null &&
                     likeRepository.existsByPostIdAndUserId(post.getPostId(), currentUserId);
+
+
+            if (this.hasImage && post.getImageUrl() != null && !post.getImageUrl().isEmpty()) {
+                this.thumbnailData = post.getImageUrl(); // 그대로 할당
+            } else {
+                this.thumbnailData = null;
+            }
         }
 
         private String getAuthorNickname(Post post) {

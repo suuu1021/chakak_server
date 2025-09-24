@@ -119,7 +119,21 @@ public class AdminResponse {
                     .build();
         }
 
+
     }
 
+    @Data
+    @Builder
+    public static class AdminPaymentStatsResponse {
+        private int totalPaymentCount;
+        private int successPaymentCount;
+        private int failedPaymentCount;
+        private int canceledPaymentCount;
+
+        private long totalPaymentAmount;
+        private long thisMonthPaymentAmount;
+        private long lastMonthPaymentAmount;
+
+    }
 
 }
