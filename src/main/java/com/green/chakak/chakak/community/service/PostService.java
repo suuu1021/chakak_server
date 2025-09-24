@@ -11,6 +11,7 @@ import com.green.chakak.chakak.community.domain.Post;
 import com.green.chakak.chakak.community.repository.LikeJpaRepository;
 import com.green.chakak.chakak.community.repository.PostJpaRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -126,6 +128,13 @@ public class PostService {
     public void deletePost(Long postId, LoginUser loginUser) {
 
         Post post = checkOwnership(postId, loginUser);
+
+        if (post.getImageUrl() != null) {
+            boolean deleted = fileUploadUtil.deleteFile(post.getImageUrl());
+            if (!deleted) {
+                log.warn("게시글 이미지 삭제 실패: {}", post.getImageUrl());
+            }
+        }
 
         postRepository.delete(post);
     }

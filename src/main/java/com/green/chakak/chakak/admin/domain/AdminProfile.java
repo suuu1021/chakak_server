@@ -5,6 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.sql.Timestamp;
 
 @Entity
 @Table(name = "admin_profile")
@@ -23,11 +27,29 @@ public class AdminProfile {
     @JoinColumn(name = "admin_id", nullable = false)
     private Admin admin;
 
+    @Column(length = 50, nullable = false, unique = true)
+    private String nickName;
+
     @Column(name = "email")
     private String email;
 
-    @Column(name = "phone")
-    private String phone;
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @CreationTimestamp
+    private Timestamp createdAt;
+
+    @UpdateTimestamp
+    private Timestamp updatedAt;
+
+    @Builder
+    public AdminProfile(Long profileId, String nickName, Admin admin, String email, String imageUrl ) {
+        this.profileId = profileId;
+        this.nickName = nickName;
+        this.admin = admin;
+        this.email = email;
+        this.imageUrl = imageUrl;
+    }
 
 
 }
