@@ -72,7 +72,7 @@ public interface PhotoServiceReviewJpaRepository extends JpaRepository<PhotoServ
 	// 최근 N개 리뷰 조회
 	List<PhotoServiceReview> findTop10ByPhotoServiceInfoOrderByCreatedAtDesc(PhotoServiceInfo photoServiceInfo);
 
-	// 복합 검색 조건을 위한 추가 메서드들
+	// 복합 검색 조건
 	@Query("SELECT r FROM PhotoServiceReview r WHERE r.photoServiceInfo = :photoServiceInfo " +
 			"AND (:minRating IS NULL OR r.rating >= :minRating) " +
 			"AND (:keyword IS NULL OR r.reviewContent LIKE %:keyword%) " +
@@ -81,4 +81,11 @@ public interface PhotoServiceReviewJpaRepository extends JpaRepository<PhotoServ
 													@Param("minRating") BigDecimal minRating,
 													@Param("keyword") String keyword,
 													Pageable pageable);
+
+	// ✅ 추가된 메서드: 포토그래퍼 전체 리뷰 조회
+	@Query("SELECT r FROM PhotoServiceReview r " +
+			"JOIN r.photoServiceInfo s " +
+			"WHERE s.photographerProfile.photographerProfileId = :photographerId " +
+			"ORDER BY r.createdAt DESC")
+	Page<PhotoServiceReview> findByPhotographerId(@Param("photographerId") Long photographerId, Pageable pageable);
 }
