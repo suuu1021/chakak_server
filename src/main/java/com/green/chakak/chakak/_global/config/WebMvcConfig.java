@@ -53,8 +53,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/admin/login",
                         "/api/photo/mappings/category/*/services",
                         "/api/post/list",
-                        "/api/v1/photo-services/{serviceId}/reviews/recent",
-                        "/api/v1/photo-services/{serviceId}/reviews/stats"
+                        "/api/v1/photo-services/*/reviews",                   // 서비스별 리뷰 목록
+                        "/api/v1/photo-services/*/reviews/stats",              // 서비스 리뷰 통계
+                        "/api/v1/photo-services/*/reviews/recent",             // 최근 리뷰
+                        "/api/v1/photo-services/*/reviews/rating-distribution",// 평점 분포
+                        "/api/v1/photo-services/*/reviews/search",             // 검색
+                        "/api/v1/photo-services/users/*/reviews",              // 특정 사용자 리뷰 조회 (공개)
+                        "/api/v1/photo-services/photographers/*/reviews"
                 );
     }
 
