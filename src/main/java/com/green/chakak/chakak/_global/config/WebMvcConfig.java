@@ -27,6 +27,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/users/login",
                         "/api/users/signup",
                         "/api/photographers",
+                        "/api/photographers/{photographerId}",
                         "/api/photographers/location/**",
                         "/api/photographers/search",
                         "/api/photographers/create",
@@ -40,6 +41,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/email/send",
                         "/api/v1/users/profile",
                         "/api/photo/services/list",
+                        "/api/photo/services/detail/{id}",
+                        "/api/photo/services/photographer/{photographerId}",
                         "/api/photo/categories/list",
                         "/api/photo/mappings/list",
                         "/api/photo/mappings/detail/{id}",
@@ -49,7 +52,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/payment/cancel",
                         "/api/admin/login",
                         "/api/photo/mappings/category/*/services",
-                        "/api/post/list"
+                        "/api/post/list",
+                        "/api/v1/photo-services/{serviceId}/reviews/recent",
+                        "/api/v1/photo-services/{serviceId}/reviews/stats"
                 );
     }
 
