@@ -48,22 +48,24 @@ public class PhotoServiceReviewResponse {
 	@Data
 	public static class DetailDTO {
 		private Long reviewId;
-		private Long serviceId;
+		private Long serviceId; // serviceId 필드 추가
 		private String serviceTitle;
 		private Long userId;
 		private Long bookingId;
 		private BigDecimal rating;
+		private String reviewerNickname;
 		private String reviewContent;
 		private Timestamp createdAt;
 		private Timestamp updatedAt;
 
 		public DetailDTO(PhotoServiceReview review) {
 			this.reviewId = review.getReviewId();
-			this.serviceId = review.getPhotoServiceInfo().getServiceId();
+			this.serviceId = review.getPhotoServiceInfo().getServiceId(); // serviceId 값 할당
 			this.serviceTitle = review.getPhotoServiceInfo().getTitle();
 			this.userId = review.getUser().getUserId();
 			this.bookingId = review.getBookingInfo().getBookingInfoId();
 			this.rating = review.getRating();
+			this.reviewerNickname = review.getUser().getUserProfile().getNickName();
 			this.reviewContent = review.getReviewContent();
 			this.createdAt = review.getCreatedAt();
 			this.updatedAt = review.getUpdatedAt();
@@ -74,18 +76,26 @@ public class PhotoServiceReviewResponse {
 	public static class ListDTO {
 		private Long reviewId;
 		private Long serviceId; // serviceId 필드 추가
+		private String serviceTitle;
 		private Long userId;
+		private Long bookingId;
 		private BigDecimal rating;
+		private String reviewerNickname;
 		private String reviewContent;
 		private Timestamp createdAt;
+		private Timestamp updatedAt;
 
 		public ListDTO(PhotoServiceReview review) {
 			this.reviewId = review.getReviewId();
 			this.serviceId = review.getPhotoServiceInfo().getServiceId(); // serviceId 값 할당
+			this.serviceTitle = review.getPhotoServiceInfo().getTitle();
 			this.userId = review.getUser().getUserId();
+			this.bookingId = review.getBookingInfo().getBookingInfoId();
 			this.rating = review.getRating();
+			this.reviewerNickname = review.getUser().getUserProfile().getNickName();
 			this.reviewContent = review.getReviewContent();
 			this.createdAt = review.getCreatedAt();
+			this.updatedAt = review.getUpdatedAt();
 		}
 	}
 
