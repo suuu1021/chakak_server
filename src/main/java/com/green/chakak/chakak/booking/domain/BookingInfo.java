@@ -3,6 +3,7 @@ package com.green.chakak.chakak.booking.domain;
 import com.green.chakak.chakak.account.domain.UserProfile;
 import com.green.chakak.chakak.payment.domain.Payment;
 import com.green.chakak.chakak.photo.domain.PhotoServiceInfo;
+import com.green.chakak.chakak.photo.domain.PhotoServiceReview;
 import com.green.chakak.chakak.photo.domain.PriceInfo;
 import com.green.chakak.chakak.photographer.domain.PhotographerCategory;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
@@ -46,6 +47,9 @@ public class BookingInfo {
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "payment_id") // nullable = true (기본값)
     private Payment payment; // 결제 정보 ID (FK)
+
+    @OneToOne(mappedBy = "bookingInfo", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    private PhotoServiceReview photoServiceReview;
 
     @Column(nullable = false)
     private LocalDate bookingDate; // 촬영 희망일

@@ -2,6 +2,9 @@ package com.green.chakak.chakak.account.domain;
 
 import com.green.chakak.chakak._global.utils.HashUtil;
 import com.green.chakak.chakak.account.service.request.UserRequest;
+import com.green.chakak.chakak.community.domain.Like;
+import com.green.chakak.chakak.community.domain.Post;
+import com.green.chakak.chakak.community.domain.Reply;
 import com.green.chakak.chakak.photographer.domain.PhotographerProfile;
 import com.green.chakak.chakak.photo.domain.PhotoServiceReview;
 import jakarta.persistence.*;
@@ -73,6 +76,15 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<PhotoServiceReview> photoServiceReviews = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Like> likes = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Post> posts = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Reply> replies = new java.util.ArrayList<>();
 
     private String provider; // 소셜 로그인 제공자(KAKAO, GOOGLE, NAVER 등)
 

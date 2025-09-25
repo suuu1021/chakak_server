@@ -32,8 +32,8 @@ public class PhotoServiceReview {
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "booking_id", nullable = false)
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "booking_id", nullable = false, unique = true)
 	private BookingInfo bookingInfo;
 
 	@Column(name = "rating", nullable = false, precision = 2, scale = 1)
