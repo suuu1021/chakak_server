@@ -27,7 +27,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/users/login",
                         "/api/users/signup",
                         "/api/photographers",
-                        // "/api/photographers/{photographerId}", // FIXME: /api/photographers/me 경로와 충돌하여 임시 주석 처리. 공개 프로필 조회 API가 인증을 요구하게 될 수 있음.
+                        "/api/photographers/{photographerId:[0-9]+}", // id 숫자일때만 예외
                         "/api/photographers/location/**",
                         "/api/photographers/search",
                         "/api/photographers/create",
