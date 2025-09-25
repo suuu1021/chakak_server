@@ -654,7 +654,7 @@ public class DataInitializer implements CommandLineRunner {
 
 		// 각 일반 유저에 대해 예약 생성
 		for (UserProfile user : generalUsers) {
-			int bookingsForUser = 2 + random.nextInt(3); // 2-4개
+			int bookingsForUser = 15 + random.nextInt(16); // 2-4개
 			System.out.println("\n유저 '" + user.getNickName() + "' (Profile ID: " + user.getUserProfileId() +
 					", User ID: " + user.getUser().getUserId() + ")에게 " +
 					bookingsForUser + "개의 예약 생성 중...");
@@ -1029,7 +1029,7 @@ public class DataInitializer implements CommandLineRunner {
             }
 
             // 10% 확률로 리뷰 내용 없음
-            String finalReviewContent = random.nextDouble() < 0.1 ? null : reviewContentBuilder.toString();
+            String finalReviewContent = reviewContentBuilder.toString();
 
 
             PhotoServiceReview review = PhotoServiceReview.builder()
