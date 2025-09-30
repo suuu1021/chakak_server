@@ -20,8 +20,6 @@ CHAKAK의 Spring Boot 기반 REST API 서버입니다. 사용자 인증, 예약 
 
 ### Authentication & Security
 - **JWT** (java-jwt 4.4.0) - 토큰 기반 인증
-- **Spring Security Crypto** - 비밀번호 암호화
-- **Kakao OAuth** - 소셜 로그인
 
 ### Payment
 - **Kakao Pay API** - 결제 처리
@@ -43,7 +41,6 @@ src/main/java/com/green/chakak/chakak/
 ├── _global/                        # 전역 설정 및 유틸리티
 │   ├── config/                     # Spring 설정
 │   │   ├── AppConfig.java
-│   │   ├── KakaoApiConfig.java
 │   │   ├── WebMvcConfig.java
 │   │   └── WebSocketConfig.java
 │   ├── errors/                     # 예외 처리
@@ -62,7 +59,6 @@ src/main/java/com/green/chakak/chakak/
 │
 ├── account/                        # 회원 관리
 │   ├── controller/
-│   │   ├── KakaoAuthController.java
 │   │   ├── UserRestController.java
 │   │   ├── UserProfileRestController.java
 │   │   └── UserTypeController.java
@@ -72,7 +68,6 @@ src/main/java/com/green/chakak/chakak/
 │   │   ├── UserType.java
 │   │   └── LoginUser.java
 │   ├── service/
-│   │   ├── KakaoAuthService.java
 │   │   ├── UserService.java
 │   │   ├── UserProfileService.java
 │   │   ├── external/               # 외부 API 연동
@@ -178,7 +173,6 @@ src/main/java/com/green/chakak/chakak/
 
 ### 1. 인증 & 회원 관리
 - ✅ JWT 기반 토큰 인증
-- ✅ 카카오 소셜 로그인
 - ✅ 이메일 인증
 - ✅ 사용자/사진작가 타입 관리
 - ✅ 프로필 관리 (CRUD)
@@ -192,8 +186,6 @@ src/main/java/com/green/chakak/chakak/
 - ✅ 카카오페이 연동
 - ✅ 결제 준비/승인/실패 처리
 - ✅ 결제 내역 조회
-- ✅ 수익 통계 (사진작가용)
-- ✅ 지출 통계 (사용자용)
 
 ### 4. 실시간 채팅
 - ✅ WebSocket (STOMP) 기반
@@ -219,9 +211,11 @@ src/main/java/com/green/chakak/chakak/
 - ✅ 좋아요 기능
 - ✅ 페이징 처리
 
-### 8. 기타
+### 8. 관리자
 - ✅ 배너 관리
-- ✅ 관리자 기능
+- ✅ 관리자 기능 (회원관련 기능 관리)
+
+### 99. 기타
 - ✅ 파일 업로드 (Base64/Multipart)
 - ✅ 전역 예외 처리
 
@@ -242,9 +236,6 @@ src/main/java/com/green/chakak/chakak/
 KAKAO_PAY_SECRET_KEY=your_kakao_pay_secret_key
 KAKAO_PAY_CID=TC0ONETIME
 KAKAO_PAY_API_URL=https://open-api.kakaopay.com
-
-# 카카오 OAuth
-KAKAO_CLIENT_ID=your_kakao_client_id
 
 # 서버 도메인
 SERVER_DOMAIN=http://localhost:8080
@@ -304,7 +295,6 @@ Password: chakak1234
 ```
 POST   /api/auth/login              # 일반 로그인
 POST   /api/auth/signup             # 회원가입
-GET    /api/auth/kakao              # 카카오 로그인
 POST   /api/auth/logout             # 로그아웃
 ```
 
@@ -342,7 +332,6 @@ SUBSCRIBE /topic/chat/{roomId}     # 채팅방 구독
 POST   /api/payments/ready          # 결제 준비
 POST   /api/payments/approve        # 결제 승인
 GET    /api/payments                # 결제 내역
-GET    /api/payments/stats          # 결제 통계
 ```
 
 ## 🏗 아키텍처 패턴
@@ -370,7 +359,6 @@ Domain (Entity)
 ## 🔐 보안
 
 - **JWT 토큰 기반 인증**: Stateless 세션 관리
-- **Spring Security Crypto**: BCrypt 비밀번호 암호화
 - **LoginInterceptor**: API 엔드포인트 인증 검증
 - **환경 변수 관리**: 민감 정보 .env 파일 분리
 - **CORS 설정**: WebMvcConfig에서 관리
@@ -416,33 +404,14 @@ Domain (Entity)
 ./gradlew clean build
 ```
 
-### Docker (예시)
-```dockerfile
-FROM openjdk:21-jdk-slim
-COPY build/libs/chakak-0.0.1-SNAPSHOT.jar app.jar
-ENTRYPOINT ["java", "-jar", "/app.jar"]
-```
-
-## 🤝 기여하기
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 라이선스
-
-이 프로젝트는 비공개 프로젝트입니다.
-
 ## 👥 팀
 
-- **Backend Developer**: [Your Name]
+- **Backend Developer**
+- [위희수] 포토그래퍼 서비스 기능 관리 및 전체 서버 개발 기획
+- [이승민] 구글 활용 이메일 인증 기능, 유저 타입 
+- [이예람] 포트폴리오 서비스 기능 관리
+- [장승원] 유저 프로필, 예약 관리
+- [문한영] 유저, 로그인(JWT), 예약 취소 내역, 웹소켓, 채팅
+- [오승운] 관리자 계정 관리, 카테고리 추가/삭제 기능, 회원 커뮤니티 관리
+- [황희곤] KakaoPay 활용 결제기능, 포토그래퍼 서비스 관리, 서비스 예약관리
 
-## 📞 문의
-
-프로젝트 관련 문의사항은 이슈를 등록하거나 이메일로 연락 주세요.
-
----
-
-**Made with ☕ by CHAKAK Backend Team**
