@@ -164,8 +164,8 @@ public class PaymentService {
                         headers.remove(HttpHeaders.AUTHORIZATION);
                         headers.set(HttpHeaders.AUTHORIZATION, "SECRET_KEY " + secretKey);
                     })
-                    .header(HttpHeaders.CONTENT_TYPE, "application/json")  // JSON으로 변경
-                    .bodyValue(requestBody)  // JSON 본문으로 전송
+                    .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .bodyValue(requestBody)
                     .retrieve()
                     .onStatus(status -> status.isError(), response -> {
                         return response.bodyToMono(String.class)
@@ -653,15 +653,15 @@ public class PaymentService {
         long lastMonthAmount = paymentJpaRepository.sumTotalAmountByUserIdAndMonth(userIdStr, lastMonth.getYear(), lastMonth.getMonthValue());
 
         // 이번 달, 지난 달 결제 건수 (별도 쿼리 필요 시 구현)
-        int thisMonthCount = 0; // TODO: 월별 건수 조회 쿼리 추가
-        int lastMonthCount = 0; // TODO: 월별 건수 조회 쿼리 추가
+        int thisMonthCount = 0;
+        int lastMonthCount = 0;
 
         // 평균 결제 금액
         long averageAmount = successCount > 0 ? totalAmount / successCount : 0;
 
         // 첫 결제/최근 결제 일자 (별도 쿼리 필요 시 구현)
-        LocalDate firstPaymentDate = null; // TODO: 첫 결제 일자 조회
-        LocalDate lastPaymentDate = null;  // TODO: 최근 결제 일자 조회
+        LocalDate firstPaymentDate = null;
+        LocalDate lastPaymentDate = null;
 
         return UserPaymentStatsResponse.builder()
                 .totalPaymentCount(totalCount)
@@ -704,21 +704,21 @@ public class PaymentService {
         long lastMonthNetIncome = (long) (lastMonthIncome * (100 - platformFeeRate) / 100.0);
 
         // 예약 건수 및 기타 통계 (별도 쿼리 구현 필요)
-        int totalBookings = 0;          // TODO: 총 예약 건수 조회
-        int thisMonthBookings = 0;      // TODO: 이번 달 예약 건수
-        int lastMonthBookings = 0;      // TODO: 지난 달 예약 건수
-        int uniqueCustomers = 0;        // TODO: 고유 고객 수
-        int repeatCustomers = 0;        // TODO: 재방문 고객 수
+        int totalBookings = 0;
+        int thisMonthBookings = 0;
+        int lastMonthBookings = 0;
+        int uniqueCustomers = 0;
+        int repeatCustomers = 0;
 
         long averageIncome = totalBookings > 0 ? totalIncome / totalBookings : 0;
         long averageNetIncome = totalBookings > 0 ? totalNetIncome / totalBookings : 0;
 
         // 최고/최저 수익 정보 (별도 쿼리 구현 필요)
-        long highestIncome = 0;         // TODO: 최고 수익 조회
-        long lowestIncome = 0;          // TODO: 최저 수익 조회
-        LocalDate highestIncomeDate = null; // TODO: 최고 수익 일자
-        LocalDate firstBookingDate = null;  // TODO: 첫 예약 일자
-        LocalDate lastBookingDate = null;   // TODO: 최근 예약 일자
+        long highestIncome = 0;
+        long lowestIncome = 0;
+        LocalDate highestIncomeDate = null;
+        LocalDate firstBookingDate = null;
+        LocalDate lastBookingDate = null;
 
         int activeDays = firstBookingDate != null && lastBookingDate != null ?
                 (int) java.time.temporal.ChronoUnit.DAYS.between(firstBookingDate, lastBookingDate) + 1 : 0;

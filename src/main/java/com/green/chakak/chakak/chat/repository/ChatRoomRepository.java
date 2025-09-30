@@ -13,7 +13,6 @@ import java.util.Optional;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
-    // user가 아닌 UserProfile을 파라미터로 받도록 변경
     Optional<ChatRoom> findByUserProfileAndPhotographerProfile(UserProfile userProfile, PhotographerProfile photographerProfile);
 
     /**

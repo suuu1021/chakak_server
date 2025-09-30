@@ -31,7 +31,7 @@ public class UserService {
     private final UserTypeRepository userTypeRepository;
     private final UserProfileJpaRepository userProfileJpaRepository;
     private final EmailService emailService;
-    private final EmailVerificationRepository emailVerificationRepository; // Inject EmailVerificationRepository
+    private final EmailVerificationRepository emailVerificationRepository;
 
     // 회원가입
     public UserResponse.SignupResponse signup(UserRequest.SignupRequest req) {
@@ -47,8 +47,7 @@ public class UserService {
         Optional<EmailVerification> verificationOpt = emailVerificationRepository.findByEmail(req.getEmail());
         boolean isEmailVerified = verificationOpt.isPresent() && verificationOpt.get().isVerified();
 
-        User savedUser = userJpaRepository.save(req.toEntity(userType, isEmailVerified)); // Pass isEmailVerified
-        // TODO(테스트) User savedUser = userJpaRepository.save(req.toEntity(userType)); // Pass isEmailVerified
+        User savedUser = userJpaRepository.save(req.toEntity(userType, isEmailVerified));
 
         // 인증 이메일 발송 (회원가입 시점에 발송하도록 유지)
         emailService.sendVerificationEmail(req.getEmail());

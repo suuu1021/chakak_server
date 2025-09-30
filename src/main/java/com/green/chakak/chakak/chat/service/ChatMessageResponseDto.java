@@ -24,7 +24,7 @@ public class ChatMessageResponseDto {
     private final String imageUrl;
     private final String imageOriginalName;
 
-    // 🔥 추가된 결제 관련 필드들
+    // 추가된 결제 관련 필드들
     private final String paymentDescription;
     private final Long photoServiceInfoId;
     private final Long priceInfoId;

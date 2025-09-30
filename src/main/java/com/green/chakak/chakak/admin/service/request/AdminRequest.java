@@ -21,7 +21,6 @@ public class AdminRequest {
                     .adminName(this.name)
                     .password(this.password)
                     .build();
-
         }
     }
 

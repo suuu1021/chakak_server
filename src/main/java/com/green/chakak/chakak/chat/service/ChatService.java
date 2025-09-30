@@ -142,7 +142,7 @@ public class ChatService {
                     .paymentDescription(messageDto.getPaymentDescription())
                     .photoServiceInfoId(messageDto.getPhotoServiceInfoId())
                     .priceInfoId(messageDto.getPriceInfoId())
-                    .bookingInfoId(messageDto.getBookingInfoId()) // ✅ 반드시 세팅
+                    .bookingInfoId(messageDto.getBookingInfoId())
                     .isRead(false)
                     .build();
             log.info("--- 6. ChatService: 결제 요청 ChatMessage 엔티티 생성 완료 ---");

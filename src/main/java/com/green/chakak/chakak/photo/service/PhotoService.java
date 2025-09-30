@@ -152,7 +152,7 @@ public class PhotoService {
                     .categoryIdList(saveDTO.getCategoryIdList())
                     .build();
 
-            createMapping(mappingDTO, loginUser); // 같은 메서드 재사용!
+            createMapping(mappingDTO, loginUser);
         }
     }
 
@@ -479,19 +479,6 @@ public class PhotoService {
         PriceInfo savedPriceInfo = priceInfoJpaRepository.save(priceInfo);
         return new PriceInfoResponse.PriceInfoListDTO(savedPriceInfo);
     }
-
-    // 특정 PhotoService의 모든 가격 정보 조회
-    /*
-    public PriceInfoResponse.PriceInfosDTO getPriceInfosByPhotoServiceId(Long photoServiceInfoId) {
-        // PhotoService 존재 확인
-        if (!photoServiceJpaRepository.existsById(photoServiceInfoId)) {
-            throw new Exception404("PhotoService를 찾을 수 없습니다: " + photoServiceInfoId);
-        }
-
-        List<PriceInfo> priceInfoList = priceInfoJpaRepository.findByPhotoServiceInfo_serviceId(photoServiceInfoId);
-        return new PriceInfoResponse.PriceInfosDTO(photoServiceInfoId, priceInfoList);
-    }
-    */
 
     // 새로운 메서드 추가
     public List<PriceInfoResponse.PriceInfoListDTO> getPriceInfoListByPhotoServiceId(Long photoServiceInfoId) {

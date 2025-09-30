@@ -23,17 +23,14 @@ public class UserRequest {
         private String password;
 
         private String userTypeCode;
-        //private String nickName; // @JsonProperty 제거하여 충돌 해결
 
-        public User toEntity(UserType userType, boolean emailVerifiedStatus) { // 파라미터 추가
-        // TODO(테스트) public User toEntity(UserType userType) {
+        public User toEntity(UserType userType, boolean emailVerifiedStatus) {
             return User.builder()
                     .email(this.email)
                     .password(this.password)
                     .userType(userType)
-                    .status(User.UserStatus.ACTIVE)//TODO: INACTIVE로 수정하기 (관리자가 바꿀 수 있다.)
-                    .emailVerified(emailVerifiedStatus) // 파라미터 값 사용
-                    // TODO(테스트) .emailVerified(true)
+                    .status(User.UserStatus.ACTIVE)
+                    .emailVerified(emailVerifiedStatus)
                     .build();
         }
     }

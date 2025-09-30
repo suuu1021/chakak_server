@@ -25,7 +25,7 @@ public class AdminProfileRequest {
         public AdminProfile toEntity(Admin admin) {
             return AdminProfile.builder()
                     .admin(admin)
-                    .nickName(this.nickName)  // this 키워드로 명확하게 지정
+                    .nickName(this.nickName)
                     .imageUrl(this.imageData)
                     .build();
         }

@@ -28,7 +28,6 @@ public class EmailService {
         String code = generateCode();
         LocalDateTime expiredAt = LocalDateTime.now().plusMinutes(EMAIL_VERIFICATION_EXPIRATION_MINUTES);
 
-        // 이메일로 기존 인증 정보가 있다면 삭제하여, 항상 새로운 코드가 유효하도록 보장합니다.
         verificationRepository.findByEmail(email).ifPresent(verificationRepository::delete);
 
         EmailVerification verification = EmailVerification.builder()
@@ -70,21 +69,21 @@ public class EmailService {
         }
 
         // 모든 검증을 통과하면 인증 성공 처리
-        verification.use(); // isVerified를 true로 변경
+        verification.use();
         return true;
     }
 
     // 이메일이 최종적으로 인증되었는지 확인하는 메서드 추가
     public boolean isEmailFullyVerified(String email) {
         return verificationRepository.findTopByEmailOrderByCreatedAtDesc(email)
-                .filter(EmailVerification::isVerified) // isVerified가 true인지 확인
-                .filter(v -> !v.isExpired()) // 만료되지 않았는지 확인
-                .isPresent(); // 해당 조건을 만족하는 레코드가 존재하는지 반환
+                .filter(EmailVerification::isVerified)
+                .filter(v -> !v.isExpired())
+                .isPresent();
     }
 
     private String generateCode() {
         SecureRandom random = new SecureRandom();
-        int code = 100000 + random.nextInt(900000); // 100000 ~ 999999
+        int code = 100000 + random.nextInt(900000);
         return String.valueOf(code);
     }
 }

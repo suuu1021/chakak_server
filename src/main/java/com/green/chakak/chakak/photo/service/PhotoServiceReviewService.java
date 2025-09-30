@@ -100,7 +100,7 @@ public class PhotoServiceReviewService {
     }
 
     /**
-     * ✅ 포토그래퍼 전체 리뷰 조회 (페이징)
+     * 포토그래퍼 전체 리뷰 조회 (페이징)
      */
     @Transactional(readOnly = true)
     public Page<PhotoServiceReviewResponse.ListDTO> getReviewsByPhotographer(Long photographerId, Pageable pageable) {

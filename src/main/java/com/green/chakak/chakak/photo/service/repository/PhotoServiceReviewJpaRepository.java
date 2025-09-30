@@ -82,7 +82,6 @@ public interface PhotoServiceReviewJpaRepository extends JpaRepository<PhotoServ
 													@Param("keyword") String keyword,
 													Pageable pageable);
 
-	// ✅ 추가된 메서드: 포토그래퍼 전체 리뷰 조회
 	@Query("SELECT r FROM PhotoServiceReview r " +
 			"JOIN r.photoServiceInfo s " +
 			"WHERE s.photographerProfile.photographerProfileId = :photographerId " +

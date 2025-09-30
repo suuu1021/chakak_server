@@ -72,7 +72,7 @@ public class KakaoAuthService {
 
         String finalTypeCode = typeCode;
 
-        // 회원 가입 및 자동 로그인을 담당하고 있다ㅏ.
+        // 회원 가입 및 자동 로그인을 담당하고 있다.
         User user = userJpaRepository.findByEmail(email)
                 .orElseGet(() -> {
                     UserType userType = userTypeRepository.findByTypeCode(finalTypeCode)

@@ -152,8 +152,6 @@ public class PostResponse {
             this.likeCount = post.getLikeCount();
             this.replyCount = post.getReplyCount();
             this.hasImage = post.hasImage();
-            // 목록에서는 전체 이미지 데이터는 너무 크므로 hasImage만 표시
-            // 필요하면 thumbnailData에 작은 크기의 썸네일 데이터를 넣을 수 있음
             this.createdAt = post.getCreatedAt();
 
             this.isLiked = currentUserId != null &&
@@ -161,7 +159,7 @@ public class PostResponse {
 
 
             if (this.hasImage && post.getImageUrl() != null && !post.getImageUrl().isEmpty()) {
-                this.thumbnailData = post.getImageUrl(); // 그대로 할당
+                this.thumbnailData = post.getImageUrl();
             } else {
                 this.thumbnailData = null;
             }

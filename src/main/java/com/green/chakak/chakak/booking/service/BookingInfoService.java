@@ -38,7 +38,7 @@ public class BookingInfoService {
     // [사용자] 나의 예약 목록 조회
     public List<BookingInfoResponse.BookingUserListDTO> getUserBookings(LoginUser loginUser){
         // 로그인한 사용자의 ID로 직접 조회하여 다른 사용자의 정보를 볼 수 없도록 함
-        return bookingInfoJpaRepository.findByUserId(loginUser.getId())  // 이 부분만 변경
+        return bookingInfoJpaRepository.findByUserId(loginUser.getId())
                 .stream()
                 .map(BookingInfoResponse.BookingUserListDTO::new)
                 .toList();
@@ -46,7 +46,7 @@ public class BookingInfoService {
 
         // [포토그래퍼] 나의 예약 목록 조회
         public List<BookingInfoResponse.BookingUserListDTO> getPhotographerBookings(LoginUser loginUser){
-            return bookingInfoJpaRepository.findByPhotographerId(loginUser.getId())  // 이것도 변경 가능
+            return bookingInfoJpaRepository.findByPhotographerId(loginUser.getId())
                     .stream()
                     .map(BookingInfoResponse.BookingUserListDTO::new)
                     .toList();
@@ -150,7 +150,6 @@ public class BookingInfoService {
         bookingInfo.setStatus(BookingStatus.COMPLETED);
     }
 
-    // TODO - 리뷰 남길 시 사용할 서비스
     // [사용자] 리뷰 작성 후 상태 변경
     @Transactional
     public void reviewBooking(Long bookingInfoId, LoginUser loginUser){

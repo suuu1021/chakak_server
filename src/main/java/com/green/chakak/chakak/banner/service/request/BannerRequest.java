@@ -109,7 +109,7 @@ public class BannerRequest {
         private Integer displayOrder;
 
         @JsonProperty("expires_at")
-        private LocalDateTime expiresAt; // 바로 LocalDateTime으로 받기
+        private LocalDateTime expiresAt;
 
         public Banner UpdateDtoToEntity() {
 

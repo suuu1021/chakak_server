@@ -226,7 +226,7 @@ public class PaymentRestController {
             // userType 파라미터 추가
             PageResponse<PaymentListResponse> response = paymentService.getUserPaymentList(
                     loginUser.getId(),
-                    loginUser.getUserTypeName(), // 추가된 파라미터
+                    loginUser.getUserTypeName(),
                     request,
                     pageable
             );

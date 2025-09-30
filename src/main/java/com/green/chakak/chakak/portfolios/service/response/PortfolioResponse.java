@@ -20,7 +20,7 @@ public class PortfolioResponse {
 		private Long portfolioId;
 		private Long photographerId;
 		private String photographerName;
-		private String photographerEmail; // 추가
+		private String photographerEmail;
 		private String title;
 		private String description;
 		private String thumbnailUrl;

@@ -118,7 +118,7 @@ public class User {
                 .email(req.getEmail())
                 .password(req.getPassword())
                 .userType(userType)
-                .status(User.UserStatus.ACTIVE)//TODO: INACTIVE로 수정하기
+                .status(User.UserStatus.ACTIVE)
                 .emailVerified(false)
                 .build();
     }

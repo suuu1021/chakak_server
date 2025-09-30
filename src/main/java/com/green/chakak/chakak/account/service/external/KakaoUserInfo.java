@@ -22,17 +22,6 @@ public class KakaoUserInfo {
     @Data
     public static class KakaoAccount {
         private String email; // 사용자 이메일 (동의하지 않으면 null이 올 수 있음)
-       // private Profile profile;
 
-//        @Data
-//        public static class Profile {
-//          //  private String nickname; // 유저 닉네임
-//
-//            @JsonProperty("profile_image_url")
-//            private String profileImageUrl; // 프로필 이미지
-//
-//            @JsonProperty("thumbnail_image_url")
-//            private String thumbnailImageUrl; // 썸네일 이미지 URL
-//        }
     }
 }
